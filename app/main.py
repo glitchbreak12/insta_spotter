@@ -40,25 +40,31 @@ app.add_middleware(
 )
 
 # 2. Trusted Host - Solo domini conosciuti
-# Costruisci la lista di host permessi dinamicamente usando REPLIT_URL se impostato
+# Possibilità di disabilitare temporaneamente il controllo impostando DISABLE_TRUSTED_HOST=1
 replit_url = os.getenv("REPLIT_URL")
-allowed_hosts = ["localhost", "127.0.0.1"]
-if replit_url:
-    try:
-        parsed = urlparse(replit_url)
-        if parsed.hostname:
-            allowed_hosts.append(parsed.hostname)
-    except Exception:
-        logger.warning("Impossibile parsare REPLIT_URL per TrustedHostMiddleware")
+disable_trusted = os.getenv("DISABLE_TRUSTED_HOST", "0") == "1"
 
-# Se non abbiamo un REPLIT_URL, manteniamo il dominio di default usato in sviluppo
-if len(allowed_hosts) == 2:
-    allowed_hosts.append("insta-spotter.replit.dev")
+if not disable_trusted:
+    # Costruisci la lista di host permessi dinamicamente usando REPLIT_URL se impostato
+    allowed_hosts = ["localhost", "127.0.0.1"]
+    if replit_url:
+        try:
+            parsed = urlparse(replit_url)
+            if parsed.hostname:
+                allowed_hosts.append(parsed.hostname)
+        except Exception:
+            logger.warning("Impossibile parsare REPLIT_URL per TrustedHostMiddleware")
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=allowed_hosts,
-)
+    # Se non abbiamo un REPLIT_URL, manteniamo il dominio di default usato in sviluppo
+    if len(allowed_hosts) == 2:
+        allowed_hosts.append("insta-spotter.replit.dev")
+
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=allowed_hosts,
+    )
+else:
+    logger.info("TrustedHostMiddleware disabilitato tramite DISABLE_TRUSTED_HOST=1")
 
 # 3. Rate Limiting
 limiter = Limiter(key_func=get_remote_address)
