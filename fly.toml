@@ -1,0 +1,5 @@
+app = 'insta-spotter-worker'  # O il nome che hai scelto
+primary_region = 'fra'      # O la regione che hai scelto
+
+[build]
+  dockerfile = 'Dockerfile'

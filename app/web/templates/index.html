@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invia un Messaggio - InstaSpotter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --background: #0a0a0a;
+            --foreground: #1a1a1a;
+            --foreground-light: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-light: #1e40af;
+            --border: #333333;
+            --border-light: #444444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --glow-color: #3b82f6;
+            --shadow-color: rgba(0, 0, 0, 0.8);
+            --glow-intensity: 0 0 30px var(--glow-color);
+            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--background);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--gradient-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: clamp(2rem, 6vw, 3.5rem);
+            box-shadow: 
+                0 20px 40px var(--shadow-color),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                var(--glow-intensity);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            opacity: 0.05;
+            z-index: 0;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: var(--gradient-primary);
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: clamp(2.8rem, 8vw, 4rem);
+            font-weight: 900;
+            letter-spacing: -3px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+            margin-bottom: 0.5rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+            to { text-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-top: 0.5rem;
+        }
+
+        .form-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+        }
+
+        .label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 
+                0 0 0 4px rgba(99, 102, 241, 0.2),
+                0 0 30px rgba(99, 102, 241, 0.3),
+                inset 0 2px 10px rgba(0, 0, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .char-counter {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .char-counter.warning {
+            color: var(--warning);
+        }
+
+        .char-counter.danger {
+            color: var(--error);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.2rem 2rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--gradient-primary);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            color: var(--success);
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--error);
+            border-radius: 12px;
+            color: var(--error);
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid var(--text-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .features {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .features h3 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 2rem;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+    <div class="container">
+        <div class="header">
+                <h1>InstaSpotter</h1>
+                <p>Condividi il tuo messaggio anonimo in modo sicuro</p>
+            </div>
+            
+            <div class="form-container">
+                <form id="message-form" action="/spotted/submit" method="post">
+                    <!-- CSRF Token per protezione contro attacchi cross-site -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    
+                    <div class="input-group">
+                        <label for="message-input" class="label">
+                            <i class="fas fa-edit"></i> Il tuo messaggio
+                        </label>
+                        <textarea 
+                            id="message-input" 
+                            name="message" 
+                            placeholder="Racconta la tua esperienza... (minimo 10 caratteri)" 
+                            maxlength="500" 
+                            required 
+                            minlength="10"
+                        ></textarea>
+        </div>
+        
+            <div class="form-footer">
+                        <div id="char-counter" class="char-counter">500 caratteri rimanenti</div>
+                        <div class="word-count">
+                            <i class="fas fa-align-left"></i> <span id="word-count">0</span> parole
+                        </div>
+            </div>
+                    
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        <div class="loading-spinner" id="loading-spinner"></div>
+                        <i class="fas fa-paper-plane"></i> Invia Messaggio
+                    </button>
+        </form>
+
+        {% if success %}
+        <div class="success-message">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>Messaggio inviato con successo!</strong>
+                    <p>Il tuo messaggio è stato ricevuto e sarà moderato prima della pubblicazione.</p>
+                </div>
+                {% endif %}
+
+                {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Errore nell'invio</strong>
+                    <p>{{ error }}</p>
+        </div>
+        {% endif %}
+            </div>
+
+            <div class="features">
+                <h3><i class="fas fa-star"></i> Perché scegliere InstaSpotter?</h3>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="feature-text">100% Anonimo</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="feature-text">Moderazione AI</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="feature-text">Pubblicazione Rapida</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="feature-text">Community Sicura</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messageInput = document.getElementById('message-input');
+        const charCounter = document.getElementById('char-counter');
+        const wordCount = document.getElementById('word-count');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const form = document.getElementById('message-form');
+        const maxLength = parseInt(messageInput.getAttribute('maxlength'));
+
+        // Character and word counting with visual feedback
+        messageInput.addEventListener('input', () => {
+            const text = messageInput.value;
+            const remaining = maxLength - text.length;
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            
+            // Update character counter
+            charCounter.textContent = `${remaining} caratteri rimanenti`;
+            
+            // Update word count
+            wordCount.textContent = words;
+            
+            // Visual feedback for character limit
+            charCounter.className = 'char-counter';
+            if (remaining < 50) {
+                charCounter.classList.add('warning');
+            }
+            if (remaining < 10) {
+                charCounter.classList.add('danger');
+            }
+            
+            // Enable/disable submit button
+            submitBtn.disabled = text.trim().length < 10 || text.length > maxLength;
+        });
+
+        // Form submission with loading state
+        form.addEventListener('submit', (e) => {
+            const text = messageInput.value.trim();
+            
+            if (text.length < 10) {
+                e.preventDefault();
+                showError('Il messaggio deve contenere almeno 10 caratteri.');
+                return;
+            }
+            
+            if (text.length > maxLength) {
+                e.preventDefault();
+                showError('Il messaggio è troppo lungo.');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            submitBtn.innerHTML = '<div class="loading-spinner" style="display: inline-block;"></div> Invio in corso...';
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 300) + 'px';
+        });
+
+        // Show error message function
+        function showError(message) {
+            const existingError = document.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Errore</strong>
+                <p>${message}</p>
+            `;
+            
+            form.appendChild(errorDiv);
+            
+            // Remove error after 5 seconds
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Add typing animation to placeholder
+        const placeholder = messageInput.getAttribute('placeholder');
+        let placeholderIndex = 0;
+        let isDeleting = false;
+        
+        function typePlaceholder() {
+            const currentText = placeholder.substring(0, placeholderIndex);
+            messageInput.setAttribute('placeholder', currentText + '|');
+            
+            if (!isDeleting) {
+                placeholderIndex++;
+                if (placeholderIndex > placeholder.length) {
+                    isDeleting = true;
+                    setTimeout(typePlaceholder, 1000);
+                    return;
+                }
+            } else {
+                placeholderIndex--;
+                if (placeholderIndex < 0) {
+                    isDeleting = false;
+                    setTimeout(typePlaceholder, 500);
+                    return;
+                }
+            }
+            
+            setTimeout(typePlaceholder, isDeleting ? 50 : 100);
+        }
+
+        // Start placeholder animation only if input is empty
+        messageInput.addEventListener('focus', () => {
+            if (messageInput.value === '') {
+                typePlaceholder();
+            }
+        });
+
+        messageInput.addEventListener('blur', () => {
+            messageInput.setAttribute('placeholder', placeholder);
+        });
+
+        // Add smooth scroll to form on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                messageInput.focus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

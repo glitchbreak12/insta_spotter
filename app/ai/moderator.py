@@ -1,0 +1,1 @@
+# This file is intentionally left blank to prevent the old pre-moderation logic from being used.
