@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+import os
+from urllib.parse import urlparse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -38,9 +40,24 @@ app.add_middleware(
 )
 
 # 2. Trusted Host - Solo domini conosciuti
+# Costruisci la lista di host permessi dinamicamente usando REPLIT_URL se impostato
+replit_url = os.getenv("REPLIT_URL")
+allowed_hosts = ["localhost", "127.0.0.1"]
+if replit_url:
+    try:
+        parsed = urlparse(replit_url)
+        if parsed.hostname:
+            allowed_hosts.append(parsed.hostname)
+    except Exception:
+        logger.warning("Impossibile parsare REPLIT_URL per TrustedHostMiddleware")
+
+# Se non abbiamo un REPLIT_URL, manteniamo il dominio di default usato in sviluppo
+if len(allowed_hosts) == 2:
+    allowed_hosts.append("insta-spotter.replit.dev")
+
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["insta-spotter.replit.dev", "localhost", "127.0.0.1"],
+    allowed_hosts=allowed_hosts,
 )
 
 # 3. Rate Limiting
