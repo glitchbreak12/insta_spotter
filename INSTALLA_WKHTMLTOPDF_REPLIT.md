@@ -1,31 +1,23 @@
 # 🚀 Installazione wkhtmltopdf su Replit - GUIDA RAPIDA
 
-## ⚡ Installazione Automatica
+## ⚠️ IMPORTANTE: Su Replit non puoi usare `apt-get` direttamente!
 
-L'app ora tenta di installare automaticamente `wkhtmltopdf` all'avvio. 
+Replit usa un sistema diverso per le dipendenze di sistema. Segui questa guida:
 
-**Se vedi ancora l'errore**, installalo manualmente:
+## 📋 Installazione tramite System Dependencies (2 minuti)
 
-## 📋 Installazione Manuale (1 minuto)
+### Passo 1: Apri il pannello System Dependencies
+1. Nel tuo Replit, cerca il pannello **"System Dependencies"** (Dipendenze di Sistema)
+2. Si trova solitamente nella barra laterale sinistra o nel menu a tre righe ☰
+3. Se non lo vedi, vai su **Tools** → **System Dependencies**
 
-### Passo 1: Apri la Shell di Replit
-1. Nel tuo Replit, clicca su **"Shell"** (terminale) in basso
-2. O usa il tasto `Ctrl + Shift + S`
-
-### Passo 2: Installa wkhtmltopdf
-Copia e incolla questi comandi uno alla volta:
-
-```bash
-apt-get update
-```
-
-Poi:
-
-```bash
-apt-get install -y wkhtmltopdf
-```
+### Passo 2: Aggiungi wkhtmltopdf
+1. Nel campo di ricerca, digita: `wkhtmltopdf`
+2. Clicca su **"Add"** o **"Install"**
+3. Attendi che l'installazione completi
 
 ### Passo 3: Verifica l'installazione
+Apri la Shell di Replit e verifica:
 ```bash
 wkhtmltoimage --version
 ```
@@ -49,23 +41,25 @@ Immagine generata con successo: ...
 
 ## 🔍 Troubleshooting
 
-### ❌ "Permission denied" durante apt-get
-Su Replit, a volte serve usare `sudo`:
-```bash
-sudo apt-get update
-sudo apt-get install -y wkhtmltopdf
-```
+### ❌ Non trovo il pannello "System Dependencies"
+1. Cerca nel menu a tre righe ☰ in alto a sinistra
+2. Oppure vai su **Tools** → **System Dependencies**
+3. Se ancora non lo trovi, prova a cercare "dependencies" nella barra di ricerca di Replit
+
+### ❌ "wkhtmltopdf" non appare nella ricerca
+1. Prova a cercare solo "wkhtml"
+2. Oppure cerca "htmltopdf"
+3. Se non appare, potrebbe non essere disponibile nel repository di Replit
 
 ### ❌ L'installazione funziona ma l'app non lo trova
-1. Verifica che sia nel PATH: `which wkhtmltoimage`
+1. Verifica che sia installato: `wkhtmltoimage --version` nella Shell
 2. Riavvia completamente l'app (Stop → Run)
 3. Controlla i log all'avvio per vedere se viene rilevato
 
-### ❌ Ancora non funziona
-Prova a installare anche le dipendenze:
-```bash
-apt-get install -y wkhtmltopdf xvfb libxrender1 libfontconfig1
-```
+### ❌ Ancora non funziona - Alternativa
+Se `wkhtmltopdf` non è disponibile nel pannello System Dependencies, potresti dover:
+1. Contattare il supporto Replit
+2. O considerare di usare un'alternativa come `playwright` o `selenium` per generare immagini
 
 ## 📝 Note
 
