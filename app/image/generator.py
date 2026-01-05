@@ -83,141 +83,197 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera l'immagine usando PIL/Pillow con design professionale."""
+        """Genera un'immagine premium con liquid glass style Apple, glow effects e branding."""
         if not PIL_AVAILABLE:
             return False
         
         try:
-            from PIL import ImageFilter
+            from PIL import ImageFilter, ImageEnhance
             import math
             
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 80
+            card_padding = 60
+            card_radius = 40
             
-            # Crea un'immagine con sfondo gradiente professionale
-            img = Image.new('RGB', (width, height), color='#0a0a0a')
+            # === SFONDO GRADIENTE PREMIUM ===
+            img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
             
-            # Disegna gradiente di sfondo animato (simulato con gradiente diagonale)
-            # Colori: #1a1a2e -> #16213e -> #0f3460 (blu scuro elegante)
+            # Gradiente multi-colore premium (nero -> blu scuro -> viola scuro)
             for y in range(height):
-                # Gradiente verticale con variazione orizzontale per effetto diagonale
                 progress = y / height
-                x_progress = (y % 200) / 200  # Variazione per effetto animato
                 
-                # Interpolazione tra i colori del gradiente
-                if progress < 0.5:
-                    # Prima metà: #1a1a2e -> #16213e
-                    r = int(26 + (22 - 26) * progress * 2)
-                    g = int(26 + (33 - 26) * progress * 2)
-                    b = int(46 + (62 - 46) * progress * 2)
+                # Gradiente complesso: nero -> blu scuro -> viola -> blu
+                if progress < 0.33:
+                    # Top: nero -> blu scuro
+                    r = int(0 + (15 * progress * 3))
+                    g = int(0 + (20 * progress * 3))
+                    b = int(0 + (40 * progress * 3))
+                elif progress < 0.66:
+                    # Middle: blu scuro -> viola
+                    local_progress = (progress - 0.33) * 3
+                    r = int(15 + (30 * local_progress))
+                    g = int(20 + (10 * local_progress))
+                    b = int(40 + (20 * local_progress))
                 else:
-                    # Seconda metà: #16213e -> #0f3460
-                    r = int(22 + (15 - 22) * (progress - 0.5) * 2)
-                    g = int(33 + (52 - 33) * (progress - 0.5) * 2)
-                    b = int(62 + (96 - 62) * (progress - 0.5) * 2)
+                    # Bottom: viola -> blu scuro
+                    local_progress = (progress - 0.66) * 3
+                    r = int(45 - (30 * local_progress))
+                    g = int(30 - (10 * local_progress))
+                    b = int(60 - (20 * local_progress))
                 
-                # Aggiungi variazione orizzontale per effetto diagonale
-                r = max(10, min(255, r + int(math.sin(x_progress * math.pi * 2) * 3)))
-                g = max(10, min(255, g + int(math.sin(x_progress * math.pi * 2) * 3)))
-                b = max(10, min(255, b + int(math.sin(x_progress * math.pi * 2) * 3)))
+                # Aggiungi variazione per effetto dinamico
+                wave = math.sin(progress * math.pi * 4) * 5
+                r = max(0, min(255, int(r + wave)))
+                g = max(0, min(255, int(g + wave)))
+                b = max(0, min(255, int(b + wave)))
                 
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # Crea un layer per l'effetto glass (sfocatura)
+            # === LIQUID GLASS CARD (stile Apple) ===
+            card_x = card_padding
+            card_y = card_padding
+            card_w = width - (card_padding * 2)
+            card_h = height - (card_padding * 2)
+            
+            # Crea layer per glass effect
             glass_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glass_draw = ImageDraw.Draw(glass_layer)
             
-            # Disegna rettangolo glass con bordi arrotondati (simulato)
-            glass_rect = [
-                padding, padding,
-                width - padding, height - padding
-            ]
+            # Sfondo glass con blur effect (simulato con gradiente trasparente)
+            # Bordo esterno più scuro
+            for i in range(20):
+                alpha = int(15 + (i * 2))
+                glass_draw.rectangle(
+                    [card_x - i, card_y - i, card_x + card_w + i, card_y + card_h + i],
+                    outline=(255, 255, 255, alpha),
+                    width=1
+                )
             
-            # Sfondo glass semi-trasparente
-            glass_draw.rectangle(glass_rect, fill=(0, 0, 0, 51))  # rgba(0,0,0,0.2)
-            
-            # Bordo glass
-            border_width = 2
+            # Sfondo glass principale (liquid glass)
             glass_draw.rectangle(
-                [glass_rect[0], glass_rect[1], glass_rect[2], glass_rect[3]],
-                outline=(255, 255, 255, 26),  # rgba(255,255,255,0.1)
-                width=border_width
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                fill=(255, 255, 255, 20),  # Bianco semi-trasparente per glass
+                outline=(255, 255, 255, 40),
+                width=3
             )
             
-            # Applica blur al layer glass (simulato con alpha)
+            # Highlight superiore (riflesso glass)
+            highlight_y = card_y + 20
+            for i in range(30):
+                alpha = int(60 - (i * 2))
+                glass_draw.rectangle(
+                    [card_x + 20, highlight_y + i, card_x + card_w - 20, highlight_y + i + 1],
+                    fill=(255, 255, 255, alpha)
+                )
+            
+            # Bordo interno glow
+            glow_color = (99, 102, 241)  # Indigo glow
+            for i in range(5):
+                alpha = int(80 - (i * 15))
+                glass_draw.rectangle(
+                    [card_x + 5 + i, card_y + 5 + i, 
+                     card_x + card_w - 5 - i, card_y + card_h - 5 - i],
+                    outline=(glow_color[0], glow_color[1], glow_color[2], alpha),
+                    width=1
+                )
+            
+            # Composizione glass
             img = Image.alpha_composite(img.convert('RGBA'), glass_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # Carica i font
+            # === CARICA FONT ===
             font_path = os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf')
             try:
                 if os.path.exists(font_path):
-                    header_font = ImageFont.truetype(font_path, 100)
-                    message_font = ImageFont.truetype(font_path, 72)
-                    footer_font = ImageFont.truetype(font_path, 40)
+                    brand_font = ImageFont.truetype(font_path, 120)
+                    header_font = ImageFont.truetype(font_path, 90)
+                    message_font = ImageFont.truetype(font_path, 68)
+                    id_font = ImageFont.truetype(font_path, 36)
+                    footer_font = ImageFont.truetype(font_path, 38)
                 else:
                     raise FileNotFoundError
             except:
-                # Font di sistema
                 try:
-                    header_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
-                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 72)
-                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
+                    brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+                    header_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 90)
+                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 68)
+                    id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
                 except:
-                    # Fallback
-                    try:
-                        header_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 100)
-                        message_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 72)
-                        footer_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
-                    except:
-                        header_font = ImageFont.load_default()
-                        message_font = ImageFont.load_default()
-                        footer_font = ImageFont.load_default()
+                    brand_font = ImageFont.load_default()
+                    header_font = ImageFont.load_default()
+                    message_font = ImageFont.load_default()
+                    id_font = ImageFont.load_default()
+                    footer_font = ImageFont.load_default()
             
-            # Disegna "SPOTTED" header con effetto glow professionale
-            header_text = "SPOTTED"
-            header_bbox = draw.textbbox((0, 0), header_text, font=header_font)
-            header_width = header_bbox[2] - header_bbox[0]
-            header_height = header_bbox[3] - header_bbox[1]
-            header_x = (width - header_width) // 2
-            header_y = 180
+            # === BRANDING "SPOTTED" CON GLOW PREMIUM ===
+            brand_text = "SPOTTED"
+            brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+            brand_width = brand_bbox[2] - brand_bbox[0]
+            brand_x = (width - brand_width) // 2
+            brand_y = card_y + 100
             
-            # Effetto glow blu (simulato con ombre multiple)
-            glow_color = (52, 89, 235)  # Blu glow
-            for i in range(5):
+            # Glow effect multiplo (blu/viola)
+            glow_colors = [
+                (99, 102, 241, 150),   # Indigo
+                (139, 92, 246, 120),   # Violet
+                (59, 130, 246, 100),   # Blue
+            ]
+            
+            for glow_idx, (gr, gg, gb, alpha) in enumerate(glow_colors):
+                for i in range(8):
+                    offset = i * 3
+                    glow_alpha = int(alpha * (1 - i / 8))
+                    draw.text(
+                        (brand_x + offset, brand_y + offset),
+                        brand_text,
+                        fill=(gr, gg, gb, glow_alpha),
+                        font=brand_font
+                    )
+            
+            # Ombra nera per profondità
+            for offset in [(4, 4), (2, 2)]:
+                draw.text(
+                    (brand_x + offset[0], brand_y + offset[1]),
+                    brand_text,
+                    fill='#000000',
+                    font=brand_font
+                )
+            
+            # Testo principale con gradiente (simulato con bianco brillante)
+            draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
+            
+            # === ID POST "sp#ID" CON BRANDING ===
+            id_text = f"sp#{message_id}"
+            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            id_width = id_bbox[2] - id_bbox[0]
+            id_x = (width - id_width) // 2
+            id_y = brand_y + 140
+            
+            # Glow per ID
+            for i in range(4):
                 offset = i * 2
-                alpha = max(10, 100 - (i * 20))
-                # Ombra blu
+                alpha = int(100 - (i * 25))
                 draw.text(
-                    (header_x + offset, header_y + offset),
-                    header_text,
-                    fill=(glow_color[0], glow_color[1], glow_color[2], alpha),
-                    font=header_font
+                    (id_x + offset, id_y + offset),
+                    id_text,
+                    fill=(139, 92, 246, alpha),  # Violet glow
+                    font=id_font
                 )
             
-            # Ombra bianca per profondità
-            for offset_x, offset_y in [(3, 3), (1, 1)]:
-                draw.text(
-                    (header_x + offset_x, header_y + offset_y),
-                    header_text,
-                    fill=(255, 255, 255, 50),
-                    font=header_font
-                )
+            draw.text((id_x, id_y), id_text, fill='#a78bfa', font=id_font)  # Violet
             
-            # Testo principale bianco brillante
-            draw.text((header_x, header_y), header_text, fill='#ffffff', font=header_font)
-            
-            # Disegna il messaggio con word wrap professionale
-            message_y = 400
-            max_width = width - (padding * 2)
+            # === MESSAGGIO CON WORD WRAP PREMIUM ===
+            message_y = id_y + 100
+            max_width = card_w - (card_padding * 2)
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 110  # Spaziatura tra righe
+            line_height = 95
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -234,7 +290,7 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
-            # Disegna le righe del messaggio centrate con ombre per leggibilità
+            # Disegna messaggio con ombre premium
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -244,8 +300,8 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_y + i * line_height
                 
-                # Ombra nera per leggibilità (simulata con testo nero leggermente spostato)
-                for offset in [(3, 3), (2, 2)]:
+                # Ombre multiple per profondità
+                for offset in [(4, 4), (2, 2), (1, 1)]:
                     draw.text(
                         (line_x + offset[0], y_pos + offset[1]),
                         line,
@@ -253,42 +309,58 @@ class ImageGenerator:
                         font=message_font
                     )
                 
-                # Testo principale con colore elegante
-                draw.text((line_x, y_pos), line, fill='#e8e8e8', font=message_font)
+                # Testo principale
+                draw.text((line_x, y_pos), line, fill='#f0f0f0', font=message_font)
             
-            # Disegna footer "@spottedatbz" con stile elegante
+            # === FOOTER BRANDING "@spottedatbz" ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = height - 180
+            footer_y = card_y + card_h - 120
             
-            # Ombra per footer
+            # Glow per footer
+            for i in range(3):
+                offset = i * 1
+                alpha = int(80 - (i * 25))
+                draw.text(
+                    (footer_x + offset, footer_y + offset),
+                    footer_text,
+                    fill=(139, 92, 246, alpha),
+                    font=footer_font
+                )
+            
+            # Ombra
             draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
-            # Footer con opacità elegante
-            draw.text((footer_x, footer_y), footer_text, fill='#b8b8b8', font=footer_font)
+            # Footer principale
+            draw.text((footer_x, footer_y), footer_text, fill='#c4b5fd', font=footer_font)
             
-            # Aggiungi glow effect al bordo glass (simulato)
-            glow_color = (52, 89, 235)  # Blu glow
-            # Disegna linee di glow ai bordi
-            for i in range(2):
-                glow_alpha = 40 - (i * 15)
-                # Top glow
-                draw.rectangle(
-                    [padding - i, padding - i, width - padding + i, padding + 5 + i],
-                    outline=(glow_color[0], glow_color[1], glow_color[2], glow_alpha),
-                    width=1
-                )
-                # Bottom glow
-                draw.rectangle(
-                    [padding - i, height - padding - 5 - i, width - padding + i, height - padding + i],
-                    outline=(glow_color[0], glow_color[1], glow_color[2], glow_alpha),
-                    width=1
-                )
+            # === GLOW BORDI FINALI ===
+            # Glow esterno premium
+            final_glow = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(final_glow)
             
-            # Salva l'immagine con alta qualità
-            img.save(output_path, 'PNG', quality=100, optimize=True)
-            print(f"✅ Immagine generata con PIL (design professionale): {output_path}")
+            glow_colors_final = [
+                (99, 102, 241, 60),   # Indigo
+                (139, 92, 246, 40),   # Violet
+            ]
+            
+            for glow_idx, (gr, gg, gb, alpha) in enumerate(glow_colors_final):
+                for i in range(3):
+                    offset = i * 2
+                    glow_alpha = int(alpha * (1 - i / 3))
+                    glow_draw.rectangle(
+                        [card_x - offset, card_y - offset,
+                         card_x + card_w + offset, card_y + card_h + offset],
+                        outline=(gr, gg, gb, glow_alpha),
+                        width=2
+                    )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), final_glow).convert('RGB')
+            
+            # Salva con qualità massima
+            img.save(output_path, 'PNG', quality=100, optimize=False)
+            print(f"✅ Immagine premium generata (liquid glass + glow): {output_path}")
             return True
             
         except Exception as e:
