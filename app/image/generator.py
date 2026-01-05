@@ -295,22 +295,22 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
 
-            # === HEADER CON BRAND E BADGE ===
-            header_y = card_y + 50  # padding-top: 50px come card_v5
+            # === HEADER CON BRAND E BADGE (esatto come card_v5.html) ===
+            header_y = card_y + 50  # padding-top: 50px
 
-            # BRAND "SPOTTED" con text-shadow 3D esatto come card_v5
+            # BRAND "SPOTTED" con text-shadow esatto come card_v5
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_x = (width - brand_width) // 2
             brand_y = header_y
 
-            # Text shadows esatti come card_v5 (4 livelli)
+            # Text shadows esatti come card_v5.html (4 livelli)
             for dx, dy, color, alpha in [
-                (0, 0, (0, 122, 255), 128),  # 0 0 10px rgba(0,122,255,0.5) ≈ 128/255
-                (0, 0, (0, 122, 255), 77),   # 0 0 20px rgba(0,122,255,0.3) ≈ 77/255
-                (0, 0, (0, 122, 255), 25),   # 0 0 30px rgba(0,122,255,0.1) ≈ 25/255
-                (0, 2, (0, 0, 0), 204)       # 0 2px 5px rgba(0,0,0,0.8) ≈ 204/255
+                (0, 0, (0, 122, 255), 128),  # 0 0 10px rgba(0,122,255,0.5) = 128
+                (0, 0, (0, 122, 255), 77),   # 0 0 20px rgba(0,122,255,0.3) = 77
+                (0, 0, (0, 122, 255), 25),   # 0 0 30px rgba(0,122,255,0.1) = 25
+                (0, 2, (0, 0, 0), 204)       # 0 2px 5px rgba(0,0,0,0.8) = 204
             ]:
                 shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 shadow_draw = ImageDraw.Draw(shadow_layer)
@@ -320,25 +320,46 @@ class ImageGenerator:
 
             draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
 
-            # BADGE ID come card_v5
+            # BADGE ID esatto come card_v5.html
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_x = (width - id_width) // 2
-            id_y = brand_y + 95 + 35  # margin-bottom: 35px come card_v5
+            id_y = brand_y + int(95 * 1.1) + 35  # font-size 95px con line-height 1.1 + margin 35px
 
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
-            pad_x, pad_y = 30, 12  # padding: 12px 30px come card_v5
+
+            # Padding esatto: 12px 30px
+            pad_x, pad_y = 30, 12
+            badge_width = id_width + (pad_x * 2)
+            badge_height = 32 + (pad_y * 2)  # Altezza base 32px come nel template
+
+            # Box-shadow per il badge
+            for shadow_dx, shadow_dy, shadow_color, shadow_alpha in [
+                (0, 4, (0, 122, 255), 38)  # 0 4px 20px rgba(0,122,255,0.15) ≈ 38
+            ]:
+                shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                shadow_draw = ImageDraw.Draw(shadow_layer)
+                shadow_draw.rounded_rectangle(
+                    [id_x - pad_x + shadow_dx, id_y - pad_y + shadow_dy,
+                     id_x + id_width + pad_x + shadow_dx, id_y + 32 + pad_y + shadow_dy],
+                    radius=25,
+                    fill=shadow_color + (shadow_alpha,)
+                )
+                img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+                draw = ImageDraw.Draw(img)
+
+            # Badge principale
             bdraw.rounded_rectangle(
                 [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + 32 + pad_y],
-                radius=25,  # border-radius: 25px come card_v5
-                fill=(0, 122, 255, 30),  # rgba(0,122,255,0.12) ≈ 30/255
-                outline=(0, 122, 255, 64)  # rgba(0,122,255,0.25) ≈ 64/255
+                radius=25,  # border-radius: 25px
+                fill=(0, 122, 255, 30),  # background: rgba(0,122,255,0.12)
+                outline=(0, 122, 255, 64)  # border: 1px solid rgba(0,122,255,0.25)
             )
             img = Image.alpha_composite(img.convert('RGBA'), badge).convert('RGB')
             draw = ImageDraw.Draw(img)
-            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)  # color: #5ac8fa come card_v5
+            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)  # color: #5ac8fa
 
             # === BODY CON MESSAGGIO ===
             body_top = id_y + 80  # margin-bottom: 80px dell'header
