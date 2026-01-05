@@ -28,14 +28,14 @@
             align-items: center;
         }
 
-        /* Sfondo stile Apple - gradiente delicato */
+        /* Sfondo stile Apple */
         .bg-container {
             position: absolute;
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
                 linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
         }
 
@@ -46,96 +46,95 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 80px;
+            padding: 90px;
         }
 
-        /* Card stile Apple - Glassmorphism */
+        /* Card stile Apple */
         .card {
             position: relative;
             width: 100%;
             height: 100%;
-            background: rgba(18, 18, 18, 0.75);
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-                0 0 80px rgba(0, 122, 255, 0.15);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+                0 0 100px rgba(0, 122, 255, 0.12);
+            backdrop-filter: blur(50px) saturate(180%);
+            -webkit-backdrop-filter: blur(50px) saturate(180%);
             display: flex;
             flex-direction: column;
-            padding: 90px 80px;
+            padding: 100px 90px;
             overflow: hidden;
         }
 
-        /* Glow sottile stile Apple */
+        /* Glow sottile */
         .card::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0, 122, 255, 0.1) 0%, transparent 70%);
-            opacity: 0.6;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+            opacity: 0.5;
             pointer-events: none;
         }
 
-        /* Highlight superiore delicato */
+        /* Highlight superiore */
         .highlight {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 300px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
-            border-radius: 40px 40px 0 0;
+            height: 350px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+            border-radius: 45px 45px 0 0;
             pointer-events: none;
         }
 
-        /* Header stile Apple */
+        /* Header */
         .header {
             text-align: center;
-            margin-bottom: 70px;
+            margin-bottom: 80px;
             position: relative;
             z-index: 2;
-            padding-top: 40px;
+            padding-top: 50px;
         }
 
         .brand {
             font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 100px;
+            font-size: 95px;
             font-weight: 700;
             color: #ffffff;
-            letter-spacing: 3px;
-            margin-bottom: 40px;
-            text-shadow: 0 2px 20px rgba(0, 122, 255, 0.3);
+            letter-spacing: 4px;
+            margin-bottom: 35px;
+            text-shadow: 0 2px 25px rgba(0, 122, 255, 0.25);
             line-height: 1.1;
         }
 
-        /* Badge ID stile Apple */
+        /* Badge */
         .badge {
             display: inline-block;
-            padding: 12px 28px;
-            background: rgba(0, 122, 255, 0.15);
-            border: 1px solid rgba(0, 122, 255, 0.3);
-            border-radius: 20px;
+            padding: 12px 30px;
+            background: rgba(0, 122, 255, 0.12);
+            border: 1px solid rgba(0, 122, 255, 0.25);
+            border-radius: 25px;
             color: #5ac8fa;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 600;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
-            margin-top: 10px;
+            letter-spacing: 1.5px;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
         }
 
-        /* Body stile Apple - centratura perfetta */
+        /* Body */
         .body {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 80px 0;
+            padding: 0;
             position: relative;
             z-index: 2;
             min-height: 0;
@@ -144,49 +143,49 @@
 
         .message {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 64px;
+            font-size: 62px;
             line-height: 1.5;
             text-align: center;
             color: #ffffff;
             font-weight: 400;
-            max-width: 82%;
+            max-width: 80%;
             white-space: pre-wrap;
             word-wrap: break-word;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             margin: 0;
             padding: 0;
         }
 
-        /* Footer stile Apple */
+        /* Footer */
         .footer {
             text-align: center;
             margin-top: auto;
-            padding-top: 50px;
-            padding-bottom: 30px;
+            padding-top: 60px;
+            padding-bottom: 40px;
             position: relative;
             z-index: 2;
         }
 
         .footer-text {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 32px;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 1px;
-            margin-bottom: 20px;
+            font-size: 30px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1.5px;
+            margin-bottom: 22px;
             font-weight: 500;
         }
 
         .cta {
             display: inline-block;
-            padding: 14px 28px;
-            background: rgba(0, 122, 255, 0.2);
-            border: 1px solid rgba(0, 122, 255, 0.4);
-            border-radius: 20px;
+            padding: 12px 26px;
+            background: rgba(0, 122, 255, 0.18);
+            border: 1px solid rgba(0, 122, 255, 0.35);
+            border-radius: 22px;
             color: #5ac8fa;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.25);
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
         }
     </style>
 </head>

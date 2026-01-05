@@ -83,87 +83,76 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con design stile Apple - minimalista e pulito."""
+        """Genera un'immagine completamente nuova stile Apple - design pulito e bilanciato."""
         if not PIL_AVAILABLE:
             return False
         
         try:
-            import math
-            
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 80
+            padding = 90
             
-            # === SFONDO STILE APPLE - Nero con glows delicati ===
+            # === SFONDO NERO CON GLOWS DELICATI ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente nero molto sottile
+            # Gradiente nero sottile
             for y in range(height):
                 t = y / height
-                # Gradiente: nero puro -> nero leggermente più chiaro
                 r = int(0 + 2 * t)
                 g = int(0 + 2 * t)
                 b = int(0 + 2 * t)
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # Glows radiali delicati stile Apple
+            # Glows radiali delicati
             ambient = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             amb_draw = ImageDraw.Draw(ambient)
             
-            # Glow blu centrale delicato
-            for radius, alpha in [(500, 40), (350, 25), (200, 15)]:
+            # Glow blu centrale
+            for radius, alpha in [(500, 30), (350, 18), (200, 10)]:
                 amb_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
                      width//2 + radius, height//2 + radius],
-                    fill=(0, 122, 255, alpha)  # Blue Apple
+                    fill=(0, 122, 255, alpha)
                 )
             
-            # Glow azzurro laterale sinistro
-            for radius, alpha in [(300, 20), (180, 12)]:
+            # Glow azzurro laterale
+            for radius, alpha in [(300, 15), (180, 8)]:
                 amb_draw.ellipse(
                     [int(width*0.3) - radius, int(height*0.4) - radius,
                      int(width*0.3) + radius, int(height*0.4) + radius],
-                    fill=(90, 200, 250, alpha)  # Azzurro Apple
-                )
-            
-            # Glow blu laterale destro
-            for radius, alpha in [(300, 20), (180, 12)]:
-                amb_draw.ellipse(
-                    [int(width*0.7) - radius, int(height*0.6) - radius,
-                     int(width*0.7) + radius, int(height*0.6) + radius],
-                    fill=(88, 86, 214, alpha)  # Blu viola Apple
+                    fill=(90, 200, 250, alpha)
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === CARD STILE APPLE - Glassmorphism ===
+            # === CARD GLASSMORPHISM ===
             card_x = padding
             card_y = padding
             card_w = width - (padding * 2)
             card_h = height - (padding * 2)
 
-            # Ombra morbida stile Apple
+            # Ombra morbida
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            for i in range(20):
-                alpha = int(60 - i * 2.8)
+            for i in range(18):
+                alpha = int(55 - i * 2.8)
                 shadow_draw.rectangle(
-                    [card_x + i + 8, card_y + i + 8,
-                     card_x + card_w + i + 8, card_y + card_h + i + 8],
+                    [card_x + i + 6, card_y + i + 6,
+                     card_x + card_w + i + 6, card_y + card_h + i + 6],
                     fill=(0, 0, 0, alpha)
                 )
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Glow blu sottile attorno alla card
+            # Glow blu sottile
             glow_outer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glow_outer_draw = ImageDraw.Draw(glow_outer)
-            for i in range(12):
-                off = i * 2
-                alpha = int(50 - i * 3)
+            for i in range(10):
+                off = i * 2.5
+                alpha = int(45 - i * 4)
                 glow_outer_draw.rectangle(
                     [card_x - off, card_y - off,
                      card_x + card_w + off, card_y + card_h + off],
@@ -173,22 +162,21 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), glow_outer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Card principale glassmorphism stile Apple
+            # Card principale
             card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             card_draw = ImageDraw.Draw(card_layer)
             card_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(18, 18, 18, 190),  # Nero trasparente stile Apple
-                outline=(255, 255, 255, 25),  # Bordo bianco sottile
+                fill=(20, 20, 20, 200),
+                outline=(255, 255, 255, 20),
                 width=1
             )
             
-            # Highlight superiore delicato
-            highlight_y = card_y
-            for i in range(300):
-                alpha = max(0, 80 - int(i * 0.25))
+            # Highlight superiore
+            for i in range(350):
+                alpha = max(0, 75 - int(i * 0.2))
                 card_draw.line(
-                    [(card_x, highlight_y + i), (card_x + card_w, highlight_y + i)],
+                    [(card_x, card_y + i), (card_x + card_w, card_y + i)],
                     fill=(255, 255, 255, alpha),
                     width=1
                 )
@@ -196,7 +184,7 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === CARICA FONT KOMIKA AXIS ===
+            # === CARICA FONT ===
             font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
             
             brand_font = None
@@ -206,10 +194,10 @@ class ImageGenerator:
             
             if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
                 try:
-                    brand_font = ImageFont.truetype(font_path, 100)  # Stile Apple - più raffinato
-                    message_font = ImageFont.truetype(font_path, 64)  # Stile Apple - leggibile
-                    id_font = ImageFont.truetype(font_path, 28)  # Stile Apple - discreto
-                    footer_font = ImageFont.truetype(font_path, 32)  # Stile Apple - elegante
+                    brand_font = ImageFont.truetype(font_path, 95)
+                    message_font = ImageFont.truetype(font_path, 62)
+                    id_font = ImageFont.truetype(font_path, 26)
+                    footer_font = ImageFont.truetype(font_path, 30)
                 except Exception as e:
                     print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
             
@@ -217,84 +205,81 @@ class ImageGenerator:
                 try:
                     if os.name == 'nt':
                         try:
-                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 100)
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 95)
                         except:
-                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 100)
-                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 64)
-                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 28)
-                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 32)
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 95)
+                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 62)
+                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 26)
+                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 30)
                     else:
-                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
-                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
-                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 95)
+                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 62)
+                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
                 except:
                     brand_font = ImageFont.load_default()
                     message_font = ImageFont.load_default()
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRAND "SPOTTED" STILE APPLE - Bianco con ombra leggera ===
+            # === BRAND "SPOTTED" ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 120  # Posizionamento più in basso per più spazio
+            brand_y = card_y + 150
             
-            # Ombra leggera stile Apple
+            # Ombra leggera
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            shadow_draw.text((brand_x + 2, brand_y + 2), brand_text, fill=(0, 122, 255, 30), font=brand_font)
+            shadow_draw.text((brand_x + 2, brand_y + 2), brand_text, fill=(0, 122, 255, 25), font=brand_font)
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # Testo brand bianco stile Apple
             draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
             
-            # === BADGE ID STILE APPLE - Pulito e minimale ===
+            # === BADGE ID ===
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_height = id_bbox[3] - id_bbox[1]
             id_x = (width - id_width) // 2
-            id_y = brand_y + brand_height + 60  # Spacing aumentato significativamente
+            id_y = brand_y + brand_height + 70
             
-            # Badge stile Apple - pulito
+            # Badge
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
-            pad_x, pad_y = 24, 12
+            pad_x, pad_y = 30, 12
             badge_top = id_y - pad_y
             badge_bottom = id_y + id_height + pad_y
             bdraw.rounded_rectangle(
                 [id_x - pad_x, badge_top, id_x + id_width + pad_x, badge_bottom],
-                radius=20,
-                fill=(0, 122, 255, 40),  # Blu Apple trasparente
-                outline=(0, 122, 255, 80),  # Bordo blu Apple
+                radius=25,
+                fill=(0, 122, 255, 30),
+                outline=(0, 122, 255, 60),
                 width=1
             )
             img = Image.alpha_composite(img.convert('RGBA'), badge).convert('RGB')
             draw = ImageDraw.Draw(img)
-            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)  # Azzurro Apple
+            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)
             
-            # === MESSAGGIO STILE APPLE - Bianco pulito ===
-            # Calcola l'altezza totale del badge incluso padding
+            # === MESSAGGIO ===
             badge_total_height = badge_bottom - badge_top
-            message_area_top = badge_bottom + 100  # Spacing molto aumentato
-            message_area_bottom = card_y + card_h - 280  # Spazio footer molto aumentato
+            message_area_top = badge_bottom + 120
+            message_area_bottom = card_y + card_h - 300
             message_area_height = message_area_bottom - message_area_top
             
-            # Verifica che ci sia spazio sufficiente
-            if message_area_height < 150:
-                message_area_bottom = card_y + card_h - 250
+            if message_area_height < 200:
+                message_area_bottom = card_y + card_h - 280
                 message_area_height = message_area_bottom - message_area_top
             
-            max_width = card_w - (padding * 2) - 80  # Margini laterali aumentati
+            max_width = card_w - (padding * 2) - 100
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 100  # Line height ridotto per più spazio
+            line_height = 93  # 62px * 1.5
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -313,16 +298,13 @@ class ImageGenerator:
             
             total_message_height = len(lines) * line_height
             
-            # Verifica che il messaggio non sia troppo alto e riduci se necessario
             if total_message_height > message_area_height:
-                # Riduci line_height se necessario
-                line_height = max(70, (message_area_height - 20) // max(len(lines), 1))
+                line_height = max(65, (message_area_height - 30) // max(len(lines), 1))
                 total_message_height = len(lines) * line_height
             
-            # Centra il messaggio verticalmente nell'area disponibile
             message_start_y = message_area_top + max(0, (message_area_height - total_message_height) // 2)
             
-            # Messaggio bianco stile Apple - senza glow eccessivo
+            # Disegna messaggio
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -332,54 +314,49 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Verifica che non si sovrapponga al footer
-                if y_pos + line_height > message_area_bottom - 20:
+                if y_pos + line_height > message_area_bottom - 30:
                     break
                 
-                # Ombra leggera
+                # Ombra
                 shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 shadow_draw = ImageDraw.Draw(shadow_layer)
-                shadow_draw.text((line_x + 1, y_pos + 1), line, fill=(0, 0, 0, 50), font=message_font)
+                shadow_draw.text((line_x + 1, y_pos + 1), line, fill=(0, 0, 0, 45), font=message_font)
                 img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
                 draw = ImageDraw.Draw(img)
                 
-                # Testo bianco
                 draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
             
-            # === FOOTER STILE APPLE - Grigio elegante ===
+            # === FOOTER ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
-            footer_height = footer_bbox[3] - footer_bbox[1]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 180  # Posizionamento sicuro con più spazio
+            footer_y = card_y + card_h - 200
             
-            # Calcola l'ultima posizione del messaggio effettivamente disegnato
+            # Calcola ultima posizione messaggio
             last_message_y = message_start_y
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
                 y_pos = message_start_y + i * line_height
-                if y_pos + line_height > message_area_bottom - 20:
+                if y_pos + line_height > message_area_bottom - 30:
                     break
                 last_message_y = y_pos + line_height
             
-            # Verifica che il footer non si sovrapponga al messaggio con margine di sicurezza
-            min_footer_y = last_message_y + 100  # Margine di sicurezza di 100px
+            # Verifica spacing
+            min_footer_y = last_message_y + 120
             if footer_y < min_footer_y:
                 footer_y = min_footer_y
             
-            # Assicura che il footer non esca dalla card
-            max_footer_y = card_y + card_h - 50
+            max_footer_y = card_y + card_h - 60
             if footer_y > max_footer_y:
                 footer_y = max_footer_y
             
-            # Footer grigio stile Apple
-            draw.text((footer_x, footer_y), footer_text, fill=(153, 153, 153), font=footer_font)  # Grigio 60% opacità
+            draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)
             
-            # Salva con qualità massima
+            # Salva
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile Apple - minimalista e pulito): {output_path}")
+            print(f"✅ Immagine generata (design completamente nuovo stile Apple): {output_path}")
             return True
             
         except Exception as e:
