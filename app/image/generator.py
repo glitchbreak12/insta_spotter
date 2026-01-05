@@ -187,25 +187,137 @@ class ImageGenerator:
                 width=1
             )
 
-            img = Image.alpha_composite(img.convert('RGBA'), card_main).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Stelle casuali come nel template CSS
-            import random
-            random.seed(42)  # Per consistenza
-            for i in range(200):  # Molte stelle per effetto spaziale
-                x = random.randint(0, width)
-                y = random.randint(0, height)
-                brightness = random.randint(180, 255)
-                size = random.randint(1, 3)
-                stars_draw.rectangle([x, y, x+size, y+size], fill=(brightness, brightness, brightness, 220))
+            # === CARICA FONT KOMIKA AXIS ===
+            font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
 
-            # Nebula gradients come nel CSS
-            nebula_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            nebula_draw = ImageDraw.Draw(nebula_layer)
+            brand_font = None
+            message_font = None
+            id_font = None
+            footer_font = None
 
-            # Nebula viola centrale (--nebula-purple: #9b59b6)
-            for radius in range(350, 100, -15):
+            if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
+                try:
+                    brand_font = ImageFont.truetype(font_path, 95)  # font-size: 95px come card_v5
+                    message_font = ImageFont.truetype(font_path, 62)  # font-size: 62px come card_v5
+                    id_font = ImageFont.truetype(font_path, 26)  # font-size: 26px come card_v5
+                    footer_font = ImageFont.truetype(font_path, 30)  # font-size: 30px come card_v5
+                except Exception as e:
+                    print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
+
+            if not brand_font:
+                try:
+                    if os.name == 'nt':
+                        try:
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 95)
+                        except:
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 95)
+                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 62)
+                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 26)
+                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 30)
+                    else:
+                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 95)
+                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 62)
+                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+                except:
+                    brand_font = ImageFont.load_default()
+                    message_font = ImageFont.load_default()
+                    id_font = ImageFont.load_default()
+                    footer_font = ImageFont.load_default()
+
+            # === RENDERING TESTO ===
+
+            # BRAND "SPOTTED" in alto centrato
+            brand_text = "SPOTTED"
+            brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+            brand_width = brand_bbox[2] - brand_bbox[0]
+            brand_x = (width - brand_width) // 2
+            brand_y = card_y + 60
+
+            # Testo bianco con glow blu come card_v5
+            for offset in [3, 2, 1]:
+                glow_color = (0, 122, 255, max(0, 150 - offset * 50))
+                glow_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                glow_draw = ImageDraw.Draw(glow_img)
+                glow_draw.text((brand_x, brand_y), brand_text, font=brand_font, fill=glow_color)
+                img = Image.alpha_composite(img.convert('RGBA'), glow_img).convert('RGB')
+                draw = ImageDraw.Draw(img)
+
+            draw.text((brand_x, brand_y), brand_text, font=brand_font, fill=(255, 255, 255))
+
+            # MESSAGGIO centrato
+            message_y = brand_y + 150
+            max_width = card_w - 100
+
+            # Word wrap del messaggio
+            words = message_text.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                test_line = current_line + " " + word if current_line else word
+                bbox = draw.textbbox((0, 0), test_line, font=message_font)
+                if bbox[2] - bbox[0] <= max_width:
+                    current_line = test_line
+                else:
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = word
+            if current_line:
+                lines.append(current_line)
+
+            # Render delle linee con glow blu
+            line_height = 80
+            total_text_height = len(lines) * line_height
+            start_y = message_y
+
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=message_font)
+                text_width = bbox[2] - bbox[0]
+                text_x = (width - text_width) // 2
+
+                # Glow bianco-blu
+                for offset in [2, 1]:
+                    glow_color = (0, 122, 255, max(0, 100 - offset * 30))
+                    glow_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_img)
+                    glow_draw.text((text_x, start_y), line, font=message_font, fill=glow_color)
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_img).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+
+                draw.text((text_x, start_y), line, font=message_font, fill=(255, 255, 255))
+                start_y += line_height
+
+            # ID del messaggio in basso a destra
+            id_text = f"#{message_id}"
+            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            id_x = width - 120
+            id_y = height - 120
+
+            draw.text((id_x, id_y), id_text, font=id_font, fill=(255, 255, 255, 128))
+
+            # FOOTER "spotted.to" in basso centrato
+            footer_text = "spotted.to"
+            footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
+            footer_width = footer_bbox[2] - footer_bbox[0]
+            footer_x = (width - footer_width) // 2
+            footer_y = height - 80
+
+            draw.text((footer_x, footer_y), footer_text, font=footer_font, fill=(255, 255, 255, 180))
+
+            # Salva e ottimizza per Instagram
+            img.save(output_path, 'PNG', quality=100, optimize=False)
+            print(f"✅ Immagine generata con successo (PIL fallback): {output_path}")
+
+            # Ottimizza per Instagram
+            optimized_path = self._optimize_for_instagram(output_path)
+            return optimized_path
+
+        except Exception as e:
+            print(f"❌ Errore PIL fallback: {e}")
+            raise
                 alpha = int(120 * (1 - radius/350))
                 nebula_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
