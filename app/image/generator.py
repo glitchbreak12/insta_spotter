@@ -567,7 +567,23 @@ class ImageGenerator:
         # Definisce il percorso completo per il file di output
         output_path = os.path.join(self.output_folder, output_filename)
 
-        # Prima prova con wkhtmltoimage (metodo preferenziale)
+        # Verifica se stiamo usando un template complesso che richiede Playwright
+        template_name = os.path.basename(settings.image.template_path)
+        is_complex_template = 'celestial' in template_name or 'prestige' in template_name or 'voltaic' in template_name
+
+        # Per template complessi, salta wkhtmltoimage e usa direttamente Playwright
+        if is_complex_template:
+            if self.playwright_available:
+                print(f"🎨 Template complesso rilevato ({template_name}), uso Playwright per rendering perfetto...")
+                try:
+                    return self._generate_with_playwright(message_text, output_path, message_id)
+                except Exception as pw_error:
+                    print(f"❌ Playwright fallito per template complesso: {pw_error}")
+                    print("🔄 Fallback a wkhtmltoimage...")
+            else:
+                print(f"⚠️ Template complesso ({template_name}) ma Playwright non disponibile, uso wkhtmltoimage...")
+
+        # Prima prova con wkhtmltoimage (per template semplici)
         if self.wkhtmltoimage_available:
             try:
                 # Renderizza l'HTML con il messaggio e il percorso base
