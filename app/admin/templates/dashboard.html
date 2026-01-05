@@ -1270,20 +1270,40 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 10,
+                                bottom: 10,
+                                left: 10,
+                                right: 10
+                            }
+                        },
                         plugins: {
                             legend: {
                                 display: true,
-                                labels: { color: '#f8fafc', font: { size: 12 } } 
+                                position: 'top',
+                                labels: { 
+                                    color: '#f8fafc', 
+                                    font: { size: window.innerWidth < 768 ? 10 : 12 },
+                                    padding: window.innerWidth < 768 ? 8 : 12
+                                } 
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: '#94a3b8', stepSize: 1 }, 
+                                ticks: { 
+                                    color: '#94a3b8', 
+                                    stepSize: 1,
+                                    font: { size: window.innerWidth < 768 ? 10 : 12 }
+                                }, 
                                 grid: { color: '#334155' } 
                             },
                             x: {
-                                ticks: { color: '#94a3b8' }, 
+                                ticks: { 
+                                    color: '#94a3b8',
+                                    font: { size: window.innerWidth < 768 ? 10 : 12 }
+                                }, 
                                 grid: { color: '#334155' } 
                             }
                         }
@@ -1308,14 +1328,22 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 10,
+                                bottom: 10,
+                                left: 10,
+                                right: 10
+                            }
+                        },
                         plugins: {
                             legend: {
                                 display: true,
                                 position: 'bottom',
                                 labels: {
                                     color: '#f8fafc',
-                                    font: { size: 12 },
-                                    padding: 15
+                                    font: { size: window.innerWidth < 768 ? 10 : 12 },
+                                    padding: window.innerWidth < 768 ? 10 : 15
                                 }
                             }
                         }
