@@ -83,7 +83,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con stile CSS glowing 3D liquid glass."""
+        """Genera un'immagine con stile luxury futuristic neon, glow azzurro, liquid glass Apple 3D."""
         if not PIL_AVAILABLE:
             return False
         
@@ -96,7 +96,7 @@ class ImageGenerator:
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 60
+            padding = 80
             
             # === SFONDO CON GLOWING GRADIENT ===
             img = Image.new('RGB', (width, height), color='#000000')
@@ -281,41 +281,35 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRANDING "SPOTTED" CON GLOWING 3D EFFECT ===
+            # === BRANDING "SPOTTED" CON NEON GLOW LUXURY ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 80
+            brand_y = card_y + 100
             
-            # Glow multipli per effetto 3D glowing
-            glow_layers = [
-                (59, 130, 246, 200),   # Blu intenso
-                (139, 92, 246, 150),   # Viola
-                (99, 102, 241, 120),   # Indigo
-            ]
+            # Glow neon azzurro multiplo (stile luxury futuristic)
+            for i in range(15):
+                offset = i * 2.5
+                alpha = int(200 - (i * 12))
+                # Glow azzurro neon in tutte le direzioni
+                for dx, dy in [(offset, offset), (-offset, offset), (offset, -offset), (-offset, -offset),
+                               (offset, 0), (-offset, 0), (0, offset), (0, -offset),
+                               (offset*0.7, offset*0.7), (-offset*0.7, offset*0.7)]:
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (brand_x + int(dx), brand_y + int(dy)),
+                        brand_text,
+                        fill=(100, 200, 255, alpha),  # Azzurro neon
+                        font=brand_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
             
-            for glow_idx, (gr, gg, gb, base_alpha) in enumerate(glow_layers):
-                for i in range(12):
-                    offset = i * 3
-                    alpha = int(base_alpha * (1 - i / 12))
-                    # Glow in tutte le direzioni
-                    for dx, dy in [(offset, offset), (-offset, offset), (offset, -offset), (-offset, -offset),
-                                   (offset, 0), (-offset, 0), (0, offset), (0, -offset)]:
-                        glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                        glow_draw = ImageDraw.Draw(glow_layer)
-                        glow_draw.text(
-                            (brand_x + dx, brand_y + dy),
-                            brand_text,
-                            fill=(gr, gg, gb, alpha),
-                            font=brand_font
-                        )
-                        img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                        draw = ImageDraw.Draw(img)
-            
-            # Ombra nera profonda per 3D
-            for offset in [(5, 5), (3, 3), (1, 1)]:
+            # Ombra nera profonda per 3D luxury
+            for offset in [(4, 4), (2, 2)]:
                 draw.text(
                     (brand_x + offset[0], brand_y + offset[1]),
                     brand_text,
@@ -323,8 +317,8 @@ class ImageGenerator:
                     font=brand_font
                 )
             
-            # Testo principale con gradiente (simulato con blu brillante)
-            draw.text((brand_x, brand_y), brand_text, fill='#60a5fa', font=brand_font)
+            # Testo principale azzurro neon brillante
+            draw.text((brand_x, brand_y), brand_text, fill='#64d9ff', font=brand_font)
             
             # === ID POST "sp#ID" (opzionale, più piccolo) ===
             id_text = f"sp#{message_id}"
@@ -369,7 +363,7 @@ class ImageGenerator:
             # Centra verticalmente il messaggio nell'area disponibile
             message_start_y = message_area_top + (message_area_height - total_message_height) // 2
             
-            # Disegna messaggio con glowing effect
+            # Disegna messaggio con neon glow luxury
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -379,56 +373,56 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Glow per il messaggio
-                for glow_i in range(5):
-                    offset = glow_i * 2
-                    alpha = int(100 - (glow_i * 20))
+                # Glow azzurro neon per il messaggio
+                for glow_i in range(6):
+                    offset = glow_i * 1.5
+                    alpha = int(120 - (glow_i * 18))
                     glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                     glow_draw = ImageDraw.Draw(glow_layer)
                     glow_draw.text(
-                        (line_x + offset, y_pos + offset),
+                        (line_x + int(offset), y_pos + int(offset)),
                         line,
-                        fill=(255, 255, 255, alpha),
+                        fill=(150, 220, 255, alpha),  # Azzurro neon chiaro
                         font=message_font
                     )
                     img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
                     draw = ImageDraw.Draw(img)
                 
-                # Ombra nera per profondità
-                draw.text((line_x + 3, y_pos + 3), line, fill='#000000', font=message_font)
-                # Testo principale bianco brillante
-                draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
+                # Ombra nera per profondità luxury
+                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
+                # Testo principale bianco luxury
+                draw.text((line_x, y_pos), line, fill='#f0f9ff', font=message_font)
             
-            # === FOOTER "@spottedatbz" CON GLOW ===
+            # === FOOTER "@spottedatbz" CON NEON GLOW BRANDING ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 100
+            footer_y = card_y + card_h - 120
             
-            # Glow per footer
-            for glow_i in range(4):
+            # Glow azzurro neon per footer branding
+            for glow_i in range(5):
                 offset = glow_i * 1
-                alpha = int(80 - (glow_i * 20))
+                alpha = int(100 - (glow_i * 20))
                 glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 glow_draw = ImageDraw.Draw(glow_layer)
                 glow_draw.text(
                     (footer_x + offset, footer_y + offset),
                     footer_text,
-                    fill=(139, 92, 246, alpha),  # Viola glow
+                    fill=(100, 200, 255, alpha),  # Azzurro neon
                     font=footer_font
                 )
                 img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
                 draw = ImageDraw.Draw(img)
             
             # Ombra
-            draw.text((footer_x + 2, footer_y + 2), footer_text, fill='#000000', font=footer_font)
-            # Footer con glow
-            draw.text((footer_x, footer_y), footer_text, fill='#a78bfa', font=footer_font)
+            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
+            # Footer azzurro neon luxury
+            draw.text((footer_x, footer_y), footer_text, fill='#64d9ff', font=footer_font)
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile CSS glowing 3D liquid glass): {output_path}")
+            print(f"✅ Immagine generata (stile luxury futuristic neon, glow azzurro, liquid glass Apple 3D): {output_path}")
             return True
             
         except Exception as e:
