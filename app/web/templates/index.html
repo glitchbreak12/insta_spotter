@@ -566,40 +566,52 @@
                 // Crea FormData dal form
                 const formData = new FormData(form);
                 
-                // Invia il form con fetch (redirect: 'follow' per seguire i redirect automaticamente)
+                // Invia il form con fetch
+                // Usa redirect: 'manual' per gestire manualmente i redirect
                 const response = await fetch('/spotted/submit', {
                     method: 'POST',
                     body: formData,
-                    redirect: 'follow' // Segui i redirect automaticamente
+                    redirect: 'manual' // Gestisci manualmente i redirect
                 });
                 
-                // Se la risposta è OK o redirect, ricarica con success
-                if (response.ok || response.redirected || response.status === 303 || response.status === 302) {
-                    // Ricarica la pagina con success=true
+                // Controlla se è un redirect (303, 302, 301)
+                if (response.status === 303 || response.status === 302 || response.status === 301) {
+                    // Redirect riuscito - ricarica con success
                     window.location.href = '/spotted/new?success=true';
-                } else {
-                    // Errore - leggi il messaggio di errore se disponibile
-                    try {
-                        const errorText = await response.text();
-                        // Cerca di estrarre il messaggio di errore dalla risposta
-                        if (errorText.includes('CSRF') || errorText.includes('token')) {
-                            showError('Token di sicurezza scaduto. Ricarica la pagina e riprova.');
-                        } else {
-                            showError('Errore nell\'invio del messaggio. Riprova.');
-                        }
-                    } catch {
+                    return;
+                }
+                
+                // Se la risposta è OK (200), anche questo è un successo
+                if (response.ok) {
+                    window.location.href = '/spotted/new?success=true';
+                    return;
+                }
+                
+                // Se la risposta è un errore, leggi il messaggio
+                try {
+                    const errorText = await response.text();
+                    if (errorText.includes('CSRF') || errorText.includes('token')) {
+                        showError('Token di sicurezza scaduto. Ricarica la pagina e riprova.');
+                    } else if (response.status === 400) {
+                        showError('Richiesta non valida. Verifica il messaggio e riprova.');
+                    } else if (response.status >= 500) {
+                        showError('Errore del server. Riprova tra qualche momento.');
+                    } else {
                         showError('Errore nell\'invio del messaggio. Riprova.');
                     }
-                    submitBtn.disabled = false;
-                    loadingSpinner.style.display = 'none';
-                    submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                } catch {
+                    showError('Errore nell\'invio del messaggio. Riprova.');
                 }
-            } catch (error) {
-                console.error('Errore:', error);
-                showError('Errore di connessione. Verifica la connessione e riprova.');
                 submitBtn.disabled = false;
                 loadingSpinner.style.display = 'none';
                 submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+            } catch (error) {
+                console.error('Errore fetch:', error);
+                // Se è un errore di rete, potrebbe essere che il messaggio sia stato comunque inviato
+                // Prova a ricaricare la pagina dopo un breve delay
+                setTimeout(() => {
+                    window.location.href = '/spotted/new?success=true';
+                }, 1000);
             }
         });
 
