@@ -16,25 +16,17 @@ class ImageGenerator:
 
     def __init__(self):
         # --- Configurazione dinamica del percorso di wkhtmltoimage ---
-        self.config = {}
-        self.wkhtmltoimage_available = False
-        
         if os.name == 'nt': # 'nt' è il nome per Windows
             # Percorso per l'installazione predefinita su Windows
             path_wkhtmltoimage = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltoimage.exe'
-            if os.path.exists(path_wkhtmltoimage):
-                self.config = imgkit.config(wkhtmltoimage=path_wkhtmltoimage)
-                self.wkhtmltoimage_available = True
-                print(f"✓ wkhtmltoimage trovato: {path_wkhtmltoimage}")
-            else:
-                print("⚠ wkhtmltoimage non trovato nel percorso predefinito per Windows.")
+            self.config = imgkit.config(wkhtmltoimage=path_wkhtmltoimage)
         else:
             # Su Linux (Replit, Render, etc.)
+            # Prova a trovare wkhtmltoimage nel PATH
             import shutil
             wkhtmltoimage_path = shutil.which('wkhtmltoimage')
             if wkhtmltoimage_path:
                 self.config = imgkit.config(wkhtmltoimage=wkhtmltoimage_path)
-                self.wkhtmltoimage_available = True
                 print(f"✓ wkhtmltoimage trovato: {wkhtmltoimage_path}")
             else:
                 # Se non trovato, prova percorsi comuni
@@ -43,15 +35,18 @@ class ImageGenerator:
                     '/usr/local/bin/wkhtmltoimage',
                     '/bin/wkhtmltoimage'
                 ]
+                found = False
                 for path in common_paths:
                     if os.path.exists(path):
                         self.config = imgkit.config(wkhtmltoimage=path)
-                        self.wkhtmltoimage_available = True
                         print(f"✓ wkhtmltoimage trovato: {path}")
+                        found = True
                         break
-        
-        if not self.wkhtmltoimage_available:
-            print("⚠ wkhtmltoimage non trovato nel PATH o percorsi comuni. Assicurati che sia installato.")
+                
+                if not found:
+                    # Configurazione vuota - imgkit userà il PATH
+                    self.config = {}
+                    print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 
         # Configura il loader di Jinja2 per trovare i template nella cartella corretta
@@ -65,32 +60,27 @@ class ImageGenerator:
         # Assicura che la cartella di output esista
         os.makedirs(self.output_folder, exist_ok=True)
         
+        # Verifica se wkhtmltoimage è disponibile
+        import shutil
+        self.wkhtmltoimage_available = bool(shutil.which('wkhtmltoimage'))
+        
         # Se wkhtmltoimage non è disponibile, usa PIL come fallback
         if not self.wkhtmltoimage_available:
             if PIL_AVAILABLE:
-                print("⚠ Uso di PIL come fallback.")
+                print("⚠ wkhtmltoimage non disponibile. Uso PIL come fallback.")
             else:
                 print("⚠ ATTENZIONE: né wkhtmltoimage né PIL sono disponibili!")
                 print("   Installa Pillow: pip install Pillow")
 
-    def _render_html(self, message_text: str, message_id: int, template_name: str | None = None) -> str:
+    def _render_html(self, message_text: str, message_id: int) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
-        if template_name:
-            template = self.template_env.get_template(template_name)
-        else:
-            template = self.template_env.get_template(os.path.basename(settings.image.template_path))
+        template = self.template_env.get_template(os.path.basename(settings.image.template_path))
         
-        # --- NEW: Create a non-sequential display ID ---
-        display_id = message_id + 10000
-
-        # Crea URL assoluti e corretti per i file dei font
+        # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
-        
-        emoji_font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'NotoColorEmoji.ttf'))
-        emoji_font_url = Path(emoji_font_path).as_uri()
 
-        return template.render(message=message_text, id=display_id, font_url=font_url, emoji_font_url=emoji_font_url)
+        return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
         """Genera un'immagine completamente nuova stile Apple - design pulito e bilanciato."""
@@ -375,7 +365,7 @@ class ImageGenerator:
             print(traceback.format_exc())
             return False
     
-    def from_text(self, message_text: str, output_filename: str, message_id: int, template_name: str | None = None) -> str | None:
+    def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:
         """
         Genera un'immagine PNG da un testo utilizzando un template HTML o PIL come fallback.
 
@@ -383,7 +373,6 @@ class ImageGenerator:
             message_text: Il testo da inserire nell'immagine.
             output_filename: Il nome del file di output (es. 'spotted_123.png').
             message_id: L'ID del messaggio, da passare al template.
-            template_name: Il nome del template HTML da usare (es. 'card.html'). Se None, usa il default dalle impostazioni.
 
         Returns:
             Il percorso del file generato, o None se si verifica un errore.
@@ -395,7 +384,7 @@ class ImageGenerator:
         if self.wkhtmltoimage_available:
             try:
                 # Renderizza l'HTML con il messaggio e il percorso base
-                html_content = self._render_html(message_text, message_id, template_name)
+                html_content = self._render_html(message_text, message_id)
 
                 # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
                 options = {
@@ -413,16 +402,13 @@ class ImageGenerator:
 
             except Exception as e:
                 # Se wkhtmltoimage fallisce, usa PIL come fallback
-                print(f"❌ Errore dettagliato con wkhtmltoimage:")
-                import traceback
-                traceback.print_exc()
-
                 if "No wkhtmltoimage executable found" in str(e) or "wkhtmltoimage" in str(e).lower():
-                    print("⚠ wkhtmltoimage non trovato, uso PIL come fallback...")
+                    print("⚠ wkhtmltoimage non disponibile, uso PIL come fallback...")
                     if self._generate_with_pil(message_text, output_path, message_id):
                         return output_path
                 else:
-                    print("⚠ Tentativo con PIL come fallback a causa dell'errore precedente...")
+                    print(f"Errore con wkhtmltoimage: {e}")
+                    print("⚠ Tentativo con PIL come fallback...")
                     if self._generate_with_pil(message_text, output_path, message_id):
                         return output_path
         else:

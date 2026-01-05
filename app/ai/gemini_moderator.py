@@ -7,7 +7,7 @@ warnings.filterwarnings("ignore", message=".*google.generativeai.*")
 warnings.filterwarnings("ignore", message=".*All support for.*")
 
 try:
-    import google.generativeai as genai
+import google.generativeai as genai
 except ImportError:
     # Se non è installato, solleverà un errore più chiaro
     genai = None
@@ -122,13 +122,13 @@ Tua Risposta:
         
         for model_name in models_to_try:
             try:
-                self.model = genai.GenerativeModel(
+        self.model = genai.GenerativeModel(
                     model_name,
-                    generation_config=genai.GenerationConfig(
-                        response_mime_type="application/json"
-                    ),
-                    system_instruction=system_prompt
-                )
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json"
+            ),
+            system_instruction=system_prompt
+        )
                 print(f"--- [Moderator] Modello {model_name} inizializzato con successo ---")
                 return  # Modello trovato, esci
             except Exception as e:
