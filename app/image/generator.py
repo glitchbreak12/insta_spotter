@@ -83,146 +83,49 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine luxury futuristic neon con glow azzurro, liquid glass Apple 3D, font Komika Axis."""
+        """Genera un'immagine con stile originale semplice e pulito."""
         if not PIL_AVAILABLE:
             return False
         
         try:
-            import math
-            
             # Percorso root del progetto
             project_root = Path(__file__).parent.parent.parent
             
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 70
+            padding = 80
             
-            # === SFONDO LUXURY FUTURISTIC NEON ===
-            img = Image.new('RGB', (width, height), color='#050510')
+            # === SFONDO SCURO SEMPLICE ===
+            img = Image.new('RGB', (width, height), color='#0f172a')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente luxury: nero profondo -> blu scuro -> azzurro neon brillante
-            for y in range(height):
-                progress = y / height
-                
-                # Gradiente luxury futuristic
-                if progress < 0.35:
-                    # Top: nero profondo -> blu scuro
-                    r = int(5 + (8 * progress * (1/0.35)))
-                    g = int(5 + (18 * progress * (1/0.35)))
-                    b = int(16 + (35 * progress * (1/0.35)))
-                elif progress < 0.65:
-                    # Middle: blu scuro -> azzurro neon
-                    local = (progress - 0.35) / 0.3
-                    r = int(13 + (22 * local))
-                    g = int(23 + (102 * local))
-                    b = int(51 + (144 * local))
-                else:
-                    # Bottom: azzurro neon -> blu scuro
-                    local = (progress - 0.65) / 0.35
-                    r = int(35 - (22 * local))
-                    g = int(125 - (102 * local))
-                    b = int(195 - (144 * local))
-                
-                # Glow neon azzurro dinamico
-                glow = math.sin(progress * math.pi * 5) * 12
-                r = max(0, min(255, int(r + glow * 0.3)))
-                g = max(0, min(255, int(g + glow * 1.5)))
-                b = max(0, min(255, int(b + glow * 1.8)))
-                
-                draw.line([(0, y), (width, y)], fill=(r, g, b))
-            
-            # === NEON GLOW BACKGROUND ===
-            neon_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            neon_draw = ImageDraw.Draw(neon_bg)
-            
-            # Glow neon azzurro radiali (simulati)
-            center_x, center_y = width // 2, height // 2
-            for i in range(2):
-                radius = 350 + (i * 400)
-                alpha = int(50 - (i * 15))
-                # Glow azzurro neon
-                for angle in range(0, 360, 20):
-                    rad = math.radians(angle)
-                    x = int(center_x + radius * math.cos(rad))
-                    y = int(center_y + radius * math.sin(rad))
-                    if 0 <= x < width and 0 <= y < height:
-                        neon_draw.ellipse(
-                            [x - 100, y - 100, x + 100, y + 100],
-                            fill=(100, 200, 255, alpha)  # Azzurro neon
-                        )
-            
-            img = Image.alpha_composite(img.convert('RGBA'), neon_bg).convert('RGB')
-            draw = ImageDraw.Draw(img)
-            
-            # === APPLE LIQUID GLASS CARD 3D ===
+            # === CARD SEMPLICE ===
             card_x = padding
-            card_y = padding + 50
+            card_y = padding
             card_w = width - (padding * 2)
-            card_h = height - (padding * 2) - 100
+            card_h = height - (padding * 2)
             
-            # Glow esterno azzurro neon intenso (stile Apple 3D)
-            glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glow_card_draw = ImageDraw.Draw(glow_card)
-            
-            # Glow azzurro neon multipli per effetto 3D luxury
-            for i in range(35):
-                offset = i * 1.2
-                glow_alpha = int(180 - (i * 4))
-                glow_card_draw.rectangle(
-                    [card_x - offset, card_y - offset,
-                     card_x + card_w + offset, card_y + card_h + offset],
-                    outline=(100, 200, 255, glow_alpha),  # Azzurro neon
-                    width=2
-                )
-            
-            img = Image.alpha_composite(img.convert('RGBA'), glow_card).convert('RGB')
-            draw = ImageDraw.Draw(img)
-            
-            # === LIQUID GLASS APPLE STYLE ===
-            glass_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glass_draw = ImageDraw.Draw(glass_card)
-            
-            # Bordo esterno glow bianco (stile Apple premium)
-            for i in range(25):
-                alpha = int(50 + (i * 2))
-                glass_draw.rectangle(
-                    [card_x - i, card_y - i,
-                     card_x + card_w + i, card_y + card_h + i],
-                    outline=(255, 255, 255, alpha),
-                    width=1
-                )
-            
-            # Sfondo glass principale (liquid glass Apple)
-            glass_draw.rectangle(
+            # Card principale
+            draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(15, 25, 45, 140),  # Blu scuro semi-trasparente luxury
-                outline=(255, 255, 255, 100),
+                fill='#1e293b',
+                outline='#3b82f6',
                 width=2
             )
             
-            # Highlight superiore Apple (riflesso glass premium)
-            highlight_y = card_y + 50
-            for i in range(60):
-                alpha = int(140 - (i * 2))
-                glass_draw.rectangle(
-                    [card_x + 50, highlight_y + i,
-                     card_x + card_w - 50, highlight_y + i + 1],
-                    fill=(255, 255, 255, alpha)
+            # Box shadow semplice
+            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(shadow_layer)
+            for i in range(10):
+                alpha = int(30 - (i * 3))
+                shadow_draw.rectangle(
+                    [card_x + i + 5, card_y + i + 5,
+                     card_x + card_w + i + 5, card_y + card_h + i + 5],
+                    fill=(0, 0, 0, alpha)
                 )
             
-            # Bordo interno glow azzurro neon
-            for i in range(12):
-                alpha = int(120 - (i * 10))
-                glass_draw.rectangle(
-                    [card_x + 20 + i, card_y + 20 + i,
-                     card_x + card_w - 20 - i, card_y + card_h - 20 - i],
-                    outline=(100, 200, 255, alpha),  # Azzurro neon
-                    width=1
-                )
-            
-            img = Image.alpha_composite(img.convert('RGBA'), glass_card).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
             # === CARICA FONT KOMIKA AXIS ===
@@ -267,46 +170,18 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRANDING "SPOTTED" CON NEON GLOW LUXURY ===
+            # === BRANDING "SPOTTED" ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 100
+            brand_y = card_y + 60
             
-            # Glow neon azzurro multiplo (stile luxury futuristic)
-            for i in range(15):
-                offset = i * 2.5
-                alpha = int(200 - (i * 12))
-                # Glow azzurro neon in tutte le direzioni
-                for dx, dy in [(offset, offset), (-offset, offset), (offset, -offset), (-offset, -offset),
-                               (offset, 0), (-offset, 0), (0, offset), (0, -offset),
-                               (offset*0.7, offset*0.7), (-offset*0.7, offset*0.7)]:
-                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                    glow_draw = ImageDraw.Draw(glow_layer)
-                    glow_draw.text(
-                        (brand_x + int(dx), brand_y + int(dy)),
-                        brand_text,
-                        fill=(100, 200, 255, alpha),  # Azzurro neon
-                        font=brand_font
-                    )
-                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                    draw = ImageDraw.Draw(img)
+            # Testo principale
+            draw.text((brand_x, brand_y), brand_text, fill='#3b82f6', font=brand_font)
             
-            # Ombra nera profonda per 3D luxury
-            for offset in [(4, 4), (2, 2)]:
-                draw.text(
-                    (brand_x + offset[0], brand_y + offset[1]),
-                    brand_text,
-                    fill='#000000',
-                    font=brand_font
-                )
-            
-            # Testo principale azzurro neon brillante
-            draw.text((brand_x, brand_y), brand_text, fill='#64d9ff', font=brand_font)
-            
-            # === ID POST "sp#ID" (opzionale, più piccolo) ===
+            # === ID POST "sp#ID" ===
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
@@ -349,7 +224,7 @@ class ImageGenerator:
             # Centra verticalmente il messaggio nell'area disponibile
             message_start_y = message_area_top + (message_area_height - total_message_height) // 2
             
-            # Disegna messaggio con neon glow luxury
+            # Disegna messaggio semplice
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -359,56 +234,22 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Glow azzurro neon per il messaggio
-                for glow_i in range(6):
-                    offset = glow_i * 1.5
-                    alpha = int(120 - (glow_i * 18))
-                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                    glow_draw = ImageDraw.Draw(glow_layer)
-                    glow_draw.text(
-                        (line_x + int(offset), y_pos + int(offset)),
-                        line,
-                        fill=(150, 220, 255, alpha),  # Azzurro neon chiaro
-                        font=message_font
-                    )
-                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                    draw = ImageDraw.Draw(img)
-                
-                # Ombra nera per profondità luxury
-                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
-                # Testo principale bianco luxury
-                draw.text((line_x, y_pos), line, fill='#f0f9ff', font=message_font)
+                # Testo principale
+                draw.text((line_x, y_pos), line, fill='#f8fafc', font=message_font)
             
-            # === FOOTER "@spottedatbz" CON NEON GLOW BRANDING ===
+            # === FOOTER "@spottedatbz" ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 120
+            footer_y = card_y + card_h - 80
             
-            # Glow azzurro neon per footer branding
-            for glow_i in range(5):
-                offset = glow_i * 1
-                alpha = int(100 - (glow_i * 20))
-                glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                glow_draw = ImageDraw.Draw(glow_layer)
-                glow_draw.text(
-                    (footer_x + offset, footer_y + offset),
-                    footer_text,
-                    fill=(100, 200, 255, alpha),  # Azzurro neon
-                    font=footer_font
-                )
-                img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                draw = ImageDraw.Draw(img)
-            
-            # Ombra
-            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
-            # Footer azzurro neon luxury
-            draw.text((footer_x, footer_y), footer_text, fill='#64d9ff', font=footer_font)
+            # Footer semplice
+            draw.text((footer_x, footer_y), footer_text, fill='#cbd5e1', font=footer_font)
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile luxury futuristic neon, glow azzurro, liquid glass Apple 3D): {output_path}")
+            print(f"✅ Immagine generata (stile originale semplice): {output_path}")
             return True
             
         except Exception as e:
