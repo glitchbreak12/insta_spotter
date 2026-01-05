@@ -1,11 +1,12 @@
+# Usa il vecchio pacchetto google-generativeai (più stabile e funzionante)
+# Il nuovo google-genai ha un'API completamente diversa e non è ancora stabile
 try:
-    # Prova prima con il nuovo pacchetto google-genai
-    import google.genai as genai
-except ImportError:
-    # Fallback al vecchio pacchetto (deprecato ma ancora funzionante)
     import google.generativeai as genai
     import warnings
     warnings.filterwarnings("ignore", category=FutureWarning, message=".*google.generativeai.*")
+except ImportError:
+    # Se non è installato, solleverà un errore più chiaro
+    genai = None
 import json
 from config import settings
 from typing import NamedTuple
@@ -24,6 +25,8 @@ class GeminiModerator:
     Modera i messaggi utilizzando il modello Gemini con regole specifiche.
     """
     def __init__(self):
+        if genai is None:
+            raise ImportError("google-generativeai package not installed. Install it with: pip install google-generativeai")
         if not settings.gemini_api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables.")
         genai.configure(api_key=settings.gemini_api_key)

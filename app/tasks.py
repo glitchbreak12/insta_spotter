@@ -24,8 +24,27 @@ def moderate_message_task(message_id: int):
         print(f"--- [TASK] Messaggio ID {message_id} trovato. Stato attuale: {message.status.name} ---")
 
         # Esegui l'analisi con il nuovo moderatore
-        moderator = GeminiModerator()
-        result: ModerationResult = moderator.moderate_message(message.text)
+        try:
+            moderator = GeminiModerator()
+            result: ModerationResult = moderator.moderate_message(message.text)
+        except (ValueError, ImportError) as e:
+            # GEMINI_API_KEY non configurata o pacchetto non installato - messaggio rimane in PENDING
+            error_msg = str(e)
+            if "GEMINI_API_KEY" in error_msg or "google-generativeai" in error_msg.lower():
+                print(f"--- [TASK] Moderazione AI non disponibile: {error_msg}. Messaggio ID {message_id} rimane in PENDING per approvazione manuale. ---")
+                message.gemini_analysis = "Moderazione AI non disponibile - richiede approvazione manuale"
+                message.status = MessageStatus.PENDING
+                db.commit()
+                return
+            else:
+                raise
+        except AttributeError as e:
+            # Errore con l'API del pacchetto (es. google-genai vs google-generativeai)
+            print(f"--- [TASK] Errore API moderazione: {e}. Messaggio ID {message_id} rimane in PENDING. ---")
+            message.gemini_analysis = f"Errore tecnico moderazione AI: {e}"
+            message.status = MessageStatus.PENDING
+            db.commit()
+            return
         
         print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
 

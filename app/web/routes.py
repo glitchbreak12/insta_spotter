@@ -118,7 +118,3 @@ def handle_submission(
             url=str(request.url_for('show_submission_form')) + "?error=Errore+del+server.+Riprova.",
             status_code=303
         )
-
-    background_tasks.add_task(moderate_message_task, new_message.id)
-
-    return RedirectResponse(url=str(request.url_for('show_submission_form')) + "?success=true", status_code=303)
