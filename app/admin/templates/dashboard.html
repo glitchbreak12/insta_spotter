@@ -682,14 +682,23 @@
 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                const errorMsg = `Failed to load data: ${error.message}`;
+                console.error('Error stack:', error.stack);
+                const errorMsg = `Failed to load data: ${error.message}. Check console (F12) for details.`;
                 if (postsTableBody) {
-                    postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errorMsg}</td></tr>`;
+                    postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">
+                        <div style="padding: 2rem;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <div>${errorMsg}</div>
+                            <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">
+                                Open browser console (F12) for more details
+                            </div>
+                        </div>
+                    </td></tr>`;
                 }
                 if (moderationGrid) {
                     moderationGrid.innerHTML = `<div class="text-center text-danger">${errorMsg}</div>`;
                 }
-                showNotification('Error loading dashboard data', 'error');
+                showNotification(`Error: ${error.message}`, 'error');
             }
         }
 
