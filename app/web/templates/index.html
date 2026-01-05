@@ -536,34 +536,59 @@
             resetFormOnSuccess();
         }
         
-        // Form submission with loading state
-        form.addEventListener('submit', (e) => {
+        // Form submission with async handling
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Previeni il submit normale
+            
             const text = messageInput.value.trim();
             
             if (text.length < 10) {
-                e.preventDefault();
                 showError('Il messaggio deve contenere almeno 10 caratteri.');
                 return;
             }
             
             if (text.length > maxLength) {
-                e.preventDefault();
                 showError('Il messaggio è troppo lungo.');
                 return;
             }
             
-            // Show loading state - il form verrà resettato dopo il redirect
+            // Show loading state
             submitBtn.disabled = true;
             loadingSpinner.style.display = 'inline-block';
             submitBtn.innerHTML = '<div class="loading-spinner" style="display: inline-block;"></div> Invio in corso...';
             
-            // Il form viene inviato normalmente e il browser seguirà il redirect 303
-            // Non chiamare preventDefault() qui per permettere il submit normale
-            // Aggiungi un timeout di sicurezza per resettare il form se il redirect non funziona
-            setTimeout(() => {
-                // Se dopo 5 secondi siamo ancora qui, potrebbe esserci un problema
-                // Ma normalmente il redirect dovrebbe funzionare prima
-            }, 5000);
+            try {
+                // Crea FormData dal form
+                const formData = new FormData(form);
+                
+                // Invia il form con fetch
+                const response = await fetch('/spotted/submit', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Se la risposta è un redirect (303), segui il redirect
+                if (response.redirected || response.status === 303 || response.status === 302) {
+                    // Il redirect è già stato seguito dal browser, ricarica la pagina con success=true
+                    window.location.href = '/spotted/new?success=true';
+                } else if (response.ok) {
+                    // Se la risposta è OK, ricarica con success
+                    window.location.href = '/spotted/new?success=true';
+                } else {
+                    // Errore
+                    const errorText = await response.text();
+                    showError('Errore nell\'invio del messaggio. Riprova.');
+                    submitBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                    submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                showError('Errore di connessione. Riprova.');
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+            }
         });
 
         // Auto-resize textarea
