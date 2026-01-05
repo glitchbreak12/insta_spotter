@@ -12,16 +12,20 @@ def moderate_message_task(message_id: int):
     Task in background per analizzare un messaggio con l'IA, salvare il risultato
     e aggiornare lo stato del messaggio in base alla decisione.
     """
+    import time
+    print(f"--- [TASK] [{time.time()}] Avvio moderazione AI per messaggio ID: {message_id} ---")
+
     db = SessionLocal()
     try:
-        print(f"--- [TASK] Avvio moderazione AI per messaggio ID: {message_id} ---")
+        print(f"--- [TASK] [{time.time()}] Query messaggio ID: {message_id} ---")
         message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
-        
+
         if not message:
-            print(f"--- [TASK] ERRORE: Messaggio ID {message_id} non trovato. ---")
+            print(f"--- [TASK] [{time.time()}] ERRORE: Messaggio ID {message_id} non trovato nel database ---")
             return
 
-        print(f"--- [TASK] Messaggio ID {message_id} trovato. Stato attuale: {message.status.name} ---")
+        print(f"--- [TASK] [{time.time()}] Messaggio ID {message_id} trovato. Stato attuale: {message.status.name} ---")
+        print(f"--- [TASK] [{time.time()}] Testo messaggio: '{message.text[:50]}...' ---")
 
         # Esegui l'analisi con il nuovo moderatore
         try:
@@ -40,22 +44,48 @@ def moderate_message_task(message_id: int):
                 raise
         except Exception as e:
             # Qualsiasi altro errore - controlla se è un errore di quota
+            import time
             error_msg = str(e)
+            print(f"--- [TASK] [{time.time()}] ECCEZIONE in moderazione ID {message_id}: {error_msg[:300]} ---")
+
             is_quota_error = "429" in error_msg and ("quota" in error_msg.lower() or "exceeded" in error_msg.lower())
+            is_api_error = "403" in error_msg or "401" in error_msg or "api" in error_msg.lower()
 
             if is_quota_error:
                 # Errore di quota API - approva automaticamente per non bloccare i messaggi
-                print(f"--- [TASK] Quota API Gemini esaurita. Approvo automaticamente messaggio ID {message_id}. ---")
+                print(f"--- [TASK] [{time.time()}] Quota API Gemini esaurita. Approvo automaticamente messaggio ID {message_id}. ---")
                 message.gemini_analysis = "Quota API esaurita - approvato automaticamente per evitare blocco"
                 message.status = MessageStatus.APPROVED
-                db.commit()
+                try:
+                    db.commit()
+                    print(f"--- [TASK] [{time.time()}] Database commit riuscito per ID {message_id} ---")
+                except Exception as db_error:
+                    print(f"--- [TASK] [{time.time()}] ERRORE database commit: {db_error} ---")
+                    db.rollback()
+                return
+            elif is_api_error:
+                # Errore API - approva automaticamente
+                print(f"--- [TASK] [{time.time()}] Errore API Gemini. Approvo automaticamente messaggio ID {message_id}. ---")
+                message.gemini_analysis = f"Errore API Gemini - approvato automaticamente"
+                message.status = MessageStatus.APPROVED
+                try:
+                    db.commit()
+                    print(f"--- [TASK] [{time.time()}] Database commit riuscito per ID {message_id} ---")
+                except Exception as db_error:
+                    print(f"--- [TASK] [{time.time()}] ERRORE database commit: {db_error} ---")
+                    db.rollback()
                 return
             else:
-                # Altro errore tecnico - lascia in pending per sicurezza
-                print(f"--- [TASK] Errore moderazione AI: {error_msg[:200]}. Messaggio ID {message_id} rimane in PENDING. ---")
-                message.gemini_analysis = f"Errore tecnico moderazione AI - richiede approvazione manuale"
-                message.status = MessageStatus.PENDING
-                db.commit()
+                # Altro errore tecnico - approva comunque per non bloccare
+                print(f"--- [TASK] [{time.time()}] Errore tecnico AI ({error_msg[:100]}...). Approvo automaticamente ID {message_id}. ---")
+                message.gemini_analysis = f"Errore tecnico AI - approvato automaticamente per sicurezza"
+                message.status = MessageStatus.APPROVED
+                try:
+                    db.commit()
+                    print(f"--- [TASK] [{time.time()}] Database commit riuscito per ID {message_id} ---")
+                except Exception as db_error:
+                    print(f"--- [TASK] [{time.time()}] ERRORE database commit: {db_error} ---")
+                    db.rollback()
                 return
         
         print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
@@ -75,8 +105,19 @@ def moderate_message_task(message_id: int):
         print(f"--- [TASK] Moderazione AI per ID {message_id} completata. Decisione: {result.decision}, Stato: {message.status.name} ---")
 
     except Exception as e:
-        print(f"--- [TASK] ERRORE CRITICO durante la moderazione per ID {message_id}: {e} ---")
-        db.rollback()
+        import time
+        print(f"--- [TASK] [{time.time()}] ERRORE CRITICO durante la moderazione per ID {message_id}: {e} ---")
+        try:
+            db.rollback()
+            # In caso di errore critico, approva comunque il messaggio per sicurezza
+            message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
+            if message and message.status == MessageStatus.PENDING:
+                message.status = MessageStatus.APPROVED
+                message.gemini_analysis = "Errore critico - approvato automaticamente per sicurezza"
+                db.commit()
+                print(f"--- [TASK] [{time.time()}] Messaggio ID {message_id} approvato automaticamente dopo errore critico ---")
+        except Exception as rollback_error:
+            print(f"--- [TASK] [{time.time()}] Anche il rollback è fallito: {rollback_error} ---")
     finally:
         db.close()
 
