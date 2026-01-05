@@ -122,13 +122,13 @@ Tua Risposta:
         
         for model_name in models_to_try:
             try:
-        self.model = genai.GenerativeModel(
+                self.model = genai.GenerativeModel(
                     model_name,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json"
-            ),
-            system_instruction=system_prompt
-        )
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="application/json"
+                    ),
+                    system_instruction=system_prompt
+                )
                 print(f"--- [Moderator] Modello {model_name} inizializzato con successo ---")
                 return  # Modello trovato, esci
             except Exception as e:
