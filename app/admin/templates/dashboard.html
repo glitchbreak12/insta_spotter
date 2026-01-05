@@ -1386,10 +1386,18 @@
         async function loadDashboardData() {
             const postsTableBody = document.querySelector('#postsTable tbody');
             const moderationGrid = document.getElementById('moderationGrid');
+            const postsCards = document.getElementById('postsCards');
             
             // 1. Set loading state
-            postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center"><div class="loading"><div class="spinner"></div>Loading posts...</div></td></tr>`;
-            moderationGrid.innerHTML = `<div class="loading"><div class="spinner"></div>Loading moderation queue...</div>`;
+            if (postsTableBody) {
+                postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center"><div class="loading"><div class="spinner"></div>Loading posts...</div></td></tr>`;
+            }
+            if (postsCards) {
+                postsCards.innerHTML = `<div class="loading"><div class="spinner"></div>Loading posts...</div>`;
+            }
+            if (moderationGrid) {
+                moderationGrid.innerHTML = `<div class="loading"><div class="spinner"></div>Loading moderation queue...</div>`;
+            }
 
             try {
                 // 2. Fetch data from the new, reliable endpoint
@@ -1416,8 +1424,16 @@
                 // 6. If anything fails, show a clear error message
                 console.error('--- A critical error occurred while loading dashboard data ---', error);
                 const errorMessage = `Failed to load data. Please check the browser console for details. Error: ${error.message}`;
-                postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errorMessage}</td></tr>`;
-                moderationGrid.innerHTML = `<div class="text-center text-danger">Failed to load moderation queue.</div>`;
+                if (postsTableBody) {
+                    postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errorMessage}</td></tr>`;
+                }
+                const postsCards = document.getElementById('postsCards');
+                if (postsCards) {
+                    postsCards.innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+                }
+                if (moderationGrid) {
+                    moderationGrid.innerHTML = `<div class="text-center text-danger">Failed to load moderation queue.</div>`;
+                }
                 showNotification('Critical Error: Could not load data.', 'error');
             }
         }
@@ -1595,9 +1611,23 @@
 
         // Setup filter buttons
         function setupFilterButtons() {
+            // Desktop filter buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.status || '';
+                    currentPage = 1;
+                    renderPostsTable();
+                });
+            });
+            
+            // Mobile chip filters
+            document.querySelectorAll('.chip-group .chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                     this.classList.add('active');
                     currentFilter = this.dataset.status || '';
                     currentPage = 1;
@@ -1921,7 +1951,7 @@
                     </td>
                     <td>
                         ${message.media_pk ? 
-                            `<img src="/static/images/placeholder.jpg" class="media-preview" alt="Media" onclick="viewMedia(${message.id})">` :
+                            `<span class="badge bg-success" title="Media PK: ${message.media_pk}"><i class="fas fa-image"></i> Media</span>` :
                             '<span class="text-muted">No media</span>'
                         }
                     </td>
