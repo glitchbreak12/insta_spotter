@@ -426,16 +426,12 @@
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: var(--text);
+            color: var(--text-muted);
         }
 
         .chart-container {
             position: relative;
             height: 250px;
-        }
-
-        .chart-container canvas {
-            max-height: 100%;
         }
 
         /* Loading States */
@@ -737,27 +733,11 @@
         let searchTerm = '';
         const charts = {};
 
-        // Auto-refresh interval
-        let refreshInterval = null;
-
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Mobile dashboard initializing...');
             initializeCharts();
             loadDashboardData();
-            
-            // Auto-refresh ogni 30 secondi
-            refreshInterval = setInterval(() => {
-                console.log('Auto-refreshing dashboard...');
-                loadDashboardData();
-            }, 30000);
-        });
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
         });
 
         // Load data
@@ -991,37 +971,23 @@
 
         // Handle action
         async function handleAction(id, action) {
-            const actionText = action === 'approve' ? 'Approvare' : 'Rifiutare';
-            if (!confirm(`${actionText} il messaggio #${id}?`)) return;
+            if (!confirm(`${action === 'approve' ? 'Approve' : 'Reject'} message #${id}?`)) return;
 
             try {
                 const response = await fetch(`/admin/messages/${id}/${action}`, {
                     method: 'POST',
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
+                    credentials: 'include'
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Errore sconosciuto' }));
-                    throw new Error(errorData.detail || `HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    if (action === 'approve') {
-                        showNotification('Messaggio approvato! Pubblicazione in corso...', 'success');
-                    } else {
-                        showNotification('Messaggio rifiutato', 'success');
-                    }
-                    // Refresh immediato
-                    setTimeout(() => loadDashboardData(), 1000);
+                if (response.ok || response.redirected) {
+                    showNotification(`Message ${action}d!`, 'success');
+                    loadDashboardData();
                 } else {
-                    throw new Error(data.message || 'Azione fallita');
+                    throw new Error('Action failed');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showNotification(`Errore: ${error.message}`, 'error');
+                showNotification('Error performing action', 'error');
             }
         }
 
@@ -1132,40 +1098,14 @@
             if (activityCtx) {
                 charts.activity = new Chart(activityCtx, {
                     type: 'line',
-                    data: { 
-                        labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'], 
-                        datasets: [{ 
-                            label: 'Messaggi', 
-                            data: [0, 0, 0, 0, 0, 0, 0], 
-                            borderColor: '#6366f1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#6366f1',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2
-                        }] 
-                    },
+                    data: { labels: [], datasets: [{ label: 'Posts', data: [], borderColor: '#6366f1', tension: 0.4 }] },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
-                                display: true,
-                                labels: { color: '#f8fafc', font: { size: 12 } } 
-                            } 
-                        },
+                        plugins: { legend: { labels: { color: '#94a3b8' } } },
                         scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                ticks: { color: '#94a3b8', stepSize: 1 }, 
-                                grid: { color: '#334155' } 
-                            },
-                            x: { 
-                                ticks: { color: '#94a3b8' }, 
-                                grid: { color: '#334155' } 
-                            }
+                            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                            x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
                         }
                     }
                 });
@@ -1176,28 +1116,13 @@
                 charts.moderation = new Chart(moderationCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Approvati', 'In attesa', 'Rifiutati'],
-                        datasets: [{ 
-                            data: [0, 0, 0], 
-                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                            borderWidth: 2,
-                            borderColor: '#1e293b'
-                        }]
+                        labels: ['Approved', 'Pending', 'Rejected'],
+                        datasets: [{ data: [0, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
-                                display: true,
-                                position: 'bottom',
-                                labels: { 
-                                    color: '#f8fafc',
-                                    font: { size: 12 },
-                                    padding: 15
-                                } 
-                            } 
-                        }
+                        plugins: { legend: { labels: { color: '#94a3b8' } } }
                     }
                 });
             }
@@ -1205,40 +1130,21 @@
 
         // Update charts
         function updateCharts(messages) {
-            if (!messages || messages.length === 0) {
-                // Se non ci sono messaggi, mostra grafici vuoti ma visibili
-                if (charts.activity) {
-                    charts.activity.data.labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-                    charts.activity.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
-                    charts.activity.update();
-                }
-                if (charts.moderation) {
-                    charts.moderation.data.datasets[0].data = [0, 0, 0];
-                    charts.moderation.update();
-                }
-                return;
-            }
+            if (!messages || messages.length === 0) return;
 
-            // Activity chart - ultimi 7 giorni
+            // Activity chart
             const activityData = Array(7).fill(0);
             const labels = [];
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
             for (let i = 6; i >= 0; i--) {
-                const date = new Date(today);
+                const date = new Date();
                 date.setDate(today.getDate() - i);
-                const dayName = date.toLocaleDateString('it-IT', { weekday: 'short' });
-                labels.push(dayName.charAt(0).toUpperCase() + dayName.slice(1));
+                labels.push(date.toLocaleDateString('it-IT', { weekday: 'short' }));
             }
 
             messages.forEach(msg => {
-                if (!msg.created_at) return;
                 const msgDate = new Date(msg.created_at);
-                msgDate.setHours(0, 0, 0, 0);
-                const diffTime = today - msgDate;
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                
+                const diffDays = Math.floor((today - msgDate) / (1000 * 60 * 60 * 24));
                 if (diffDays >= 0 && diffDays < 7) {
                     activityData[6 - diffDays]++;
                 }
@@ -1247,7 +1153,7 @@
             if (charts.activity) {
                 charts.activity.data.labels = labels;
                 charts.activity.data.datasets[0].data = activityData;
-                charts.activity.update('none'); // Aggiorna senza animazione
+                charts.activity.update();
             }
 
             // Moderation chart
@@ -1263,7 +1169,7 @@
                     counts.pending || 0,
                     counts.rejected || 0
                 ];
-                charts.moderation.update('none');
+                charts.moderation.update();
             }
         }
 

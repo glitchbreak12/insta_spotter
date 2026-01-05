@@ -112,6 +112,7 @@ def get_dashboard_data(db: Session = Depends(get_db), user: str = Depends(get_au
         print(f"--- CRITICAL ERROR in get_dashboard_data: {e} ---")
         print(f"--- Traceback: {error_trace} ---")
         # Return empty array instead of raising error to prevent frontend crash
+        # This allows the dashboard to load even if there's a database error
         return {
             "messages": [],
             "total": 0,
@@ -373,9 +374,17 @@ def show_dashboard(request: Request, db: Session = Depends(get_db), user: str = 
         "settings": settings # Pass settings to the template
     })
 
-@router.post("/messages/{message_id}/approve", response_class=RedirectResponse)
-def approve_message(request: Request, message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    if isinstance(user, RedirectResponse): return user
+@router.post("/messages/{message_id}/approve")
+def approve_message(
+    message_id: int, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db), 
+    user: str = Depends(get_authenticated_user)
+):
+    """Approva un messaggio e lo posta automaticamente su Instagram."""
+    if isinstance(user, RedirectResponse): 
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     print(f"--- DEBUG: Richiesta di approvazione per messaggio ID: {message_id} ---")
     message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
     if not message:
@@ -387,11 +396,18 @@ def approve_message(request: Request, message_id: int, db: Session = Depends(get
     db.commit()
     print(f"--- DEBUG: Commit eseguito. Stato per ID {message_id} è ora APPROVED. ---")
     
-    return RedirectResponse(url=str(request.url_for('show_dashboard')), status_code=303)
+    # Posta automaticamente il messaggio approvato
+    print(f"--- DEBUG: Avvio posting automatico per messaggio ID: {message_id} ---")
+    background_tasks.add_task(post_single_message, message_id)
+    
+    return {"status": "success", "message": "Messaggio approvato e in pubblicazione", "message_id": message_id}
 
-@router.post("/messages/{message_id}/reject", response_class=RedirectResponse)
-def reject_message(request: Request, message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    if isinstance(user, RedirectResponse): return user
+@router.post("/messages/{message_id}/reject")
+def reject_message(message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Rifiuta un messaggio."""
+    if isinstance(user, RedirectResponse): 
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Messaggio non trovato")
@@ -399,4 +415,60 @@ def reject_message(request: Request, message_id: int, db: Session = Depends(get_
     message.status = MessageStatus.REJECTED
     db.commit()
     
-    return RedirectResponse(url=str(request.url_for('show_dashboard')), status_code=303)
+    return {"status": "success", "message": "Messaggio rifiutato", "message_id": message_id}
+
+def post_single_message(message_id: int):
+    """Posta un singolo messaggio approvato su Instagram."""
+    from app.image.generator import ImageGenerator
+    from app.bot.poster import InstagramBot
+    from app.database import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
+        if not message or message.status != MessageStatus.APPROVED:
+            print(f"--- DEBUG [POST]: Messaggio ID {message_id} non trovato o non approvato. ---")
+            return
+        
+        print(f"--- DEBUG [POST]: Inizio pubblicazione messaggio ID {message_id} ---")
+        
+        # Genera immagine
+        image_generator = ImageGenerator()
+        output_filename = f"spotted_{message.id}_{int(datetime.now().timestamp())}.png"
+        image_path = image_generator.from_text(message.text, output_filename, message.id)
+        
+        if not image_path:
+            raise Exception("Image generation failed")
+        
+        # Posta su Instagram
+        insta_bot = InstagramBot()
+        result = insta_bot.post_story(image_path)
+        
+        if not result:
+            raise Exception("Instagram posting failed")
+        
+        # Estrai media_pk
+        if isinstance(result, dict) and 'media' in result:
+            media_pk = result['media']
+        elif isinstance(result, str):
+            media_pk = result
+        else:
+            raise Exception(f"Invalid result format: {result}")
+        
+        # Aggiorna stato
+        message.status = MessageStatus.POSTED
+        message.posted_at = datetime.utcnow()
+        message.error_message = None
+        message.media_pk = str(media_pk)
+        
+        db.commit()
+        print(f"--- DEBUG [POST]: Messaggio ID {message_id} pubblicato con successo. Media PK: {media_pk} ---")
+        
+    except Exception as e:
+        print(f"--- DEBUG [POST]: Errore pubblicazione ID {message_id}: {e} ---")
+        if message:
+            message.status = MessageStatus.FAILED
+            message.error_message = str(e)
+            db.commit()
+    finally:
+        db.close()
