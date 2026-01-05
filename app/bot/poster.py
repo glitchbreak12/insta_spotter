@@ -163,46 +163,71 @@ class InstagramBot:
 
     def post_story(self, image_path: str) -> bool:
         if not os.path.exists(image_path): return False
-        try:
-            print(f"--- DEBUG [POSTER]: Tento pubblicazione storia: {image_path} ---")
-            media = self.client.photo_upload_to_story(path=image_path)
-            if not media:
-                print("--- DEBUG [POSTER]: ERRORE: La pubblicazione potrebbe essere fallita (nessun oggetto media restituito). ---")
-                return None
-            print("--- DEBUG [POSTER]: Storia pubblicata con successo! ---")
-            return media.pk
-        except Exception as e:
-            error_str = str(e)
-            print(f"--- DEBUG [POSTER]: ERRORE pubblicazione storia: {error_str} ---")
-            
-            # Rileva vari tipi di errori che richiedono un nuovo login
-            needs_relogin = (
-                isinstance(e, LoginRequired) or
-                isinstance(e, ChallengeRequired) or
-                "update Instagram to the latest version" in error_str.lower() or
-                "login required" in error_str.lower() or
-                "session" in error_str.lower() and "expired" in error_str.lower()
-            )
-            
-            if needs_relogin:
-                print("--- DEBUG [POSTER]: Sessione scaduta o obsoleta. Rimuovo il file di sessione... ---")
-                if os.path.exists(self.session_file):
-                    os.remove(self.session_file)
-                    print("--- DEBUG [POSTER]: File di sessione rimosso. Provo un nuovo login... ---")
-                
-                # Tenta un nuovo login e riprova una volta
-                try:
-                    print("--- DEBUG [POSTER]: Tentativo di nuovo login... ---")
-                    self._login()
-                    print("--- DEBUG [POSTER]: Nuovo login completato. Riprovo la pubblicazione... ---")
-                    media = self.client.photo_upload_to_story(path=image_path)
-                    if media:
-                        print("--- DEBUG [POSTER]: Storia pubblicata con successo dopo nuovo login! ---")
-                        return media.pk
-                except Exception as retry_error:
-                    print(f"--- DEBUG [POSTER]: Errore anche dopo nuovo login: {retry_error} ---")
-            
-            return None
+
+        # Contatore di tentativi per gestire fallimenti del primo post
+        max_retries = 3
+        base_delay = 5  # secondi
+
+        for attempt in range(max_retries):
+            try:
+                if attempt > 0:
+                    delay = base_delay * (2 ** attempt)  # Backoff esponenziale: 5s, 10s, 20s
+                    print(f"--- DEBUG [POSTER]: Tentativo {attempt + 1}/{max_retries} dopo {delay}s... ---")
+                    time.sleep(delay)
+
+                print(f"--- DEBUG [POSTER]: Tento pubblicazione storia: {image_path} (tentativo {attempt + 1}) ---")
+                media = self.client.photo_upload_to_story(path=image_path)
+
+                if not media:
+                    print("--- DEBUG [POSTER]: ERRORE: La pubblicazione potrebbe essere fallita (nessun oggetto media restituito). ---")
+                    if attempt < max_retries - 1:
+                        continue  # Riprova
+                    return None
+
+                print("--- DEBUG [POSTER]: Storia pubblicata con successo! ---")
+                return media.pk
+
+            except Exception as e:
+                error_str = str(e)
+                print(f"--- DEBUG [POSTER]: ERRORE pubblicazione storia (tentativo {attempt + 1}): {error_str} ---")
+
+                # Rileva vari tipi di errori che richiedono un nuovo login
+                needs_relogin = (
+                    isinstance(e, LoginRequired) or
+                    isinstance(e, ChallengeRequired) or
+                    "update Instagram to the latest version" in error_str.lower() or
+                    "login required" in error_str.lower() or
+                    "session" in error_str.lower() and "expired" in error_str.lower()
+                )
+
+                if needs_relogin:
+                    print("--- DEBUG [POSTER]: Sessione scaduta o obsoleta. Rimuovo il file di sessione... ---")
+                    if os.path.exists(self.session_file):
+                        os.remove(self.session_file)
+                        print("--- DEBUG [POSTER]: File di sessione rimosso. Provo un nuovo login... ---")
+
+                    # Tenta un nuovo login e riprova una volta
+                    try:
+                        print("--- DEBUG [POSTER]: Tentativo di nuovo login... ---")
+                        self._login()
+                        print("--- DEBUG [POSTER]: Nuovo login completato. Riprovo la pubblicazione... ---")
+                        media = self.client.photo_upload_to_story(path=image_path)
+                        if media:
+                            print("--- DEBUG [POSTER]: Storia pubblicata con successo dopo nuovo login! ---")
+                            return media.pk
+                    except Exception as retry_error:
+                        print(f"--- DEBUG [POSTER]: Errore anche dopo nuovo login: {retry_error} ---")
+
+                # Se non è un errore di login e abbiamo tentativi rimanenti, riprova
+                if attempt < max_retries - 1:
+                    print(f"--- DEBUG [POSTER]: Riprovo tra poco... ({attempt + 1}/{max_retries}) ---")
+                    continue
+                else:
+                    print(f"--- DEBUG [POSTER]: Tutti i {max_retries} tentativi falliti. Pubblicazione abbandonata. ---")
+                    return None
+
+        # Se arriviamo qui, tutti i tentativi sono falliti
+        return None
 
     def post_album(self, image_paths: list[str], caption: str) -> bool:
         if not image_paths: return False
