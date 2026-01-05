@@ -71,30 +71,74 @@ class InstagramBot:
                 challenge_choice = ChallengeChoice.EMAIL
                 print(f"--- DEBUG [POSTER]: Scelto metodo di verifica: {challenge_choice} ---")
                 
-                # Invia la richiesta di codice
-                self.client.challenge_select_method(challenge_choice)
-                print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata. ---")
-                print("--- DEBUG [POSTER]: Controlla la tua email per il codice a 6 cifre. ---")
+                # Invia la richiesta di codice (se non è già stato inviato)
+                try:
+                    self.client.challenge_select_method(challenge_choice)
+                    print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata. ---")
+                    print("--- DEBUG [POSTER]: ⏳ Attendi 10-30 secondi e controlla la tua email. ---")
+                except Exception as select_error:
+                    # Potrebbe essere che il metodo è già stato selezionato
+                    if "already" in str(select_error).lower() or "selected" in str(select_error).lower():
+                        print("--- DEBUG [POSTER]: Metodo di verifica già selezionato. ---")
+                    else:
+                        print(f"--- DEBUG [POSTER]: Errore selezione metodo: {select_error} ---")
+                
+                # Aspetta un po' per dare tempo all'email di arrivare
+                import time
+                print("--- DEBUG [POSTER]: Attendo 15 secondi per l'arrivo dell'email... ---")
+                time.sleep(15)
                 
                 # Controlla se c'è un codice pre-configurato nei Secrets
                 verification_code = os.getenv("INSTAGRAM_VERIFICATION_CODE")
                 
-                if verification_code and len(verification_code) == 6:
-                    print(f"--- DEBUG [POSTER]: Trovato codice di verifica nei Secrets. ---")
-                    self.client.challenge_code_handler(verification_code)
-                    print("--- DEBUG [POSTER]: Verifica completata con codice dai Secrets. ---")
+                if verification_code and len(verification_code.strip()) == 6:
+                    code = verification_code.strip()
+                    print(f"--- DEBUG [POSTER]: Trovato codice di verifica nei Secrets: {code} ---")
+                    try:
+                        self.client.challenge_code_handler(code)
+                        print("--- DEBUG [POSTER]: ✅ Verifica completata con successo! ---")
+                    except Exception as code_error:
+                        print(f"--- DEBUG [POSTER]: ❌ Errore con il codice: {code_error} ---")
+                        print("--- DEBUG [POSTER]: Il codice potrebbe essere errato o scaduto. ---")
+                        print("--- DEBUG [POSTER]: Richiedi un nuovo codice e aggiorna INSTAGRAM_VERIFICATION_CODE. ---")
+                        raise Exception(
+                            f"Codice di verifica non valido: {code_error}. "
+                            "Controlla che il codice sia corretto e non scaduto. "
+                            "Se necessario, rimuovi INSTAGRAM_VERIFICATION_CODE dai Secrets, "
+                            "riavvia l'app per richiedere un nuovo codice, poi aggiungi il nuovo codice."
+                        )
                 else:
-                    # Se non c'è codice, salva le info della challenge e solleva un errore informativo
-                    print("--- DEBUG [POSTER]: Nessun codice di verifica trovato nei Secrets. ---")
-                    print("--- DEBUG [POSTER]: Aggiungi INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit. ---")
-                    print("--- DEBUG [POSTER]: Il codice è stato inviato alla tua email. ---")
+                    # Se non c'è codice, fornisci istruzioni chiare
+                    print("\n" + "="*60)
+                    print("⚠️  INSTAGRAM RICHIEDE VERIFICA VIA EMAIL")
+                    print("="*60)
+                    print("\n📧 ISTRUZIONI:")
+                    print("1. Controlla la tua email associata a Instagram")
+                    print("2. Cerca un'email da Instagram con un codice a 6 cifre")
+                    print("3. Se non trovi l'email, controlla anche la cartella SPAM")
+                    print("4. Se non arriva, aspetta 1-2 minuti e riavvia l'app")
+                    print("\n🔑 QUANDO HAI IL CODICE:")
+                    print("1. Vai su Secrets (🔒) nel tuo Replit")
+                    print("2. Aggiungi: INSTAGRAM_VERIFICATION_CODE = [il codice a 6 cifre]")
+                    print("3. Riavvia l'app")
+                    print("\n" + "="*60 + "\n")
+                    
+                    # Rimuovi la sessione per forzare un nuovo tentativo al prossimo avvio
+                    if os.path.exists(self.session_file):
+                        os.remove(self.session_file)
+                        print("--- DEBUG [POSTER]: File di sessione rimosso per permettere nuovo tentativo. ---")
+                    
                     raise Exception(
                         "Instagram richiede verifica via email. "
-                        "Controlla la tua email per il codice a 6 cifre, poi aggiungilo come "
-                        "INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit e riavvia l'app."
+                        "Controlla la tua email per il codice a 6 cifre. "
+                        "Aggiungi INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit con il codice ricevuto, "
+                        "poi riavvia l'app. Se l'email non arriva, aspetta 1-2 minuti e riavvia l'app."
                     )
                     
             except Exception as challenge_error:
+                # Se è già un'eccezione informativa, rilanciala
+                if "Instagram richiede verifica" in str(challenge_error):
+                    raise
                 print(f"--- DEBUG [POSTER]: Errore durante la gestione della challenge: {challenge_error} ---")
                 raise
                 
