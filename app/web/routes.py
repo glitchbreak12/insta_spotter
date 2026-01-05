@@ -24,9 +24,13 @@ templates = Jinja2Templates(directory="app/web/templates")
 csrf_tokens_store = {}
 
 @router.get("/new", response_class=HTMLResponse)
-def show_submission_form(request: Request, success: bool = False, error: str = None):
+def show_submission_form(request: Request):
     """Mostra il form di invio con token CSRF."""
     global csrf_tokens_store
+    
+    # Leggi i parametri dalla query string manualmente (più affidabile)
+    success = request.query_params.get("success", "false").lower() == "true"
+    error = request.query_params.get("error", None)
     
     # Genera token CSRF per il form
     csrf_token = generate_csrf_token()

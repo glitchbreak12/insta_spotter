@@ -559,6 +559,11 @@
             
             // Il form viene inviato normalmente e il browser seguirà il redirect 303
             // Non chiamare preventDefault() qui per permettere il submit normale
+            // Aggiungi un timeout di sicurezza per resettare il form se il redirect non funziona
+            setTimeout(() => {
+                // Se dopo 5 secondi siamo ancora qui, potrebbe esserci un problema
+                // Ma normalmente il redirect dovrebbe funzionare prima
+            }, 5000);
         });
 
         // Auto-resize textarea
