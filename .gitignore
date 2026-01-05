@@ -87,6 +87,7 @@ yarn-error.log*
 # PROJECT SPECIFIC
 # ============================================================================
 data/generated_images/
+test_output/
 *.jpg
 *.jpeg
 *.png
