@@ -83,62 +83,128 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera l'immagine usando PIL/Pillow come fallback."""
+        """Genera l'immagine usando PIL/Pillow con design professionale."""
         if not PIL_AVAILABLE:
             return False
         
         try:
+            from PIL import ImageFilter
+            import math
+            
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
+            padding = 80
             
-            # Crea un'immagine con sfondo gradiente scuro
+            # Crea un'immagine con sfondo gradiente professionale
             img = Image.new('RGB', (width, height), color='#0a0a0a')
             draw = ImageDraw.Draw(img)
             
-            # Disegna gradiente di sfondo (semplificato)
+            # Disegna gradiente di sfondo animato (simulato con gradiente diagonale)
+            # Colori: #1a1a2e -> #16213e -> #0f3460 (blu scuro elegante)
             for y in range(height):
-                # Gradiente da scuro a leggermente più chiaro
-                r = int(10 + (y / height) * 5)
-                g = int(10 + (y / height) * 5)
-                b = int(10 + (y / height) * 5)
+                # Gradiente verticale con variazione orizzontale per effetto diagonale
+                progress = y / height
+                x_progress = (y % 200) / 200  # Variazione per effetto animato
+                
+                # Interpolazione tra i colori del gradiente
+                if progress < 0.5:
+                    # Prima metà: #1a1a2e -> #16213e
+                    r = int(26 + (22 - 26) * progress * 2)
+                    g = int(26 + (33 - 26) * progress * 2)
+                    b = int(46 + (62 - 46) * progress * 2)
+                else:
+                    # Seconda metà: #16213e -> #0f3460
+                    r = int(22 + (15 - 22) * (progress - 0.5) * 2)
+                    g = int(33 + (52 - 33) * (progress - 0.5) * 2)
+                    b = int(62 + (96 - 62) * (progress - 0.5) * 2)
+                
+                # Aggiungi variazione orizzontale per effetto diagonale
+                r = max(10, min(255, r + int(math.sin(x_progress * math.pi * 2) * 3)))
+                g = max(10, min(255, g + int(math.sin(x_progress * math.pi * 2) * 3)))
+                b = max(10, min(255, b + int(math.sin(x_progress * math.pi * 2) * 3)))
+                
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # Prova a caricare il font personalizzato, altrimenti usa default
+            # Crea un layer per l'effetto glass (sfocatura)
+            glass_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glass_draw = ImageDraw.Draw(glass_layer)
+            
+            # Disegna rettangolo glass con bordi arrotondati (simulato)
+            glass_rect = [
+                padding, padding,
+                width - padding, height - padding
+            ]
+            
+            # Sfondo glass semi-trasparente
+            glass_draw.rectangle(glass_rect, fill=(0, 0, 0, 51))  # rgba(0,0,0,0.2)
+            
+            # Bordo glass
+            border_width = 2
+            glass_draw.rectangle(
+                [glass_rect[0], glass_rect[1], glass_rect[2], glass_rect[3]],
+                outline=(255, 255, 255, 26),  # rgba(255,255,255,0.1)
+                width=border_width
+            )
+            
+            # Applica blur al layer glass (simulato con alpha)
+            img = Image.alpha_composite(img.convert('RGBA'), glass_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # Carica i font
             font_path = os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf')
             try:
                 if os.path.exists(font_path):
-                    header_font = ImageFont.truetype(font_path, 80)
-                    message_font = ImageFont.truetype(font_path, 64)
-                    footer_font = ImageFont.truetype(font_path, 32)
+                    header_font = ImageFont.truetype(font_path, 100)
+                    message_font = ImageFont.truetype(font_path, 72)
+                    footer_font = ImageFont.truetype(font_path, 40)
                 else:
                     raise FileNotFoundError
             except:
-                # Usa font di sistema se il font personalizzato non è disponibile
+                # Font di sistema
                 try:
-                    header_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
-                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
-                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+                    header_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
+                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 72)
+                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
                 except:
-                    # Ultimo fallback: font di default
-                    header_font = ImageFont.load_default()
-                    message_font = ImageFont.load_default()
-                    footer_font = ImageFont.load_default()
+                    # Fallback
+                    try:
+                        header_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 100)
+                        message_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 72)
+                        footer_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 40)
+                    except:
+                        header_font = ImageFont.load_default()
+                        message_font = ImageFont.load_default()
+                        footer_font = ImageFont.load_default()
             
-            # Disegna "SPOTTED" header
+            # Disegna "SPOTTED" header con effetto glow
             header_text = "SPOTTED"
             header_bbox = draw.textbbox((0, 0), header_text, font=header_font)
             header_width = header_bbox[2] - header_bbox[0]
+            header_height = header_bbox[3] - header_bbox[1]
             header_x = (width - header_width) // 2
-            draw.text((header_x, 150), header_text, fill='#ffffff', font=header_font)
+            header_y = 200
             
-            # Disegna il messaggio (con word wrap)
-            message_y = 300
-            max_width = width - 200
+            # Effetto glow (ombra multipla)
+            for offset_x, offset_y, opacity in [(0, 0, 200), (2, 2, 100), (4, 4, 50)]:
+                draw.text(
+                    (header_x + offset_x, header_y + offset_y),
+                    header_text,
+                    fill=(255, 255, 255, opacity),
+                    font=header_font
+                )
+            
+            # Testo principale
+            draw.text((header_x, header_y), header_text, fill='#ffffff', font=header_font)
+            
+            # Disegna il messaggio con word wrap professionale
+            message_y = 400
+            max_width = width - (padding * 2)
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
+            line_height = 110  # Spaziatura tra righe
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -155,27 +221,47 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
-            # Disegna le righe del messaggio
+            # Disegna le righe del messaggio centrate
             for i, line in enumerate(lines):
                 line_bbox = draw.textbbox((0, 0), line, font=message_font)
                 line_width = line_bbox[2] - line_bbox[0]
                 line_x = (width - line_width) // 2
-                draw.text((line_x, message_y + i * 100), line, fill='#e0e0e0', font=message_font)
+                y_pos = message_y + i * line_height
+                
+                # Ombra leggera per leggibilità
+                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
+                # Testo principale
+                draw.text((line_x, y_pos), line, fill='#e0e0e0', font=message_font)
             
-            # Disegna footer
+            # Disegna footer "@spottedatbz"
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            draw.text((footer_x, height - 150), footer_text, fill='rgba(255, 255, 255, 102)', font=footer_font)
+            footer_y = height - 150
             
-            # Salva l'immagine
-            img.save(output_path, 'PNG', quality=95)
-            print(f"Immagine generata con PIL: {output_path}")
+            # Footer con opacità
+            draw.text((footer_x, footer_y), footer_text, fill='#ffffff', font=footer_font)
+            
+            # Aggiungi glow effect al bordo (simulato con linee)
+            glow_color = (52, 89, 235)  # Blu glow
+            for i in range(3):
+                alpha = 30 - (i * 10)
+                draw.rectangle(
+                    [padding - i, padding - i, width - padding + i, height - padding + i],
+                    outline=(glow_color[0], glow_color[1], glow_color[2], alpha),
+                    width=1
+                )
+            
+            # Salva l'immagine con alta qualità
+            img.save(output_path, 'PNG', quality=100, optimize=True)
+            print(f"✅ Immagine generata con PIL (design professionale): {output_path}")
             return True
             
         except Exception as e:
-            print(f"Errore durante la generazione con PIL: {e}")
+            import traceback
+            print(f"❌ Errore durante la generazione con PIL: {e}")
+            print(traceback.format_exc())
             return False
     
     def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:

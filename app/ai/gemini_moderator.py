@@ -110,8 +110,14 @@ Tua Risposta:
 """
         
         # Prova diversi modelli Gemini disponibili
-        # Lista dei modelli da provare in ordine di preferenza
-        models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro']
+        # Lista dei modelli da provare in ordine di preferenza (modelli più recenti prima)
+        models_to_try = [
+            'gemini-2.0-flash-exp',  # Modello più recente
+            'gemini-1.5-flash-latest',  # Versione latest
+            'gemini-1.5-flash',  # Flash standard
+            'gemini-1.5-pro',  # Pro version
+            'gemini-pro'  # Fallback
+        ]
         last_error = None
         
         for model_name in models_to_try:

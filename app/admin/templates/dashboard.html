@@ -990,13 +990,13 @@
                         </div>
                     ` : ''}
                     <div class="message-actions">
-                        <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')">
+                        <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')" type="button">
                             <i class="fas fa-check"></i> Approve
                         </button>
-                        <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')">
+                        <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')" type="button">
                             <i class="fas fa-times"></i> Reject
                         </button>
-                        <button class="action-btn edit" onclick="editMessage(${message.id})">
+                        <button class="action-btn edit" onclick="editMessage(${message.id})" type="button">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                     </div>
@@ -1225,8 +1225,10 @@
 
         // Initialize charts
         function initializeCharts() {
+            console.log('Initializing charts...');
             const activityCtx = document.getElementById('activityChart');
-            if (activityCtx) {
+            if (activityCtx && typeof Chart !== 'undefined') {
+                console.log('Creating activity chart...');
                 charts.activity = new Chart(activityCtx, {
                     type: 'line',
                     data: { 
@@ -1269,7 +1271,8 @@
             }
 
             const moderationCtx = document.getElementById('moderationChart');
-            if (moderationCtx) {
+            if (moderationCtx && typeof Chart !== 'undefined') {
+                console.log('Creating moderation chart...');
                 charts.moderation = new Chart(moderationCtx, {
                     type: 'doughnut',
                     data: {
@@ -1302,20 +1305,8 @@
 
         // Update charts
         function updateCharts(messages) {
-            if (!messages || messages.length === 0) {
-                // Se non ci sono messaggi, mostra grafici vuoti ma visibili
-                if (charts.activity) {
-                    charts.activity.data.labels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
-                    charts.activity.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
-                    charts.activity.update();
-                }
-                if (charts.moderation) {
-                    charts.moderation.data.datasets[0].data = [0, 0, 0];
-                    charts.moderation.update();
-                }
-                return;
-            }
-
+            console.log('Updating charts with', messages?.length || 0, 'messages');
+            
             // Activity chart - ultimi 7 giorni
             const activityData = Array(7).fill(0);
             const labels = [];
@@ -1329,38 +1320,59 @@
                 labels.push(dayName.charAt(0).toUpperCase() + dayName.slice(1));
             }
 
-            messages.forEach(msg => {
-                if (!msg.created_at) return;
-                const msgDate = new Date(msg.created_at);
-                msgDate.setHours(0, 0, 0, 0);
-                const diffTime = today - msgDate;
-                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays >= 0 && diffDays < 7) {
-                    activityData[6 - diffDays]++;
-                }
-            });
+            if (messages && messages.length > 0) {
+                messages.forEach(msg => {
+                    if (!msg.created_at) return;
+                    try {
+                        const msgDate = new Date(msg.created_at);
+                        msgDate.setHours(0, 0, 0, 0);
+                        const diffTime = today.getTime() - msgDate.getTime();
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays >= 0 && diffDays < 7) {
+                            activityData[6 - diffDays]++;
+                        }
+                    } catch (e) {
+                        console.error('Error processing message date:', e);
+                    }
+                });
+            }
+
+            console.log('Activity data:', activityData);
+            console.log('Labels:', labels);
 
             if (charts.activity) {
                 charts.activity.data.labels = labels;
                 charts.activity.data.datasets[0].data = activityData;
-                charts.activity.update('none'); // Aggiorna senza animazione
+                charts.activity.update('none');
+                console.log('Activity chart updated');
+            } else {
+                console.warn('Activity chart not initialized');
             }
 
             // Moderation chart
-            const counts = messages.reduce((acc, m) => {
-                const s = (m.status || '').toLowerCase();
-                acc[s] = (acc[s] || 0) + 1;
-                return acc;
-            }, {});
+            const counts = { approved: 0, pending: 0, rejected: 0 };
+            if (messages && messages.length > 0) {
+                messages.forEach(m => {
+                    const s = (m.status || '').toLowerCase();
+                    if (s === 'approved') counts.approved++;
+                    else if (s === 'pending') counts.pending++;
+                    else if (s === 'rejected') counts.rejected++;
+                });
+            }
+
+            console.log('Moderation counts:', counts);
 
             if (charts.moderation) {
                 charts.moderation.data.datasets[0].data = [
-                    counts.approved || 0,
-                    counts.pending || 0,
-                    counts.rejected || 0
+                    counts.approved,
+                    counts.pending,
+                    counts.rejected
                 ];
                 charts.moderation.update('none');
+                console.log('Moderation chart updated');
+            } else {
+                console.warn('Moderation chart not initialized');
             }
         }
 
