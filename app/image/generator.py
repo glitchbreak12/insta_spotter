@@ -93,7 +93,7 @@ class ImageGenerator:
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 60
+            padding = 70  # Padding aumentato per migliore bilanciamento
             
             # === SFONDO COMPLETAMENTE NUOVO ===
             img = Image.new('RGB', (width, height), color='#000000')
@@ -173,14 +173,14 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), glow_outer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Card principale glass
+            # Card principale glass migliorata
             card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             card_draw = ImageDraw.Draw(card_layer)
             card_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(10, 15, 30, 220),
-                outline=(100, 200, 255, 160),
-                width=2
+                fill=(10, 15, 30, 225),  # Opacità leggermente aumentata
+                outline=(100, 200, 255, 175),  # Bordo più visibile
+                width=3  # Bordo leggermente più spesso
             )
             
             # Highlight superiore diagonale
@@ -216,10 +216,10 @@ class ImageGenerator:
             
             if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
                 try:
-                    brand_font = ImageFont.truetype(font_path, 110)
-                    message_font = ImageFont.truetype(font_path, 72)
-                    id_font = ImageFont.truetype(font_path, 32)
-                    footer_font = ImageFont.truetype(font_path, 38)
+                    brand_font = ImageFont.truetype(font_path, 120)  # Aumentato per migliore proporzione
+                    message_font = ImageFont.truetype(font_path, 76)  # Aumentato per migliore leggibilità
+                    id_font = ImageFont.truetype(font_path, 34)  # Aumentato leggermente
+                    footer_font = ImageFont.truetype(font_path, 40)  # Aumentato per migliore visibilità
                 except Exception as e:
                     print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
             
@@ -227,30 +227,30 @@ class ImageGenerator:
                 try:
                     if os.name == 'nt':
                         try:
-                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 110)
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 120)
                         except:
-                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 110)
-                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 72)
-                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 32)
-                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 38)
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 120)
+                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 76)
+                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 34)
+                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 40)
                     else:
-                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 110)
-                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 72)
-                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
+                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 76)
+                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 34)
+                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
                 except:
                     brand_font = ImageFont.load_default()
                     message_font = ImageFont.load_default()
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRAND "SPOTTED" CON GRADIENTE E GLOW ===
+            # === BRAND "SPOTTED" CON GRADIENTE E GLOW - Posizionamento migliorato ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 70
+            brand_y = card_y + 90  # Posizionamento più preciso
             
             # Glow intenso per brand
             for i in range(20):
@@ -270,18 +270,18 @@ class ImageGenerator:
             # Testo brand con gradiente simulato (colore medio)
             draw.text((brand_x, brand_y), brand_text, fill='#64d9ff', font=brand_font)
             
-            # === BADGE ID ===
+            # === BADGE ID - Posizionamento migliorato ===
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_height = id_bbox[3] - id_bbox[1]
             id_x = (width - id_width) // 2
-            id_y = brand_y + brand_height + 30
+            id_y = brand_y + brand_height + 35  # Spacing migliorato
             
-            # Badge con glow
+            # Badge con glow migliorato
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
-            pad_x, pad_y = 28, 14
+            pad_x, pad_y = 32, 16  # Padding aumentato per migliore proporzione
             bdraw.rounded_rectangle(
                 [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + id_height + pad_y],
                 radius=50,
@@ -303,17 +303,17 @@ class ImageGenerator:
             draw = ImageDraw.Draw(img)
             draw.text((id_x, id_y), id_text, fill='#b3e5ff', font=id_font)
             
-            # === MESSAGGIO CON WORD WRAP ===
-            message_area_top = id_y + id_height + 60
-            message_area_bottom = card_y + card_h - 200
+            # === MESSAGGIO CON WORD WRAP - Posizionamento migliorato ===
+            message_area_top = id_y + id_height + pad_y + 70  # Spacing migliorato
+            message_area_bottom = card_y + card_h - 220  # Spazio footer aumentato
             message_area_height = message_area_bottom - message_area_top
             
-            max_width = card_w - (padding * 2)
+            max_width = card_w - (padding * 2) - 40  # Margini laterali aumentati
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 108  # 72px * 1.5
+            line_height = 118  # 76px * 1.55 (line-height migliorato)
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -359,12 +359,13 @@ class ImageGenerator:
                 
                 draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
             
-            # === FOOTER ===
+            # === FOOTER - Posizionamento migliorato ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
+            footer_height = footer_bbox[3] - footer_bbox[1]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 120
+            footer_y = card_y + card_h - 140  # Posizionamento più preciso
             
             # Glow footer
             for g in range(5):
