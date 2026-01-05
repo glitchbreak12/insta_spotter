@@ -511,16 +511,29 @@
         });
 
         // Reset form state when page loads with success/error
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('success') === 'true') {
-            // Reset form after successful submission
-            form.reset();
-            messageInput.value = '';
-            submitBtn.disabled = false;
-            loadingSpinner.style.display = 'none';
-            submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
-            charCounter.textContent = `${maxLength} caratteri rimanenti`;
-            wordCount.textContent = '0';
+        // Esegui questo codice quando il DOM è completamente caricato
+        function resetFormOnSuccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                // Reset form after successful submission
+                form.reset();
+                messageInput.value = '';
+                submitBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+                submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                charCounter.textContent = `${maxLength} caratteri rimanenti`;
+                wordCount.textContent = '0';
+                
+                // Scroll to top per mostrare il messaggio di successo
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        // Esegui quando il DOM è pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', resetFormOnSuccess);
+        } else {
+            resetFormOnSuccess();
         }
         
         // Form submission with loading state

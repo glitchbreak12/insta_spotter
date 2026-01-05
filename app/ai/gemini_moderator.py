@@ -1,9 +1,10 @@
 # Usa il vecchio pacchetto google-generativeai (più stabile e funzionante)
 # Il nuovo google-genai ha un'API completamente diversa e non è ancora stabile
 import warnings
-# Sopprimi completamente il warning FutureWarning per google.generativeai
-warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+# Sopprimi completamente il warning FutureWarning PRIMA dell'import
+warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*google.generativeai.*")
+warnings.filterwarnings("ignore", message=".*All support for.*")
 
 try:
     import google.generativeai as genai
