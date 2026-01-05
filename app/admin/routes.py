@@ -68,34 +68,56 @@ def get_dashboard_data(db: Session = Depends(get_db), user: str = Depends(get_au
     A single, robust endpoint to fetch all data needed for the dashboard.
     This function ONLY reads data and builds a simple JSON response to avoid all previous errors.
     """
+    print(f"--- [API] get_dashboard_data called, user: {user} ---")
+    
     if not user or isinstance(user, RedirectResponse):
+        print("--- [API] User not authenticated ---")
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
+        print("--- [API] Querying database for messages ---")
         # Fetch all messages, keeping it simple
         messages_query = db.query(SpottedMessage).order_by(SpottedMessage.created_at.desc()).limit(200).all()
+        print(f"--- [API] Found {len(messages_query)} messages in database ---")
 
         # Manually build the response to ensure it's clean
-        messages_data = [
-            {
-                "id": msg.id,
-                "text": msg.text,
-                "status": msg.status.value, # Safely get enum value
-                "created_at": msg.created_at.isoformat(), # Use ISO format for JS
-                "media_pk": msg.media_pk,
-                "admin_note": msg.admin_note,
-                "gemini_analysis": msg.gemini_analysis
-            }
-            for msg in messages_query
-        ]
+        messages_data = []
+        for msg in messages_query:
+            try:
+                messages_data.append({
+                    "id": msg.id,
+                    "text": msg.text or "",
+                    "status": msg.status.value if msg.status else "pending", # Safely get enum value
+                    "created_at": msg.created_at.isoformat() if msg.created_at else datetime.utcnow().isoformat(), # Use ISO format for JS
+                    "media_pk": msg.media_pk or None,
+                    "admin_note": msg.admin_note or None,
+                    "gemini_analysis": msg.gemini_analysis or None
+                })
+            except Exception as e:
+                print(f"--- [API] Error processing message {msg.id}: {e} ---")
+                continue
         
-        # Return the clean data
-        return {"messages": messages_data}
+        print(f"--- [API] Returning {len(messages_data)} messages ---")
+        
+        # Return the clean data - always return a valid response even if empty
+        return {
+            "messages": messages_data,
+            "total": len(messages_data),
+            "status": "success"
+        }
 
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         print(f"--- CRITICAL ERROR in get_dashboard_data: {e} ---")
-        # If anything goes wrong, send a clear error
-        raise HTTPException(status_code=500, detail=f"An internal error occurred: {e}")
+        print(f"--- Traceback: {error_trace} ---")
+        # Return empty array instead of raising error to prevent frontend crash
+        return {
+            "messages": [],
+            "total": 0,
+            "status": "error",
+            "error": str(e)
+        }
 
 
 
