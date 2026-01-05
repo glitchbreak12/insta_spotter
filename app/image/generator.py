@@ -318,7 +318,6 @@ class ImageGenerator:
         except Exception as e:
             print(f"❌ Errore PIL fallback: {e}")
             raise
-                alpha = int(120 * (1 - radius/350))
                 nebula_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
                      width//2 + radius, height//2 + radius],
