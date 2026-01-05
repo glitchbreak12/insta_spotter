@@ -1,4 +1,11 @@
-import google.generativeai as genai
+try:
+    # Prova prima con il nuovo pacchetto google-genai
+    import google.genai as genai
+except ImportError:
+    # Fallback al vecchio pacchetto (deprecato ma ancora funzionante)
+    import google.generativeai as genai
+    import warnings
+    warnings.filterwarnings("ignore", category=FutureWarning, message=".*google.generativeai.*")
 import json
 from config import settings
 from typing import NamedTuple

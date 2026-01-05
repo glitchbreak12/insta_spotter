@@ -7,6 +7,8 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+import asyncio
+import httpx
 
 from app.database import create_db_and_tables
 from app.web import routes as web_routes
@@ -43,26 +45,58 @@ app.add_middleware(
 # Possibilità di disabilitare temporaneamente il controllo impostando DISABLE_TRUSTED_HOST=1
 replit_url = os.getenv("REPLIT_URL")
 disable_trusted = os.getenv("DISABLE_TRUSTED_HOST", "0") == "1"
+# Rileva se siamo su Replit (Replit imposta queste variabili d'ambiente)
+is_replit = os.getenv("REPL_ID") is not None or os.getenv("REPL_SLUG") is not None or "replit" in os.getenv("HOME", "").lower()
+
+# Su Replit, disabilita TrustedHost per evitare problemi con richieste interne
+if is_replit:
+    disable_trusted = True
+    logger.info("🔵 Rilevato ambiente Replit - TrustedHostMiddleware disabilitato per compatibilità")
 
 if not disable_trusted:
     # Costruisci la lista di host permessi dinamicamente usando REPLIT_URL se impostato
-    allowed_hosts = ["localhost", "127.0.0.1"]
+    allowed_hosts = ["localhost", "127.0.0.1", "*"]  # * permette qualsiasi host su Replit
+    
     if replit_url:
         try:
             parsed = urlparse(replit_url)
             if parsed.hostname:
                 allowed_hosts.append(parsed.hostname)
+                # Aggiungi anche varianti comuni di Replit
+                if ".replit.app" in parsed.hostname:
+                    # Estrai il nome base
+                    base_name = parsed.hostname.split(".")[0]
+                    allowed_hosts.extend([
+                        f"{base_name}.replit.app",
+                        f"{base_name}.replit.dev",
+                        "*.replit.app",
+                        "*.replit.dev"
+                    ])
         except Exception:
             logger.warning("Impossibile parsare REPLIT_URL per TrustedHostMiddleware")
 
-    # Se non abbiamo un REPLIT_URL, manteniamo il dominio di default usato in sviluppo
-    if len(allowed_hosts) == 2:
-        allowed_hosts.append("insta-spotter.replit.dev")
+    # Se siamo su Replit, aggiungi pattern comuni
+    if is_replit:
+        allowed_hosts.extend([
+            "*.replit.app",
+            "*.replit.dev",
+            "*.repl.co",
+            "*"  # Permetti qualsiasi host su Replit (per richieste interne)
+        ])
+        logger.info("Rilevato ambiente Replit - TrustedHost configurato per Replit")
 
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=allowed_hosts,
-    )
+    # Rimuovi duplicati mantenendo l'ordine
+    allowed_hosts = list(dict.fromkeys(allowed_hosts))
+    
+    # Su Replit, usa una configurazione più permissiva
+    if is_replit and "*" in allowed_hosts:
+        # Su Replit, disabilita TrustedHost per evitare problemi con richieste interne
+        logger.info("TrustedHostMiddleware disabilitato su Replit per compatibilità")
+    else:
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=allowed_hosts,
+        )
 else:
     logger.info("TrustedHostMiddleware disabilitato tramite DISABLE_TRUSTED_HOST=1")
 
@@ -89,10 +123,36 @@ async def add_security_headers(request, call_next):
     
     return response
 
+# --- Keep Alive Background Task per Replit ---
+
+async def keep_alive_task():
+    """Task in background che fa ping a se stesso ogni 5 minuti per mantenere Replit attivo."""
+    await asyncio.sleep(60)  # Attendi 1 minuto dopo l'avvio
+    
+    base_url = os.getenv("REPLIT_URL", "http://localhost:8000")
+    # Rimuovi trailing slash se presente
+    base_url = base_url.rstrip('/')
+    
+    logger.info(f"🔄 Keep-alive task avviato. URL: {base_url}")
+    
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{base_url}/health")
+                if response.status_code == 200:
+                    logger.info("✓ Keep-alive ping riuscito")
+                else:
+                    logger.warning(f"⚠ Keep-alive ping restituito status {response.status_code}")
+        except Exception as e:
+            logger.warning(f"⚠ Keep-alive ping fallito: {e}")
+        
+        # Attendi 5 minuti (300 secondi) prima del prossimo ping
+        await asyncio.sleep(300)
+
 # --- Eventi di Avvio e Spegnimento ---
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     """Funzioni da eseguire all'avvio dell'applicazione."""
     logger.info("🚀 Avvio dell'applicazione InstaSpotter...")
     
@@ -102,6 +162,10 @@ def on_startup():
     except Exception as e:
         logger.error(f"✗ Errore nell'inizializzazione del database: {e}")
         raise
+    
+    # Avvia il task di keep-alive in background per Replit
+    asyncio.create_task(keep_alive_task())
+    logger.info("✓ Keep-alive task avviato per hosting 24/7")
 
 # --- Inclusione delle Rotte ---
 

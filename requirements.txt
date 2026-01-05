@@ -10,7 +10,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 requests
 httpx
-google-generativeai
+google-genai
 instagrapi==2.2.1
 imgkit
 python-multipart
