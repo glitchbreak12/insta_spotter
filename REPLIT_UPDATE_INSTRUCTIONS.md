@@ -1,58 +1,46 @@
-# 🚨 AGGIORNAMENTO REPLIT OBBLIGATORIO - Template card_v5_fixed.html
+# 🚨 FIX IMMEDIATO - PASSA A card_v5_fixed.html
 
-## 🔥 PROBLEMA CRITICO:
-Replit sta usando il vecchio template DORATO (card_v11_celestial) invece di **card_v5_fixed.html**!
+## 🔥 PROBLEMA:
+Replit usa ancora il template **DORATO** invece di card_v5_fixed.html
 
-## ✅ SOLUZIONE IMMEDIATA (3 minuti):
+## ✅ SOLUZIONE (20 secondi):
 
-### **PASSO 1: PULL CODICE**
+### **COPIA E INCOLLA QUESTO in Shell Replit:**
 ```bash
-# Apri Shell su Replit:
-cd /home/runner/workspace
-git pull origin main
-echo "✅ Template aggiornato a card_v5_fixed.html!"
-```
-
-### **PASSO 2: VERIFICA**
-```bash
-python3 -c "
+cd /home/runner/workspace && git pull origin main && python3 -c "
 from config import settings
-print('Template attuale:', settings.image.template_path)
+print('TEMPLATE ATTUALE:', settings.image.template_path)
 if 'card_v5_fixed.html' in settings.image.template_path:
-    print('✅ CORRETTO: Ora usa card_v5_fixed.html!')
+    print('✅ SUCCESSO: Ora usa card_v5_fixed.html!')
 else:
-    print('❌ ANCORA SBAGLIATO - riprova git pull')
+    print('❌ FALLITO: Riprova')
 "
 ```
 
-### **PASSO 3: RIAVVIA**
-- Premi **"Restart"** in Replit
-- Ora le card saranno **card_v5_fixed.html** pulite!
+### **DOPO:**
+1. **RIAVVIA** l'app (tasto Restart in Replit)
+2. **TESTA** uno spot
+3. **VEDRAI** card_v5_fixed.html pulite!
 
 ---
 
-## 🎭 OPZIONALE: Playwright per rendering perfetto
+## 🎯 COSA CAMBIA:
 
-Se vuoi il rendering HTML perfetto (non necessario, ma meglio):
+**VECCHIO:** Template dorato con stelle spaziali
+**NUOVO:** card_v5_fixed.html pulito professionale
+
+---
+
+## 🔥 SE NON FUNZIONA:
 
 ```bash
-pip install playwright
-playwright install chromium
-
-# Verifica
-python3 -c "
-from app.image.generator import ImageGenerator
-gen = ImageGenerator()
-print('Playwright disponibile:', gen.playwright_available)
-"
+# Forza aggiornamento completo:
+cd /home/runner/workspace
+git fetch origin && git reset --hard origin/main
+echo "Forza aggiornamento fatto!"
 ```
 
----
+**NON INSTALLARE NULLA** - solo `git pull origin main`!
 
-## 🎯 RISULTATO FINALE:
-- ✅ Template: **card_v5_fixed.html** (non più dorato)
-- ✅ Sistema retry: **primo post ora funziona**
-- ✅ Card pulite con glow 3D professionale
-
-**AGGIORNA SUBITO REPLIT CON `git pull origin main`!** 🚀</contents>
+Ora vai su Replit e fai il pull! 🚀</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
