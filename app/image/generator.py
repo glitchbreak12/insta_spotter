@@ -490,20 +490,35 @@ class ImageGenerator:
                     file_url = f'file://{temp_html_path}'
                     page.goto(file_url, wait_until='networkidle', timeout=10000)
 
-                    # Aspetta caricamento completo (font, CSS, etc.)
-                    page.wait_for_timeout(3000)  # 3 secondi per sicurezza
+                    # Aspetta caricamento completo (font, CSS, animazioni, etc.)
+                    page.wait_for_timeout(4000)  # 4 secondi per animazioni e stelle
 
-                    # Verifica rendering
-                    is_visible = page.evaluate('''
+                    # Verifica rendering completo
+                    render_status = page.evaluate('''
                         () => {
                             const body = document.body;
                             const card = document.querySelector('.card');
-                            return body && card && body.scrollHeight > 100;
+                            const stars = document.querySelector('#stars');
+                            const bg = document.querySelector('.bg-container');
+
+                            return {
+                                hasBody: !!body,
+                                hasCard: !!card,
+                                hasStars: !!stars,
+                                hasBg: !!bg,
+                                bodyHeight: body ? body.scrollHeight : 0,
+                                cardVisible: card ? card.offsetWidth > 0 : false
+                            };
                         }
                     ''')
 
-                    if not is_visible:
-                        raise RuntimeError("HTML non renderizzato correttamente - elementi mancanti")
+                    print(f"🔍 Render status: {render_status}")
+
+                    if not (render_status.get('hasBody') and render_status.get('hasCard') and render_status.get('bodyHeight', 0) > 500):
+                        raise RuntimeError(f"HTML non renderizzato correttamente: {render_status}")
+
+                    # Aspetta ancora un po' per animazioni CSS (stelle, gradienti)
+                    page.wait_for_timeout(1000)
 
                     print("🎨 HTML renderizzato correttamente, catturo screenshot...")
 
