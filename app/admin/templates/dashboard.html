@@ -715,7 +715,19 @@
             postsTableBody.innerHTML = '';
 
             if (pageMessages.length === 0) {
-                postsTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No messages found</td></tr>';
+                if (filteredMessages.length === 0 && allMessages.length === 0) {
+                    postsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center" style="padding: 3rem;">
+                                <i class="fas fa-inbox" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                                <div style="font-size: 1.2rem; color: var(--text-primary); margin-bottom: 0.5rem;">No messages in database</div>
+                                <div style="color: var(--text-muted);">Submit messages from the public form to see them here.</div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    postsTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No messages match the current filters</td></tr>';
+                }
                 updatePagination();
                 return;
             }
