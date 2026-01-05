@@ -1,38 +1,38 @@
-# 🚨 URGENTE: PASSA A card_v5_fixed.html
+# 🚨 FORZA AGGIORNAMENTO REPLIT
 
 ## 🔥 PROBLEMA:
-Replit usa ancora il template **DORATO** invece di card_v5_fixed.html
+Hai provato 5 volte ma Replit usa ancora il template **DORATO**
 
-## ✅ SOLUZIONE FINALE:
+## ✅ SOLUZIONE FORZA:
 
 ### **COPIA QUESTO ESATTAMENTE in Shell Replit:**
 
 ```bash
-cd /home/runner/workspace && git pull origin main && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path); print('✅ Se vedi card_v5_fixed.html, SUCCESSO!')" && echo "ORA RIAVVIA L'APP!"
+cd /home/runner/workspace && echo "=== FORZA RESET ===" && git fetch origin && git reset --hard origin/main && echo "=== AGGIORNAMENTO FORZATO ===" && python3 -c "from config import settings; print('TEMPLATE ATTUALE:', settings.image.template_path); print('✅ Se vedi card_v5.html, SUCCESSO!')" && echo "=== RIAVVIA L'APP ORA ==="
 ```
 
 ### **DOPO:**
 1. **RIAVVIA** l'app (tasto Restart in Replit)
 2. **TESTA** uno spot
-3. **VEDRAI** card_v5_fixed.html (glow blu, non dorato)
+3. **VEDRAI** card_v5.html (glow blu, non dorato)
 
 ---
 
 ## 🎯 COSA CAMBIA:
 
 **ATTUALE (sbagliato):** Template dorato card_v11_celestial
-**CORRETTO (nuovo):** card_v5_fixed.html pulito professionale
+**CORRETTO (nuovo):** card_v5.html pulito professionale
 
 ---
 
-## 🔥 SE NON FUNZIONA:
+## 🔥 SE ANCORA NON FUNZIONA:
 
-**Prova questo comando forza:**
+**Prova questo comando alternativo:**
 ```bash
-cd /home/runner/workspace && git fetch origin && git reset --hard origin/main && echo "FORZA AGGIORNAMENTO COMPLETATO!"
+cd /home/runner/workspace && rm -rf .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main && echo "REPO RICREATO!"
 ```
 
-**NON INSTALLARE NULLA** - il problema è solo che Replit non ha il codice aggiornato!
+**Questo ricrea completamente il repository!**
 
-Le istruzioni sono su GitHub. Copia il comando e fallo funzionare! 🚀</contents>
+Il problema è che Replit ha il vecchio codice. Prova il comando di forza! 🚀</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
