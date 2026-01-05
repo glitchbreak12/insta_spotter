@@ -583,73 +583,73 @@
             <div class="user-avatar">A</div>
             <a href="/admin/logout" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
-            </a>
+                </a>
+                </div>
         </div>
-    </div>
 
     <!-- Stats -->
     <div class="stats-container">
-        <div class="stat-card">
+                    <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-icon primary">
-                    <i class="fas fa-newspaper"></i>
+                        <div class="stat-icon primary">
+                            <i class="fas fa-newspaper"></i>
                 </div>
-            </div>
-            <div class="stat-value" id="totalPosts">0</div>
-            <div class="stat-label">Total Posts</div>
-        </div>
-        <div class="stat-card">
+                            </div>
+                        <div class="stat-value" id="totalPosts">0</div>
+                        <div class="stat-label">Total Posts</div>
+                        </div>
+                    <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-icon warning">
-                    <i class="fas fa-clock"></i>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-clock"></i>
                 </div>
-            </div>
-            <div class="stat-value" id="pendingModeration">0</div>
+                    </div>
+                        <div class="stat-value" id="pendingModeration">0</div>
             <div class="stat-label">Pending</div>
-        </div>
-        <div class="stat-card">
+                            </div>
+                    <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-icon success">
-                    <i class="fas fa-check-circle"></i>
+                        <div class="stat-icon success">
+                            <i class="fas fa-check-circle"></i>
                 </div>
-            </div>
-            <div class="stat-value" id="approvedPosts">0</div>
+                        </div>
+                        <div class="stat-value" id="approvedPosts">0</div>
             <div class="stat-label">Approved</div>
-        </div>
-        <div class="stat-card">
+                    </div>
+                    <div class="stat-card">
             <div class="stat-header">
-                <div class="stat-icon error">
-                    <i class="fas fa-times-circle"></i>
+                        <div class="stat-icon error">
+                            <i class="fas fa-times-circle"></i>
                 </div>
-            </div>
-            <div class="stat-value" id="rejectedPosts">0</div>
+                            </div>
+                        <div class="stat-value" id="rejectedPosts">0</div>
             <div class="stat-label">Rejected</div>
-        </div>
-    </div>
+                        </div>
+                    </div>
 
     <!-- Content Management -->
     <div class="content-section">
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fas fa-newspaper"></i>
+                        <i class="fas fa-newspaper"></i>
                 Messages
-            </h2>
+                    </h2>
             <div class="action-buttons">
-                <button class="btn btn-primary btn-sm" onclick="refreshPosts()">
+                        <button class="btn btn-primary btn-sm" onclick="refreshPosts()">
                     <i class="fas fa-sync-alt"></i>
-                </button>
-                <button class="btn btn-success btn-sm" onclick="bulkApprove()">
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="bulkApprove()">
                     <i class="fas fa-check-double"></i>
-                </button>
-            </div>
-        </div>
+                        </button>
+                    </div>
+                </div>
 
         <!-- Search -->
         <div class="search-bar">
             <input type="text" class="search-input" id="searchInput" 
                    placeholder="🔍 Search messages..." 
                    onkeyup="searchMessages()">
-        </div>
+                </div>
 
         <!-- Filter Chips -->
         <div class="filter-chips">
@@ -659,78 +659,78 @@
             <div class="chip" data-status="REJECTED" onclick="setFilter('REJECTED')">Rejected</div>
             <div class="chip" data-status="POSTED" onclick="setFilter('POSTED')">Posted</div>
             <div class="chip" data-status="FAILED" onclick="setFilter('FAILED')">Failed</div>
-        </div>
+                </div>
 
         <!-- Messages List -->
         <div class="messages-list" id="messagesList">
-            <div class="loading">
-                <div class="spinner"></div>
+                                        <div class="loading">
+                                            <div class="spinner"></div>
                 <div>Loading messages...</div>
-            </div>
-        </div>
-    </div>
+                                        </div>
+                        </div>
+                </div>
 
     <!-- Moderation Queue -->
     <div class="content-section" id="moderationSection">
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt"></i>
                 Moderation Queue
-            </h2>
+                </h2>
         </div>
         <div class="messages-list" id="moderationQueue">
-            <div class="loading">
-                <div class="spinner"></div>
+                    <div class="loading">
+                        <div class="spinner"></div>
                 <div>Loading...</div>
-            </div>
-        </div>
+                    </div>
+                </div>
     </div>
 
     <!-- Analytics -->
     <div class="content-section">
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fas fa-chart-line"></i>
+                    <i class="fas fa-chart-line"></i>
                 Analytics
-            </h2>
-        </div>
+                </h2>
+                            </div>
         <div class="chart-card">
             <div class="chart-title">Activity (Last 7 Days)</div>
-            <div class="chart-container">
+                                <div class="chart-container">
                 <canvas id="activityChart"></canvas>
-            </div>
-        </div>
+                                </div>
+                            </div>
         <div class="chart-card">
             <div class="chart-title">Moderation Trends</div>
-            <div class="chart-container">
+                                <div class="chart-container">
                 <canvas id="moderationChart"></canvas>
-            </div>
-        </div>
-    </div>
+                                </div>
+                            </div>
+                        </div>
 
     <!-- Settings -->
     <div class="content-section">
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog"></i>
                 Settings
-            </h2>
-        </div>
+                </h2>
+                                </div>
         <div class="message-card">
             <div style="margin-bottom: 1rem;">
                 <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem;">AI Moderation</h3>
                 <p style="font-size: 0.8rem; color: var(--text-muted);">Autonomous mode for AI moderation</p>
-            </div>
+                            </div>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <label style="font-size: 0.85rem;">Autonomous Mode</label>
                 <input type="checkbox" id="autonomousMode" checked 
                        style="width: 44px; height: 24px; accent-color: var(--primary);">
-            </div>
+                        </div>
             <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="updateAISettings()">
-                <i class="fas fa-save"></i> Save Settings
-            </button>
-        </div>
-    </div>
+                                    <i class="fas fa-save"></i> Save Settings
+                                </button>
+                            </div>
+                        </div>
 
     <!-- Bottom Navigation - Mobile -->
     <div class="bottom-nav">
@@ -944,15 +944,28 @@
                         ${message.media_pk ? '<span><i class="fas fa-image"></i> Has Media</span>' : ''}
                     </div>
                     <div class="message-actions">
-                        <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')" type="button">
-                            <i class="fas fa-check"></i> Approve
-                        </button>
-                        <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')" type="button">
-                            <i class="fas fa-times"></i> Reject
-                        </button>
-                        <button class="action-btn edit" onclick="editMessage(${message.id})" type="button">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
+                        ${(message.status || '').toUpperCase() === 'POSTED' ? `
+                            <div style="text-align: center; color: var(--success); font-size: 0.85rem; padding: 0.5rem; width: 100%;">
+                                <i class="fas fa-check-circle"></i> Pubblicato su Instagram
+                            </div>
+                        ` : (message.status || '').toUpperCase() === 'FAILED' ? `
+                            <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')" type="button">
+                                <i class="fas fa-redo"></i> Riprova
+                            </button>
+                            <button class="action-btn edit" onclick="editMessage(${message.id})" type="button">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        ` : `
+                            <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')" type="button">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')" type="button">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                            <button class="action-btn edit" onclick="editMessage(${message.id})" type="button">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        `}
                     </div>
                 `;
                 messagesList.appendChild(card);
@@ -1109,7 +1122,7 @@
                 if (data.status === 'success') {
                     if (action === 'approve') {
                         showNotification('Messaggio approvato! Pubblicazione in corso...', 'success');
-                    } else {
+            } else {
                         showNotification('Messaggio rifiutato', 'success');
                     }
                     // Refresh immediato (non silenzioso per mostrare le modifiche)
@@ -1218,15 +1231,15 @@
             const enabled = document.getElementById('autonomousMode').checked;
             try {
                 const response = await fetch('/admin/settings/autonomous-mode', {
-                    method: 'POST',
+                        method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ enabled })
                 });
                 if (response.ok) {
                     showNotification('Settings saved!', 'success');
-                }
-            } catch (error) {
+                    }
+                } catch (error) {
                 showNotification('Error', 'error');
             }
         }
@@ -1239,9 +1252,9 @@
                 console.log('Creating activity chart...');
                 charts.activity = new Chart(activityCtx, {
                     type: 'line',
-                    data: { 
+                    data: {
                         labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'], 
-                        datasets: [{ 
+                        datasets: [{
                             label: 'Messaggi', 
                             data: [0, 0, 0, 0, 0, 0, 0], 
                             borderColor: '#6366f1',
@@ -1252,24 +1265,24 @@
                             pointBackgroundColor: '#6366f1',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2
-                        }] 
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
+                        plugins: {
+                            legend: {
                                 display: true,
                                 labels: { color: '#f8fafc', font: { size: 12 } } 
-                            } 
+                            }
                         },
                         scales: {
-                            y: { 
-                                beginAtZero: true, 
+                            y: {
+                                beginAtZero: true,
                                 ticks: { color: '#94a3b8', stepSize: 1 }, 
                                 grid: { color: '#334155' } 
                             },
-                            x: { 
+                            x: {
                                 ticks: { color: '#94a3b8' }, 
                                 grid: { color: '#334155' } 
                             }
@@ -1285,7 +1298,7 @@
                     type: 'doughnut',
                     data: {
                         labels: ['Approvati', 'In attesa', 'Rifiutati'],
-                        datasets: [{ 
+                        datasets: [{
                             data: [0, 0, 0], 
                             backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
                             borderWidth: 2,
@@ -1295,16 +1308,16 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { 
-                            legend: { 
+                        plugins: {
+                            legend: {
                                 display: true,
                                 position: 'bottom',
-                                labels: { 
+                                labels: {
                                     color: '#f8fafc',
                                     font: { size: 12 },
                                     padding: 15
-                                } 
-                            } 
+                                }
+                            }
                         }
                     }
                 });
@@ -1350,12 +1363,16 @@
             console.log('Labels:', labels);
 
             if (charts.activity) {
-                charts.activity.data.labels = labels;
-                charts.activity.data.datasets[0].data = activityData;
-                charts.activity.update('none');
-                console.log('Activity chart updated');
+                try {
+                    charts.activity.data.labels = labels;
+                    charts.activity.data.datasets[0].data = activityData;
+                    charts.activity.update('none');
+                    console.log('✅ Activity chart updated with data:', activityData);
+                } catch (e) {
+                    console.error('❌ Error updating activity chart:', e);
+                }
             } else {
-                console.warn('Activity chart not initialized');
+                console.warn('⚠️ Activity chart not initialized');
             }
 
             // Moderation chart
@@ -1369,18 +1386,22 @@
                 });
             }
 
-            console.log('Moderation counts:', counts);
+            console.log('📊 Moderation counts:', counts);
 
             if (charts.moderation) {
-                charts.moderation.data.datasets[0].data = [
-                    counts.approved,
-                    counts.pending,
-                    counts.rejected
-                ];
-                charts.moderation.update('none');
-                console.log('Moderation chart updated');
+                try {
+                    charts.moderation.data.datasets[0].data = [
+                        counts.approved,
+                        counts.pending,
+                        counts.rejected
+                    ];
+                    charts.moderation.update('none');
+                    console.log('✅ Moderation chart updated');
+                } catch (e) {
+                    console.error('❌ Error updating moderation chart:', e);
+                }
             } else {
-                console.warn('Moderation chart not initialized');
+                console.warn('⚠️ Moderation chart not initialized');
             }
         }
 

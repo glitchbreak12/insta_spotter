@@ -177,24 +177,37 @@ class ImageGenerator:
                         message_font = ImageFont.load_default()
                         footer_font = ImageFont.load_default()
             
-            # Disegna "SPOTTED" header con effetto glow
+            # Disegna "SPOTTED" header con effetto glow professionale
             header_text = "SPOTTED"
             header_bbox = draw.textbbox((0, 0), header_text, font=header_font)
             header_width = header_bbox[2] - header_bbox[0]
             header_height = header_bbox[3] - header_bbox[1]
             header_x = (width - header_width) // 2
-            header_y = 200
+            header_y = 180
             
-            # Effetto glow (ombra multipla)
-            for offset_x, offset_y, opacity in [(0, 0, 200), (2, 2, 100), (4, 4, 50)]:
+            # Effetto glow blu (simulato con ombre multiple)
+            glow_color = (52, 89, 235)  # Blu glow
+            for i in range(5):
+                offset = i * 2
+                alpha = max(10, 100 - (i * 20))
+                # Ombra blu
                 draw.text(
-                    (header_x + offset_x, header_y + offset_y),
+                    (header_x + offset, header_y + offset),
                     header_text,
-                    fill=(255, 255, 255, opacity),
+                    fill=(glow_color[0], glow_color[1], glow_color[2], alpha),
                     font=header_font
                 )
             
-            # Testo principale
+            # Ombra bianca per profondità
+            for offset_x, offset_y in [(3, 3), (1, 1)]:
+                draw.text(
+                    (header_x + offset_x, header_y + offset_y),
+                    header_text,
+                    fill=(255, 255, 255, 50),
+                    font=header_font
+                )
+            
+            # Testo principale bianco brillante
             draw.text((header_x, header_y), header_text, fill='#ffffff', font=header_font)
             
             # Disegna il messaggio con word wrap professionale
@@ -221,35 +234,55 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
-            # Disegna le righe del messaggio centrate
+            # Disegna le righe del messaggio centrate con ombre per leggibilità
             for i, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                    
                 line_bbox = draw.textbbox((0, 0), line, font=message_font)
                 line_width = line_bbox[2] - line_bbox[0]
                 line_x = (width - line_width) // 2
                 y_pos = message_y + i * line_height
                 
-                # Ombra leggera per leggibilità
-                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
-                # Testo principale
-                draw.text((line_x, y_pos), line, fill='#e0e0e0', font=message_font)
+                # Ombra nera per leggibilità (simulata con testo nero leggermente spostato)
+                for offset in [(3, 3), (2, 2)]:
+                    draw.text(
+                        (line_x + offset[0], y_pos + offset[1]),
+                        line,
+                        fill='#000000',
+                        font=message_font
+                    )
+                
+                # Testo principale con colore elegante
+                draw.text((line_x, y_pos), line, fill='#e8e8e8', font=message_font)
             
-            # Disegna footer "@spottedatbz"
+            # Disegna footer "@spottedatbz" con stile elegante
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = height - 150
+            footer_y = height - 180
             
-            # Footer con opacità
-            draw.text((footer_x, footer_y), footer_text, fill='#ffffff', font=footer_font)
+            # Ombra per footer
+            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
+            # Footer con opacità elegante
+            draw.text((footer_x, footer_y), footer_text, fill='#b8b8b8', font=footer_font)
             
-            # Aggiungi glow effect al bordo (simulato con linee)
+            # Aggiungi glow effect al bordo glass (simulato)
             glow_color = (52, 89, 235)  # Blu glow
-            for i in range(3):
-                alpha = 30 - (i * 10)
+            # Disegna linee di glow ai bordi
+            for i in range(2):
+                glow_alpha = 40 - (i * 15)
+                # Top glow
                 draw.rectangle(
-                    [padding - i, padding - i, width - padding + i, height - padding + i],
-                    outline=(glow_color[0], glow_color[1], glow_color[2], alpha),
+                    [padding - i, padding - i, width - padding + i, padding + 5 + i],
+                    outline=(glow_color[0], glow_color[1], glow_color[2], glow_alpha),
+                    width=1
+                )
+                # Bottom glow
+                draw.rectangle(
+                    [padding - i, height - padding - 5 - i, width - padding + i, height - padding + i],
+                    outline=(glow_color[0], glow_color[1], glow_color[2], glow_alpha),
                     width=1
                 )
             
