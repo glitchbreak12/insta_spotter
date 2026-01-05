@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
-from app.database import get_db, SpottedMessage, MessageStatus
+from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
 from config import settings # Import settings
 
@@ -421,7 +421,6 @@ def post_single_message(message_id: int):
     """Posta un singolo messaggio approvato su Instagram."""
     from app.image.generator import ImageGenerator
     from app.bot.poster import InstagramBot
-    from app.database import SessionLocal
     
     db = SessionLocal()
     try:
