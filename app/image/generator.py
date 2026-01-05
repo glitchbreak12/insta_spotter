@@ -129,142 +129,140 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === CARD CON GLOW 3D IDENTICO A card_v5.html ===
-            card_x = 90  # padding: 90px come card_v5
+            # === TEMPLATE CELESTIAL - Rendering OTTIMIZZATO ===
+            # Sfondo spaziale con stelle simulate come nel CSS
+            stars_layer = Image.new('RGBA', (width, height), (11, 11, 26, 255))  # #0B0B1A
+            stars_draw = ImageDraw.Draw(stars_layer)
+
+            # Stelle casuali come nel template CSS
+            import random
+            random.seed(42)  # Per consistenza
+            for i in range(200):  # Molte stelle per effetto spaziale
+                x = random.randint(0, width)
+                y = random.randint(0, height)
+                brightness = random.randint(180, 255)
+                size = random.randint(1, 3)
+                stars_draw.rectangle([x, y, x+size, y+size], fill=(brightness, brightness, brightness, 220))
+
+            # Nebula gradients come nel CSS
+            nebula_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            nebula_draw = ImageDraw.Draw(nebula_layer)
+
+            # Nebula viola centrale (--nebula-purple: #9b59b6)
+            for radius in range(350, 100, -15):
+                alpha = int(120 * (1 - radius/350))
+                nebula_draw.ellipse(
+                    [width//2 - radius, height//2 - radius,
+                     width//2 + radius, height//2 + radius],
+                    fill=(155, 89, 182, alpha)  # #9b59b6
+                )
+
+            # Nebula blu ai lati (--nebula-blue: #3498db)
+            for radius in range(280, 80, -12):
+                alpha = int(100 * (1 - radius/280))
+                nebula_draw.ellipse(
+                    [width//4 - radius, height//3 - radius,
+                     width//4 + radius, height//3 + radius],
+                    fill=(52, 152, 219, alpha)  # #3498db
+                )
+
+                nebula_draw.ellipse(
+                    [3*width//4 - radius, 2*height//3 - radius,
+                     3*width//4 + radius, 2*height//3 + radius],
+                    fill=(52, 152, 219, alpha)
+                )
+
+            # Combina sfondi spaziali
+            celestial_bg = Image.alpha_composite(stars_layer, nebula_layer)
+            img = Image.alpha_composite(img.convert('RGBA'), celestial_bg).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # === CARD CELESTIAL ===
+            card_x = 90  # padding: 90px come nel template
             card_y = 90
-            card_w = width - 180  # 1080 - (90*2)
-            card_h = height - 180  # 1920 - (90*2)
+            card_w = width - 180
+            card_h = height - 180
 
-            # Simula il ::before pseudo-element (glow radiale)
-            before_glow = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            before_draw = ImageDraw.Draw(before_glow)
+            # Glow complesso come nel template celestial
+            card_glow = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(card_glow)
 
-            # Glow radiale come ::before: top: -30%, left: -30%, width: 160%, height: 160%
-            glow_center_x = card_x + card_w // 2
-            glow_center_y = card_y + card_h // 2
-            glow_radius = int(max(card_w, card_h) * 0.8)  # 160% / 2 ≈ 80%
+            # Glow multi-layer ispirato al template
+            glow_colors = [
+                (0, 122, 255, 48),   # Blu principale
+                (155, 89, 182, 32),  # Viola nebula
+                (52, 152, 219, 24),  # Blu secondario
+            ]
 
-            for radius in range(glow_radius, 0, -2):
-                alpha = int(127 * (1 - radius/glow_radius) * 0.5)  # opacity: 0.5
-                before_draw.ellipse(
-                    [glow_center_x - radius, glow_center_y - radius,
-                     glow_center_x + radius, glow_center_y + radius],
-                    fill=(0, 122, 255, alpha)
-                )
+            for color_r, color_g, color_b, base_alpha in glow_colors:
+                for i in range(25):
+                    alpha = max(0, base_alpha - i * 2)
+                    offset = i * 3
+                    glow_draw.rounded_rectangle(
+                        [card_x - offset, card_y - offset,
+                         card_x + card_w + offset, card_y + card_h + offset],
+                        radius=45 + offset//2,
+                        outline=(color_r, color_g, color_b, alpha)
+                    )
 
-            img = Image.alpha_composite(img.convert('RGBA'), before_glow).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), card_glow).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # BOX-SHADOW 3D esatto come card_v5 (4 livelli)
-            shadow_3d = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            shadow_draw = ImageDraw.Draw(shadow_3d)
+            # Ombra profonda come nel template
+            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(shadow_layer)
 
-            # 1. Inner light glow: 0 0 10px rgba(0, 122, 255, 0.3)
-            for i in range(5):
-                alpha = int(77 - i * 15)  # 0.3 * 255 ≈ 77
-                shadow_draw.rectangle(
-                    [card_x - 10 + i, card_y - 10 + i,
-                     card_x + card_w + 10 - i, card_y + card_h + 10 - i],
-                    outline=(0, 122, 255, alpha)
-                )
-
-            # 2. Medium glow: 0 0 40px rgba(0, 122, 255, 0.2)
-            for i in range(10):
-                alpha = int(51 - i * 5)  # 0.2 * 255 ≈ 51
-                shadow_draw.rectangle(
-                    [card_x - 40 + i*4, card_y - 40 + i*4,
-                     card_x + card_w + 40 - i*4, card_y + card_h + 40 - i*4],
-                    outline=(0, 122, 255, alpha)
-                )
-
-            # 3. Outer subtle glow: 0 0 80px rgba(0, 122, 255, 0.15)
-            for i in range(15):
-                alpha = int(38 - i * 2.5)  # 0.15 * 255 ≈ 38
-                shadow_draw.rectangle(
-                    [card_x - 80 + i*5, card_y - 80 + i*5,
-                     card_x + card_w + 80 - i*5, card_y + card_h + 80 - i*5],
-                    outline=(0, 122, 255, alpha)
-                )
-
-            img = Image.alpha_composite(img.convert('RGBA'), shadow_3d).convert('RGB')
-            draw = ImageDraw.Draw(img)
-
-            # 4. Deep dark shadow: 0 20px 60px rgba(0, 0, 0, 0.7)
-            deep_shadow = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            deep_draw = ImageDraw.Draw(deep_shadow)
-
-            for i in range(25):
-                alpha = int(179 - i * 7)  # 0.7 * 255 ≈ 179
-                offset_x = i * 2  # Simula blur
-                offset_y = 20 + i  # 20px offset
-                deep_draw.rectangle(
+            for i in range(50):
+                alpha = int(220 - i * 4.4)  # Simula box-shadow
+                offset_x = i * 1.5
+                offset_y = 40 + i * 2
+                shadow_draw.rounded_rectangle(
                     [card_x + offset_x, card_y + offset_y,
                      card_x + card_w - offset_x, card_y + card_h + offset_y],
+                    radius=45,
                     fill=(0, 0, 0, alpha)
                 )
 
-            img = Image.alpha_composite(img.convert('RGBA'), deep_shadow).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Card principale con backdrop-filter simulato (blur + saturate)
-            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            card_draw = ImageDraw.Draw(card_layer)
+            # Card principale con gradiente metallico come nel template
+            card_main = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_main)
 
-            # Simula backdrop-filter: blur(55px) saturate(190%)
-            # Crea una versione molto sfocata per simulare il blur
-            blur_bg = img.filter(ImageFilter.GaussianBlur(radius=8))  # blur(55px) ≈ radius 8
-
-            # Applica saturazione extra (saturate(190%))
-            # PIL non ha saturate diretto, simuliamo con un filtro di contrasto
-            enhancer = ImageEnhance.Contrast(blur_bg)
-            blur_bg = enhancer.enhance(1.9)  # 190% contrast ≈ saturation boost
-
-            # Maschera per la card
-            mask = Image.new('L', (card_w, card_h), 0)
-            mask_draw = ImageDraw.Draw(mask)
-            mask_draw.rounded_rectangle([0, 0, card_w, card_h], radius=45, fill=255)
-
-            # Applica la maschera sfocata alla card
-            card_region = blur_bg.crop((card_x, card_y, card_x + card_w, card_y + card_h))
-            card_layer.paste(card_region, (card_x, card_y), mask)
-
-            # Overlay semi-trasparente come rgba(20, 20, 20, 0.8)
-            overlay = Image.new('RGBA', (width, height), (20, 20, 20, 204))
-            overlay_draw = ImageDraw.Draw(overlay)
-            overlay_draw.rounded_rectangle(
-                [card_x, card_y, card_x + card_w, card_y + card_h],
-                radius=45,
-                fill=(20, 20, 20, 204)
-            )
-
-            # Bordo sottile come border: 1px solid rgba(255,255,255,0.08)
-            border_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            border_draw = ImageDraw.Draw(border_layer)
-            border_draw.rounded_rectangle(
-                [card_x, card_y, card_x + card_w, card_y + card_h],
-                radius=45,
-                outline=(255, 255, 255, 20),
-                width=2  # Simula 1px border
-            )
-
-            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
-            img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
-            img = Image.alpha_composite(img.convert('RGBA'), border_layer).convert('RGB')
-            draw = ImageDraw.Draw(img)
-
-            # Highlight superiore esatto come card_v5
-            highlight_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            highlight_draw = ImageDraw.Draw(highlight_layer)
-
-            for y in range(350):  # height: 350px
-                # linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%)
-                alpha = max(0, int(15 * (1 - y/350)))  # 0.06 * 255 ≈ 15
-                highlight_draw.line(
+            # Gradiente metallico da #2E2E2E a #1F1F1F
+            for y in range(card_h):
+                t = y / card_h
+                r = int(46 - 15 * t)  # 2E=46, 1F=31
+                g = int(46 - 15 * t)
+                b = int(46 - 15 * t)
+                card_draw.line(
                     [(card_x, card_y + y), (card_x + card_w, card_y + y)],
-                    fill=(255, 255, 255, alpha)
+                    fill=(r, g, b, 255)
                 )
 
-            img = Image.alpha_composite(img.convert('RGBA'), highlight_layer).convert('RGB')
+            # Bordo dorato come nel template (#d4af37)
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45,
+                outline=(212, 175, 55, 204),  # #d4af37 con alpha
+                width=4
+            )
+
+            # Effetto shimmer metallico come nel CSS
+            shimmer_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            shimmer_draw = ImageDraw.Draw(shimmer_layer)
+
+            # Linee diagonali shimmer animate
+            for i in range(0, card_w + card_h, 60):
+                shimmer_draw.line(
+                    [(card_x + i - card_h//2, card_y), (card_x + i - card_h//2 + card_h//5, card_y + card_h)],
+                    fill=(255, 255, 255, 35),
+                    width=3
+                )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_main).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), shimmer_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
             # === CARICA FONT KOMIKA AXIS ===
