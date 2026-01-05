@@ -463,6 +463,10 @@
             100% { transform: rotate(360deg); }
         }
 
+        #refresh-icon {
+            transition: transform 0.3s ease;
+        }
+
         /* Notifications */
         .notification {
             position: fixed;
@@ -484,6 +488,16 @@
 
         .notification.show {
             transform: translateY(0);
+        }
+
+        /* Refresh badge */
+        #refresh-badge {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .notification.success {
@@ -563,6 +577,9 @@
     <div class="top-bar">
         <h1><i class="fas fa-shield-alt"></i> InstaSpotter</h1>
         <div class="user-menu">
+            <button class="logout-btn" onclick="refreshPosts()" style="margin-right: 0.5rem;" title="Refresh">
+                <i class="fas fa-sync-alt" id="refresh-icon"></i>
+            </button>
             <div class="user-avatar">A</div>
             <a href="/admin/logout" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
@@ -739,18 +756,37 @@
 
         // Auto-refresh interval
         let refreshInterval = null;
+        let isRefreshing = false;
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize - carica immediatamente
+        (function init() {
             console.log('Mobile dashboard initializing...');
             initializeCharts();
             loadDashboardData();
             
-            // Auto-refresh ogni 30 secondi
+            // Auto-refresh ogni 15 secondi (più frequente)
             refreshInterval = setInterval(() => {
-                console.log('Auto-refreshing dashboard...');
+                if (!isRefreshing && document.visibilityState === 'visible') {
+                    console.log('Auto-refreshing dashboard...');
+                    loadDashboardData();
+                }
+            }, 15000);
+        })();
+
+        // Refresh quando la pagina diventa visibile
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && !isRefreshing) {
+                console.log('Page visible, refreshing data...');
                 loadDashboardData();
-            }, 30000);
+            }
+        });
+
+        // Refresh quando la finestra riprende il focus
+        window.addEventListener('focus', () => {
+            if (!isRefreshing) {
+                console.log('Window focused, refreshing data...');
+                loadDashboardData();
+            }
         });
 
         // Cleanup on page unload
@@ -761,22 +797,49 @@
         });
 
         // Load data
-        async function loadDashboardData() {
+        async function loadDashboardData(silent = false) {
+            if (isRefreshing) {
+                console.log('Already refreshing, skipping...');
+                return;
+            }
+
+            isRefreshing = true;
             const messagesList = document.getElementById('messagesList');
             const moderationQueue = document.getElementById('moderationQueue');
             
-            if (messagesList) {
-                messagesList.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading messages...</div></div>';
-            }
-            if (moderationQueue) {
-                moderationQueue.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
+            // Mostra loading solo se non è un refresh silenzioso
+            if (!silent) {
+                if (messagesList && messagesList.children.length > 0) {
+                    // Se ci sono già messaggi, mostra un indicatore discreto
+                    const existingCards = messagesList.querySelectorAll('.message-card');
+                    if (existingCards.length > 0) {
+                        // Aggiungi un badge di refresh invece di sostituire tutto
+                        const refreshBadge = document.createElement('div');
+                        refreshBadge.id = 'refresh-badge';
+                        refreshBadge.style.cssText = 'position: fixed; top: 70px; right: 1rem; background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; z-index: 2000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+                        refreshBadge.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Aggiornamento...';
+                        document.body.appendChild(refreshBadge);
+                    } else {
+                        messagesList.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading messages...</div></div>';
+                    }
+                } else if (messagesList) {
+                    messagesList.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading messages...</div></div>';
+                }
+                
+                if (moderationQueue && moderationQueue.children.length === 0) {
+                    moderationQueue.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading...</div></div>';
+                }
             }
 
             try {
-                const response = await fetch('/admin/api/dashboard-data', {
+                // Aggiungi timestamp per evitare cache
+                const response = await fetch(`/admin/api/dashboard-data?t=${Date.now()}`, {
                     method: 'GET',
                     credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
                 });
 
                 if (!response.ok) {
@@ -788,24 +851,51 @@
                 }
 
                 const data = await response.json();
+                const previousCount = allMessages.length;
                 allMessages = data.messages || [];
-                console.log(`Loaded ${allMessages.length} messages`);
+                console.log(`Loaded ${allMessages.length} messages (was ${previousCount})`);
+
+                // Rimuovi badge di refresh se presente
+                const refreshBadge = document.getElementById('refresh-badge');
+                if (refreshBadge) {
+                    refreshBadge.remove();
+                }
 
                 renderMessages();
                 renderModerationQueue();
                 updateStats();
                 updateCharts(allMessages);
 
+                // Notifica discreta se ci sono nuovi messaggi
+                if (!silent && allMessages.length > previousCount && previousCount > 0) {
+                    const newCount = allMessages.length - previousCount;
+                    showNotification(`${newCount} nuovo/i messaggio/i`, 'success');
+                }
+
             } catch (error) {
                 console.error('Error:', error);
-                if (messagesList) {
+                
+                // Rimuovi badge di refresh se presente
+                const refreshBadge = document.getElementById('refresh-badge');
+                if (refreshBadge) {
+                    refreshBadge.remove();
+                }
+                
+                if (messagesList && messagesList.querySelector('.loading')) {
                     messagesList.innerHTML = `<div class="empty-state">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>Error loading data</div>
                         <div style="font-size: 0.8rem; margin-top: 0.5rem;">${error.message}</div>
+                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="loadDashboardData()">
+                            <i class="fas fa-redo"></i> Riprova
+                        </button>
                     </div>`;
                 }
-                showNotification('Error loading data', 'error');
+                if (!silent) {
+                    showNotification('Errore nel caricamento dati', 'error');
+                }
+            } finally {
+                isRefreshing = false;
             }
         }
 
@@ -1014,8 +1104,8 @@
                     } else {
                         showNotification('Messaggio rifiutato', 'success');
                     }
-                    // Refresh immediato
-                    setTimeout(() => loadDashboardData(), 1000);
+                    // Refresh immediato (non silenzioso per mostrare le modifiche)
+                    setTimeout(() => loadDashboardData(false), 500);
                 } else {
                     throw new Error(data.message || 'Azione fallita');
                 }
@@ -1056,8 +1146,15 @@
 
         // Refresh
         function refreshPosts() {
-            loadDashboardData();
-            showNotification('Refreshed', 'success');
+            const refreshIcon = document.getElementById('refresh-icon');
+            if (refreshIcon) {
+                refreshIcon.style.animation = 'spin 1s linear infinite';
+            }
+            loadDashboardData(false).finally(() => {
+                if (refreshIcon) {
+                    refreshIcon.style.animation = '';
+                }
+            });
         }
 
         // Export
