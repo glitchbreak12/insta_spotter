@@ -98,82 +98,61 @@ class ImageGenerator:
             height = 1920
             padding = 60
             
-            # === SFONDO AZZURRO/BLU CON GRADIENTE ===
+            # === SFONDO SEMPLICE AZZURRO/BLU ===
             img = Image.new('RGB', (width, height), color='#0a1628')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente azzurro/blu intenso
+            # Gradiente azzurro/blu semplice
             for y in range(height):
                 progress = y / height
-                # Gradiente: blu scuro -> azzurro brillante -> blu
+                # Gradiente: blu scuro -> azzurro -> blu
                 if progress < 0.5:
-                    # Top: blu scuro -> azzurro brillante
-                    r = int(10 + (50 * progress * 2))
-                    g = int(22 + (130 * progress * 2))
-                    b = int(40 + (200 * progress * 2))
+                    # Top: blu scuro -> azzurro
+                    r = int(10 + (40 * progress * 2))
+                    g = int(22 + (100 * progress * 2))
+                    b = int(40 + (160 * progress * 2))
                 else:
-                    # Bottom: azzurro brillante -> blu scuro
+                    # Bottom: azzurro -> blu scuro
                     local = (progress - 0.5) * 2
-                    r = int(60 - (50 * local))
-                    g = int(152 - (130 * local))
-                    b = int(240 - (200 * local))
+                    r = int(50 - (40 * local))
+                    g = int(122 - (100 * local))
+                    b = int(200 - (160 * local))
                 
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # === GLOW BACKGROUND AZZURRO ===
-            glow_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glow_bg_draw = ImageDraw.Draw(glow_bg)
-            
-            # Glow radiali azzurri
-            center_x, center_y = width // 2, height // 2
-            for i in range(2):
-                radius = 400 + (i * 500)
-                alpha = int(70 - (i * 20))
-                for angle in range(0, 360, 15):
-                    rad = math.radians(angle)
-                    x = int(center_x + radius * math.cos(rad))
-                    y = int(center_y + radius * math.sin(rad))
-                    if 0 <= x < width and 0 <= y < height:
-                        glow_bg_draw.ellipse(
-                            [x - 120, y - 120, x + 120, y + 120],
-                            fill=(100, 200, 255, alpha)  # Azzurro glow intenso
-                        )
-            
-            img = Image.alpha_composite(img.convert('RGBA'), glow_bg).convert('RGB')
-            draw = ImageDraw.Draw(img)
-            
-            # === OMBRA 3D PRONUNCIATA ===
+            # === CARD 3D CON OMBRA PRONUNCIATA ===
             card_x = padding
             card_y = padding + 40
             card_w = width - (padding * 2)
             card_h = height - (padding * 2) - 80
             
+            # Ombra 3D grande e pronunciata (prima della card)
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            # Ombra 3D grande e pronunciata
-            for i in range(25):
-                alpha = int(60 - (i * 2))
+            # Ombra 3D con blur effect
+            for i in range(30):
+                alpha = int(80 - (i * 2.5))
                 shadow_draw.rectangle(
-                    [card_x + i + 15, card_y + i + 15,
-                     card_x + card_w + i + 15, card_y + card_h + i + 15],
+                    [card_x + i + 20, card_y + i + 20,
+                     card_x + card_w + i + 20, card_y + card_h + i + 20],
                     fill=(0, 0, 0, alpha)
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === GLOW ESTERNO AZZURRO INTENSO (3D) ===
+            # === GLOW ESTERNO AZZURRO PER 3D ===
             glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glow_draw = ImageDraw.Draw(glow_card)
             
-            # Glow azzurro/blu multipli e intensi per 3D
-            for i in range(40):
-                offset = i * 1.2
-                glow_alpha = int(200 - (i * 4))
+            # Glow azzurro attorno alla card per effetto 3D
+            for i in range(25):
+                offset = i * 1.5
+                glow_alpha = int(180 - (i * 6))
                 glow_draw.rectangle(
                     [card_x - offset, card_y - offset,
                      card_x + card_w + offset, card_y + card_h + offset],
-                    outline=(100, 200, 255, glow_alpha),  # Azzurro glow intenso
+                    outline=(100, 200, 255, glow_alpha),  # Azzurro glow
                     width=3
                 )
             
