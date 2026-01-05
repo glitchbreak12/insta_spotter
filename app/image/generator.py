@@ -14,9 +14,32 @@ class ImageGenerator:
             path_wkhtmltoimage = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltoimage.exe'
             self.config = imgkit.config(wkhtmltoimage=path_wkhtmltoimage)
         else:
-            # Su Linux (come in Render), il percorso è solitamente questo
-            # Render include già wkhtmltoimage nel suo ambiente standard
-            self.config = {}
+            # Su Linux (Replit, Render, etc.)
+            # Prova a trovare wkhtmltoimage nel PATH
+            import shutil
+            wkhtmltoimage_path = shutil.which('wkhtmltoimage')
+            if wkhtmltoimage_path:
+                self.config = imgkit.config(wkhtmltoimage=wkhtmltoimage_path)
+                print(f"✓ wkhtmltoimage trovato: {wkhtmltoimage_path}")
+            else:
+                # Se non trovato, prova percorsi comuni
+                common_paths = [
+                    '/usr/bin/wkhtmltoimage',
+                    '/usr/local/bin/wkhtmltoimage',
+                    '/bin/wkhtmltoimage'
+                ]
+                found = False
+                for path in common_paths:
+                    if os.path.exists(path):
+                        self.config = imgkit.config(wkhtmltoimage=path)
+                        print(f"✓ wkhtmltoimage trovato: {path}")
+                        found = True
+                        break
+                
+                if not found:
+                    # Configurazione vuota - imgkit userà il PATH
+                    self.config = {}
+                    print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 
         # Configura il loader di Jinja2 per trovare i template nella cartella corretta
