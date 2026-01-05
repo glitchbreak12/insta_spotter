@@ -164,6 +164,14 @@ Tua Risposta:
         except Exception as e:
             error_msg = str(e)
             print(f"--- ERRORE [Moderator]: Impossibile analizzare il messaggio. Errore: {error_msg} ---")
+
+            # Controlla se è un errore di quota API
+            is_quota_error = "429" in error_msg and ("quota" in error_msg.lower() or "exceeded" in error_msg.lower())
+
+            if is_quota_error:
+                # Errore di quota - rilancia per far gestire dal task
+                raise ValueError(f"Quota API Gemini esaurita: {error_msg}")
+
             # Se è un errore 404 sui modelli o API non disponibile, rilancia l'eccezione
             if "404" in error_msg and ("models" in error_msg.lower() or "not found" in error_msg.lower()):
                 raise ValueError(f"Modelli Gemini non disponibili per questo account: {error_msg}")

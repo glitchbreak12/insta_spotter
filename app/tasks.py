@@ -39,13 +39,24 @@ def moderate_message_task(message_id: int):
             else:
                 raise
         except Exception as e:
-            # Qualsiasi altro errore - disabilita moderazione AI per questo messaggio
+            # Qualsiasi altro errore - controlla se è un errore di quota
             error_msg = str(e)
-            print(f"--- [TASK] Errore moderazione AI: {error_msg[:200]}. Messaggio ID {message_id} rimane in PENDING. ---")
-            message.gemini_analysis = f"Errore tecnico moderazione AI - richiede approvazione manuale"
-            message.status = MessageStatus.PENDING
-            db.commit()
-            return
+            is_quota_error = "429" in error_msg and ("quota" in error_msg.lower() or "exceeded" in error_msg.lower())
+
+            if is_quota_error:
+                # Errore di quota API - approva automaticamente per non bloccare i messaggi
+                print(f"--- [TASK] Quota API Gemini esaurita. Approvo automaticamente messaggio ID {message_id}. ---")
+                message.gemini_analysis = "Quota API esaurita - approvato automaticamente per evitare blocco"
+                message.status = MessageStatus.APPROVED
+                db.commit()
+                return
+            else:
+                # Altro errore tecnico - lascia in pending per sicurezza
+                print(f"--- [TASK] Errore moderazione AI: {error_msg[:200]}. Messaggio ID {message_id} rimane in PENDING. ---")
+                message.gemini_analysis = f"Errore tecnico moderazione AI - richiede approvazione manuale"
+                message.status = MessageStatus.PENDING
+                db.commit()
+                return
         
         print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
 

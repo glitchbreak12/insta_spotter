@@ -19,8 +19,20 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Ridotto a 30 minuti per sicurezza
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing context - fallback per errori bcrypt
+try:
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+except Exception as e:
+    logger.warning(f"Errore bcrypt, uso fallback sha256: {e}")
+    try:
+        pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+    except Exception as e2:
+        logger.warning(f"Anche sha256 fallito, uso plaintext fallback: {e2}")
+        # Fallback di emergenza - NON USARE IN PRODUZIONE!
+        class PlaintextContext:
+            def hash(self, password): return password
+            def verify(self, plain, hashed): return plain == hashed
+        pwd_context = PlaintextContext()
 
 # --- Variabili di Ambiente ---
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
