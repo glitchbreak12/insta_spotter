@@ -1,10 +1,23 @@
-# 🚨 SETUP COMPLETO REPLIT - TUTTE LE VARIABILI
+# 🚨 ULTIMA SOLUZIONE - TEMPLATE ANCORA DORATO
 
-## 🔥 PROBLEMA RISOLTO:
-Template dorato → card_v5.html ✅
-Ora configura le Secrets per far funzionare tutto!
+## 🔥 PROBLEMA:
+È ancora dorato! Replit NON ha il codice aggiornato.
 
-## ✅ CONFIGURA QUESTE SECRETS IN REPLIT:
+## ✅ SOLUZIONE FINALE - COPIA QUESTO:
+
+### **COMANDO MAGICO (copia tutto in Replit):**
+```bash
+cd /home/runner/workspace && rm -rf .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main && python3 -c "from config import settings; print('TEMPLATE ATTUALE:', settings.image.template_path); print('✅ Se vedi card_v5.html, SUCCESSO!')" && echo "RIAVVIA L'APP SUBITO!"
+```
+
+### **DOPO:**
+1. **RIAVVIA** l'app (Restart)
+2. **TESTA** uno spot
+3. **VEDRAI** card_v5.html blu!
+
+---
+
+## ✅ POI CONFIGURA LE SECRETS:
 
 ### **1. 📸 INSTAGRAM (OBBLIGATORIO)**
 ```
