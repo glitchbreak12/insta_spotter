@@ -318,6 +318,8 @@ class ImageGenerator:
         except Exception as e:
             print(f"❌ Errore PIL fallback: {e}")
             raise
+
+    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> str | None:
                 nebula_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
                      width//2 + radius, height//2 + radius],
