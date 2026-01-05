@@ -1,6 +1,8 @@
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired, TwoFactorRequired, ChallengeRequired
+from instagrapi.types import ChallengeChoice
 import os
+import time
 
 from config import settings
 
@@ -59,6 +61,43 @@ class InstagramBot:
             })
             
             self.client.login(self.username, self.password)
+        except ChallengeRequired as e:
+            print("--- DEBUG [POSTER]: Instagram richiede verifica (Challenge). ---")
+            print(f"--- DEBUG [POSTER]: Challenge info: {e} ---")
+            
+            # Prova a risolvere la challenge automaticamente
+            try:
+                # Scegli EMAIL come metodo di verifica (più comune)
+                challenge_choice = ChallengeChoice.EMAIL
+                print(f"--- DEBUG [POSTER]: Scelto metodo di verifica: {challenge_choice} ---")
+                
+                # Invia la richiesta di codice
+                self.client.challenge_select_method(challenge_choice)
+                print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata. ---")
+                print("--- DEBUG [POSTER]: Controlla la tua email per il codice a 6 cifre. ---")
+                
+                # Controlla se c'è un codice pre-configurato nei Secrets
+                verification_code = os.getenv("INSTAGRAM_VERIFICATION_CODE")
+                
+                if verification_code and len(verification_code) == 6:
+                    print(f"--- DEBUG [POSTER]: Trovato codice di verifica nei Secrets. ---")
+                    self.client.challenge_code_handler(verification_code)
+                    print("--- DEBUG [POSTER]: Verifica completata con codice dai Secrets. ---")
+                else:
+                    # Se non c'è codice, salva le info della challenge e solleva un errore informativo
+                    print("--- DEBUG [POSTER]: Nessun codice di verifica trovato nei Secrets. ---")
+                    print("--- DEBUG [POSTER]: Aggiungi INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit. ---")
+                    print("--- DEBUG [POSTER]: Il codice è stato inviato alla tua email. ---")
+                    raise Exception(
+                        "Instagram richiede verifica via email. "
+                        "Controlla la tua email per il codice a 6 cifre, poi aggiungilo come "
+                        "INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit e riavvia l'app."
+                    )
+                    
+            except Exception as challenge_error:
+                print(f"--- DEBUG [POSTER]: Errore durante la gestione della challenge: {challenge_error} ---")
+                raise
+                
         except TwoFactorRequired:
             print("--- DEBUG [POSTER]: Richiesta 2FA. ---")
             if not self.two_factor_seed:
