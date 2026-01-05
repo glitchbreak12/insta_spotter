@@ -83,7 +83,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con design completamente nuovo luxury 3D."""
+        """Genera un'immagine con design stile Apple - minimalista e pulito."""
         if not PIL_AVAILABLE:
             return False
         
@@ -93,114 +93,104 @@ class ImageGenerator:
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 70  # Padding aumentato per migliore bilanciamento
+            padding = 80
             
-            # === SFONDO COMPLETAMENTE NUOVO ===
+            # === SFONDO STILE APPLE - Nero con glows delicati ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente di sfondo luxury
+            # Gradiente nero molto sottile
             for y in range(height):
                 t = y / height
-                # Gradiente: nero -> blu scuro -> blu medio
-                r = int(0 + 4 * t)
-                g = int(0 + 66 * t)
-                b = int(0 + 146 * t)
+                # Gradiente: nero puro -> nero leggermente più chiaro
+                r = int(0 + 2 * t)
+                g = int(0 + 2 * t)
+                b = int(0 + 2 * t)
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # Glows radiali multipli per profondità
+            # Glows radiali delicati stile Apple
             ambient = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             amb_draw = ImageDraw.Draw(ambient)
             
-            # Glow centrale principale
-            for radius, alpha in [(600, 100), (450, 75), (300, 50)]:
+            # Glow blu centrale delicato
+            for radius, alpha in [(500, 40), (350, 25), (200, 15)]:
                 amb_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
                      width//2 + radius, height//2 + radius],
-                    fill=(0, 150, 255, alpha)
+                    fill=(0, 122, 255, alpha)  # Blue Apple
                 )
             
-            # Glow laterale sinistro
-            for radius, alpha in [(400, 60), (250, 40)]:
+            # Glow azzurro laterale sinistro
+            for radius, alpha in [(300, 20), (180, 12)]:
                 amb_draw.ellipse(
-                    [int(width*0.2) - radius, int(height*0.3) - radius,
-                     int(width*0.2) + radius, int(height*0.3) + radius],
-                    fill=(100, 50, 255, alpha)
+                    [int(width*0.3) - radius, int(height*0.4) - radius,
+                     int(width*0.3) + radius, int(height*0.4) + radius],
+                    fill=(90, 200, 250, alpha)  # Azzurro Apple
                 )
             
-            # Glow laterale destro
-            for radius, alpha in [(400, 60), (250, 40)]:
+            # Glow blu laterale destro
+            for radius, alpha in [(300, 20), (180, 12)]:
                 amb_draw.ellipse(
-                    [int(width*0.8) - radius, int(height*0.7) - radius,
-                     int(width*0.8) + radius, int(height*0.7) + radius],
-                    fill=(0, 100, 200, alpha)
+                    [int(width*0.7) - radius, int(height*0.6) - radius,
+                     int(width*0.7) + radius, int(height*0.6) + radius],
+                    fill=(88, 86, 214, alpha)  # Blu viola Apple
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === CARD 3D COMPLETAMENTE NUOVA ===
+            # === CARD STILE APPLE - Glassmorphism ===
             card_x = padding
             card_y = padding
             card_w = width - (padding * 2)
             card_h = height - (padding * 2)
 
-            # Ombra 3D profonda e realistica
+            # Ombra morbida stile Apple
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            for i in range(30):
-                alpha = int(80 - i * 2.5)
+            for i in range(20):
+                alpha = int(60 - i * 2.8)
                 shadow_draw.rectangle(
-                    [card_x + i + 20, card_y + i + 20,
-                     card_x + card_w + i + 20, card_y + card_h + i + 20],
+                    [card_x + i + 8, card_y + i + 8,
+                     card_x + card_w + i + 8, card_y + card_h + i + 8],
                     fill=(0, 0, 0, alpha)
                 )
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Glow esterno multilayer (prima della card)
+            # Glow blu sottile attorno alla card
             glow_outer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glow_outer_draw = ImageDraw.Draw(glow_outer)
-            for i in range(25):
-                off = i * 1.8
-                alpha = int(180 - i * 6)
+            for i in range(12):
+                off = i * 2
+                alpha = int(50 - i * 3)
                 glow_outer_draw.rectangle(
                     [card_x - off, card_y - off,
                      card_x + card_w + off, card_y + card_h + off],
-                    outline=(0, 150, 255, alpha),
-                    width=4
+                    outline=(0, 122, 255, alpha),
+                    width=2
                 )
             img = Image.alpha_composite(img.convert('RGBA'), glow_outer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Card principale glass migliorata
+            # Card principale glassmorphism stile Apple
             card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             card_draw = ImageDraw.Draw(card_layer)
             card_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(10, 15, 30, 225),  # Opacità leggermente aumentata
-                outline=(100, 200, 255, 175),  # Bordo più visibile
-                width=3  # Bordo leggermente più spesso
+                fill=(18, 18, 18, 190),  # Nero trasparente stile Apple
+                outline=(255, 255, 255, 25),  # Bordo bianco sottile
+                width=1
             )
             
-            # Highlight superiore diagonale
-            highlight_y = card_y + 50
-            for i in range(200):
-                alpha = max(0, 100 - int(i * 0.4))
+            # Highlight superiore delicato
+            highlight_y = card_y
+            for i in range(300):
+                alpha = max(0, 80 - int(i * 0.25))
                 card_draw.line(
-                    [(card_x + 50, highlight_y + i), (card_x + card_w - 50, highlight_y + i + 100)],
+                    [(card_x, highlight_y + i), (card_x + card_w, highlight_y + i)],
                     fill=(255, 255, 255, alpha),
-                    width=3
-                )
-            
-            # Glow interno
-            for i in range(15):
-                alpha = int(120 - i * 7)
-                card_draw.rectangle(
-                    [card_x + 20 + i, card_y + 20 + i,
-                     card_x + card_w - 20 - i, card_y + card_h - 20 - i],
-                    outline=(100, 200, 255, alpha),
-                    width=2
+                    width=1
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
@@ -385,7 +375,7 @@ class ImageGenerator:
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (design completamente nuovo luxury 3D): {output_path}")
+            print(f"✅ Immagine generata (stile Apple - minimalista e pulito): {output_path}")
             return True
             
         except Exception as e:
