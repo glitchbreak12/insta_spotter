@@ -83,7 +83,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con stile luxury futuristic neon, glow azzurro, liquid glass Apple 3D."""
+        """Genera un'immagine luxury futuristic neon con glow azzurro, liquid glass Apple 3D, font Komika Axis."""
         if not PIL_AVAILABLE:
             return False
         
@@ -96,111 +96,97 @@ class ImageGenerator:
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 80
+            padding = 70
             
-            # === SFONDO CON GLOWING GRADIENT ===
-            img = Image.new('RGB', (width, height), color='#000000')
+            # === SFONDO LUXURY FUTURISTIC NEON ===
+            img = Image.new('RGB', (width, height), color='#050510')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente complesso con glow blu/viola
+            # Gradiente luxury: nero profondo -> blu scuro -> azzurro neon brillante
             for y in range(height):
                 progress = y / height
                 
-                # Gradiente: nero -> blu scuro -> viola -> blu
-                if progress < 0.25:
-                    # Top: nero -> blu scuro
-                    r = int(0 + (20 * progress * 4))
-                    g = int(0 + (30 * progress * 4))
-                    b = int(0 + (60 * progress * 4))
-                elif progress < 0.5:
-                    # Middle-top: blu scuro -> viola
-                    local = (progress - 0.25) * 4
-                    r = int(20 + (40 * local))
-                    g = int(30 + (20 * local))
-                    b = int(60 + (30 * local))
-                elif progress < 0.75:
-                    # Middle-bottom: viola -> blu brillante
-                    local = (progress - 0.5) * 4
-                    r = int(60 - (20 * local))
-                    g = int(50 - (10 * local))
-                    b = int(90 + (40 * local))
+                # Gradiente luxury futuristic
+                if progress < 0.35:
+                    # Top: nero profondo -> blu scuro
+                    r = int(5 + (8 * progress * (1/0.35)))
+                    g = int(5 + (18 * progress * (1/0.35)))
+                    b = int(16 + (35 * progress * (1/0.35)))
+                elif progress < 0.65:
+                    # Middle: blu scuro -> azzurro neon
+                    local = (progress - 0.35) / 0.3
+                    r = int(13 + (22 * local))
+                    g = int(23 + (102 * local))
+                    b = int(51 + (144 * local))
                 else:
-                    # Bottom: blu brillante -> blu scuro
-                    local = (progress - 0.75) * 4
-                    r = int(40 - (20 * local))
-                    g = int(40 - (10 * local))
-                    b = int(130 - (50 * local))
+                    # Bottom: azzurro neon -> blu scuro
+                    local = (progress - 0.65) / 0.35
+                    r = int(35 - (22 * local))
+                    g = int(125 - (102 * local))
+                    b = int(195 - (144 * local))
                 
-                # Aggiungi glow dinamico
-                glow = math.sin(progress * math.pi * 6) * 15
-                r = max(0, min(255, int(r + glow)))
-                g = max(0, min(255, int(g + glow)))
-                b = max(0, min(255, int(b + glow)))
+                # Glow neon azzurro dinamico
+                glow = math.sin(progress * math.pi * 5) * 12
+                r = max(0, min(255, int(r + glow * 0.3)))
+                g = max(0, min(255, int(g + glow * 1.5)))
+                b = max(0, min(255, int(b + glow * 1.8)))
                 
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # === GLOWING BACKGROUND EFFECTS ===
-            glow_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glow_bg_draw = ImageDraw.Draw(glow_bg)
+            # === NEON GLOW BACKGROUND ===
+            neon_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            neon_draw = ImageDraw.Draw(neon_bg)
             
-            # Glow radiali multipli (simulati)
+            # Glow neon azzurro radiali (simulati)
             center_x, center_y = width // 2, height // 2
-            for i in range(3):
-                radius = 300 + (i * 200)
-                alpha = int(80 - (i * 20))
-                # Glow blu
-                for angle in range(0, 360, 10):
+            for i in range(2):
+                radius = 350 + (i * 400)
+                alpha = int(50 - (i * 15))
+                # Glow azzurro neon
+                for angle in range(0, 360, 20):
                     rad = math.radians(angle)
                     x = int(center_x + radius * math.cos(rad))
                     y = int(center_y + radius * math.sin(rad))
                     if 0 <= x < width and 0 <= y < height:
-                        glow_bg_draw.ellipse(
-                            [x - 50, y - 50, x + 50, y + 50],
-                            fill=(59, 130, 246, alpha)
+                        neon_draw.ellipse(
+                            [x - 100, y - 100, x + 100, y + 100],
+                            fill=(100, 200, 255, alpha)  # Azzurro neon
                         )
             
-            img = Image.alpha_composite(img.convert('RGBA'), glow_bg).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), neon_bg).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === LIQUID GLASS CARD 3D ===
+            # === APPLE LIQUID GLASS CARD 3D ===
             card_x = padding
-            card_y = padding
+            card_y = padding + 50
             card_w = width - (padding * 2)
-            card_h = height - (padding * 2)
+            card_h = height - (padding * 2) - 100
             
-            # Glow esterno intenso (3D effect)
+            # Glow esterno azzurro neon intenso (stile Apple 3D)
             glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glow_card_draw = ImageDraw.Draw(glow_card)
             
-            # Glow multipli per effetto 3D
-            glow_colors = [
-                (59, 130, 246, 120),   # Blu
-                (139, 92, 246, 100),   # Viola
-                (99, 102, 241, 80),    # Indigo
-            ]
-            
-            for glow_idx, (gr, gg, gb, alpha) in enumerate(glow_colors):
-                for i in range(25):
-                    offset = i * 2
-                    glow_alpha = int(alpha * (1 - i / 25))
-                    glow_card_draw.rectangle(
-                        [card_x - offset, card_y - offset,
-                         card_x + card_w + offset, card_y + card_h + offset],
-                        outline=(gr, gg, gb, glow_alpha),
-                        width=3
-                    )
+            # Glow azzurro neon multipli per effetto 3D luxury
+            for i in range(35):
+                offset = i * 1.2
+                glow_alpha = int(180 - (i * 4))
+                glow_card_draw.rectangle(
+                    [card_x - offset, card_y - offset,
+                     card_x + card_w + offset, card_y + card_h + offset],
+                    outline=(100, 200, 255, glow_alpha),  # Azzurro neon
+                    width=2
+                )
             
             img = Image.alpha_composite(img.convert('RGBA'), glow_card).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === LIQUID GLASS CARD ===
+            # === LIQUID GLASS APPLE STYLE ===
             glass_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glass_draw = ImageDraw.Draw(glass_card)
             
-            # Sfondo glass con blur effect (simulato con gradiente)
-            # Bordo esterno glow
-            for i in range(15):
-                alpha = int(30 + (i * 2))
+            # Bordo esterno glow bianco (stile Apple premium)
+            for i in range(25):
+                alpha = int(50 + (i * 2))
                 glass_draw.rectangle(
                     [card_x - i, card_y - i,
                      card_x + card_w + i, card_y + card_h + i],
@@ -208,31 +194,31 @@ class ImageGenerator:
                     width=1
                 )
             
-            # Sfondo glass principale (liquid glass)
+            # Sfondo glass principale (liquid glass Apple)
             glass_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(30, 41, 59, 100),  # Semi-trasparente
-                outline=(255, 255, 255, 60),
-                width=3
+                fill=(15, 25, 45, 140),  # Blu scuro semi-trasparente luxury
+                outline=(255, 255, 255, 100),
+                width=2
             )
             
-            # Highlight superiore (riflesso glass)
-            highlight_y = card_y + 30
-            for i in range(40):
-                alpha = int(100 - (i * 2))
+            # Highlight superiore Apple (riflesso glass premium)
+            highlight_y = card_y + 50
+            for i in range(60):
+                alpha = int(140 - (i * 2))
                 glass_draw.rectangle(
-                    [card_x + 30, highlight_y + i,
-                     card_x + card_w - 30, highlight_y + i + 2],
+                    [card_x + 50, highlight_y + i,
+                     card_x + card_w - 50, highlight_y + i + 1],
                     fill=(255, 255, 255, alpha)
                 )
             
-            # Bordo interno glow
-            for i in range(8):
-                alpha = int(120 - (i * 15))
+            # Bordo interno glow azzurro neon
+            for i in range(12):
+                alpha = int(120 - (i * 10))
                 glass_draw.rectangle(
-                    [card_x + 10 + i, card_y + 10 + i,
-                     card_x + card_w - 10 - i, card_y + card_h - 10 - i],
-                    outline=(59, 130, 246, alpha),
+                    [card_x + 20 + i, card_y + 20 + i,
+                     card_x + card_w - 20 - i, card_y + card_h - 20 - i],
+                    outline=(100, 200, 255, alpha),  # Azzurro neon
                     width=1
                 )
             
