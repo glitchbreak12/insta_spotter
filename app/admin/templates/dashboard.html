@@ -761,6 +761,14 @@
         // Initialize - carica immediatamente
         (function init() {
             console.log('Mobile dashboard initializing...');
+            
+            // Aspetta che Chart.js sia caricato
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js not loaded, retrying...');
+                setTimeout(init, 500);
+                return;
+            }
+            
             initializeCharts();
             loadDashboardData();
             
@@ -936,13 +944,13 @@
                         ${message.media_pk ? '<span><i class="fas fa-image"></i> Has Media</span>' : ''}
                     </div>
                     <div class="message-actions">
-                        <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')">
+                        <button class="action-btn approve" onclick="handleAction(${message.id}, 'approve')" type="button">
                             <i class="fas fa-check"></i> Approve
                         </button>
-                        <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')">
+                        <button class="action-btn reject" onclick="handleAction(${message.id}, 'reject')" type="button">
                             <i class="fas fa-times"></i> Reject
                         </button>
-                        <button class="action-btn edit" onclick="editMessage(${message.id})">
+                        <button class="action-btn edit" onclick="editMessage(${message.id})" type="button">
                             <i class="fas fa-edit"></i> Edit
                         </button>
                     </div>
