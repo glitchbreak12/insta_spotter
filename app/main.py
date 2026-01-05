@@ -13,6 +13,7 @@ import httpx
 from app.database import create_db_and_tables
 from app.web import routes as web_routes
 from app.admin import routes as admin_routes
+from app.api import routes as api_routes
 from app.security import SECURITY_HEADERS, CORS_SETTINGS, setup_secure_logging
 
 # Setup logging sicuro
@@ -228,6 +229,7 @@ async def on_startup():
 
 app.include_router(web_routes.router)
 app.include_router(admin_routes.router)
+app.include_router(api_routes.router)
 
 # --- Rotta di Benvenuto ---
 

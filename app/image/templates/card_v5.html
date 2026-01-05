@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V5 - 3D Glow</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #000000;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Sfondo stile Apple - mantiene v3 */
+        .bg-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Card con Glow 3D */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            /* NEW: Enhanced 3D Box Shadow */
+            box-shadow: 
+                0 0 10px rgba(0, 122, 255, 0.3), /* Inner light glow */
+                0 0 40px rgba(0, 122, 255, 0.2), /* Medium glow */
+                0 0 80px rgba(0, 122, 255, 0.15), /* Outer subtle glow */
+                0 20px 60px rgba(0, 0, 0, 0.7); /* Deep dark shadow for depth */
+            backdrop-filter: blur(55px) saturate(190%); /* Slightly stronger blur/saturate */
+            -webkit-backdrop-filter: blur(55px) saturate(190%);
+            display: flex;
+            flex-direction: column;
+            padding: 100px 90px;
+            overflow: hidden;
+            /* Optional: slight transform for subtle 3D tilt */
+            /* transform: perspective(1000px) rotateX(2deg) rotateY(-2deg); */
+        }
+
+        /* Glow sottile - mantiene v3 */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Highlight superiore - mantiene v3 */
+        .highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 350px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+            border-radius: 45px 45px 0 0;
+            pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 2;
+            padding-top: 50px;
+        }
+
+        .brand {
+            font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 95px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 4px;
+            margin-bottom: 35px;
+            /* NEW: Enhanced 3D Text Shadow */
+            text-shadow: 
+                0 0 10px rgba(0, 122, 255, 0.5), /* Inner glow */
+                0 0 20px rgba(0, 122, 255, 0.3), /* Medium glow */
+                0 0 30px rgba(0, 122, 255, 0.1), /* Outer glow */
+                0 2px 5px rgba(0, 0, 0, 0.8); /* Stronger dark shadow for lift */
+            line-height: 1.1;
+        }
+
+        /* Badge - mantiene v3 */
+        .badge {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(0, 122, 255, 0.12);
+            border: 1px solid rgba(0, 122, 255, 0.25);
+            border-radius: 25px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
+        }
+
+        /* Body */
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: relative;
+            z-index: 2;
+            min-height: 0;
+            margin: 0;
+        }
+
+        .message {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 62px;
+            line-height: 1.5;
+            text-align: center;
+            color: #ffffff;
+            font-weight: 400;
+            max-width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            /* NEW: Enhanced 3D Text Shadow */
+            text-shadow: 
+                0 0 8px rgba(255, 255, 255, 0.3), /* Subtle white glow */
+                0 0 15px rgba(0, 0, 0, 0.6), /* Medium dark shadow */
+                0 5px 10px rgba(0, 0, 0, 0.8); /* Deep dark shadow for lift */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: auto;
+            padding-top: 60px;
+            padding-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Footer Text - mantiene v3 */
+        .footer-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 30px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1.5px;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        /* CTA - mantiene v3 */
+        .cta {
+            display: inline-block;
+            padding: 12px 26px;
+            background: rgba(0, 122, 255, 0.18);
+            border: 1px solid rgba(0, 122, 255, 0.35);
+            border-radius: 22px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="highlight"></div>
+            
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+                <div class="badge">sp#{{ id }}</div>
+            </div>
+            
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">@spottedatbz</div>
+                <div class="cta">Invia il tuo spotted dal link in bio</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

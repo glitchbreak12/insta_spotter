@@ -21,7 +21,7 @@ class AutomationSettings(BaseModel):
 
 class ImageSettings(BaseModel):
     """Configurazioni per la generazione delle immagini."""
-    template_path: str = "app/image/templates/card_v3.html"
+    template_path: str = "app/image/templates/card_v5_centered.html"
     output_folder: str = "data/generated_images"
     width: int = 1080
     height: int = 1920

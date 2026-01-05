@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V5 - Emoji Fix</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+        /* NEW: Embed the Noto Color Emoji font directly */
+        @font-face {
+            font-family: 'Noto Color Emoji';
+            src: url('{{ emoji_font_url }}') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: #000000;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bg-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 0 10px rgba(0, 122, 255, 0.3),
+                0 0 40px rgba(0, 122, 255, 0.2),
+                0 0 80px rgba(0, 122, 255, 0.15),
+                0 20px 60px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(55px) saturate(190%);
+            -webkit-backdrop-filter: blur(55px) saturate(190%);
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            padding: 100px 90px;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 350px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+            border-radius: 45px 45px 0 0;
+            pointer-events: none;
+        }
+
+        .header, .footer {
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header {
+            margin-bottom: 80px;
+            padding-top: 50px;
+        }
+
+        .brand {
+            font-family: 'Komika Axis', sans-serif;
+            font-size: 95px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 4px;
+            margin-bottom: 35px;
+            text-shadow: 
+                0 0 10px rgba(0, 122, 255, 0.5),
+                0 0 25px rgba(0, 122, 255, 0.3),
+                0 0 40px rgba(0, 122, 255, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.8);
+            line-height: 1.1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(0, 122, 255, 0.12);
+            border: 1px solid rgba(0, 122, 255, 0.25);
+            border-radius: 25px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
+        }
+
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            min-height: 0;
+        }
+
+        .message {
+            /* NEW: Prioritize the embedded Noto Color Emoji font */
+            font-family: 'Noto Color Emoji', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 62px;
+            line-height: 1.5;
+            text-align: center;
+            color: #ffffff;
+            font-weight: 400;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        .footer-text {
+            font-size: 30px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1.5px;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        .cta {
+            display: inline-block;
+            padding: 12px 26px;
+            background: rgba(0, 122, 255, 0.18);
+            border: 1px solid rgba(0, 122, 255, 0.35);
+            border-radius: 22px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="highlight"></div>
+            
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+                <div class="badge">sp#{{ id }}</div>
+            </div>
+            
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">@spottedatbz</div>
+                <div class="cta">Invia il tuo spotted dal link in bio</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

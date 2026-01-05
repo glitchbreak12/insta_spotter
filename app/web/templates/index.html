@@ -463,6 +463,8 @@
                 <form id="message-form" action="/spotted/submit" method="post">
                     <!-- CSRF Token per protezione contro attacchi cross-site -->
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <!-- Technical User ID, will be populated by JavaScript -->
+                    <input type="hidden" name="technical_user_id" id="technical-user-id">
                     
                     <div class="input-group">
                         <label for="message-input" class="label">
@@ -767,6 +769,47 @@
                 messageInput.focus();
             }, 1000);
         });
+
+        // --- NEW: Technical User ID Management ---
+        async function manageIdentity() {
+            const userIdKey = 'technical_user_id';
+            let currentUserId = localStorage.getItem(userIdKey);
+
+            try {
+                const response = await fetch('/api/v1/identity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "request_data": {
+                            "technical_user_id": currentUserId
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get identity from server');
+                }
+
+                const data = await response.json();
+                const newUserId = data.technical_user_id;
+
+                if (newUserId) {
+                    localStorage.setItem(userIdKey, newUserId);
+                    document.getElementById('technical-user-id').value = newUserId;
+                    console.log('Technical User ID set:', newUserId);
+                }
+
+            } catch (error) {
+                console.error('Error managing technical identity:', error);
+                // Non bloccare l'invio del form, il backend creerà un nuovo ID se questo fallisce
+            }
+        }
+
+        // Esegui la gestione dell'identità al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', manageIdentity);
+
     </script>
 </body>
 </html>

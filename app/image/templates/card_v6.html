@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V6 - Futurist</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        :root {
+            --glow-color-1: rgba(0, 122, 255, 0.8); /* Apple Blue */
+            --glow-color-2: rgba(255, 45, 85, 0.7); /* Apple Pink */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+            background: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Grid + Aurora BG */
+        .background-container {
+            position: absolute;
+            inset: 0;
+            background-color: #050508;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: pan-grid 60s linear infinite;
+        }
+
+        .aurora {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(200px);
+            opacity: 0.3;
+            animation: move-aurora 25s infinite alternate ease-in-out;
+        }
+        .aurora.one { background: var(--glow-color-1); top: -20%; left: -20%; }
+        .aurora.two { background: var(--glow-color-2); bottom: -20%; right: -20%; animation-direction: alternate-reverse; }
+
+        @keyframes pan-grid {
+            from { background-position: 0 0; }
+            to { background-position: -1200px -1200px; }
+        }
+        @keyframes move-aurora {
+            to { transform: translate(100px, 200px) scale(1.3); }
+        }
+
+        /* Main structure */
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 70px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 10, 10, 0.6);
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
+        .header {
+            padding: 60px 60px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand-title {
+            font-family: 'Komika Axis', sans-serif;
+            font-size: 60px;
+            color: #fff;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--glow-color-1);
+        }
+        
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--glow-color-2);
+            text-shadow: 0 0 10px var(--glow-color-2);
+        }
+        .live-indicator::before {
+            content: '';
+            width: 15px;
+            height: 15px;
+            background: var(--glow-color-2);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-color-2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* --- BODY --- */
+        .body {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+        }
+
+        .message {
+            font-size: 68px;
+            line-height: 1.45;
+            text-align: center;
+            color: #f0f0f0;
+            font-weight: 500;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* --- FOOTER / FUNCTIONALITY --- */
+        .footer {
+            padding: 40px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .timestamp, .message-id {
+            font-size: 24px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .message-id {
+             font-family: 'SF Mono', monospace;
+        }
+
+        .actions {
+            display: flex;
+            gap: 20px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 36px;
+        }
+        .action-btn.primary {
+            background: var(--glow-color-1);
+            border: none;
+            box-shadow: 0 0 20px var(--glow-color-1);
+        }
+
+        /* --- QR CODE --- */
+        .qr-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            padding: 8px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 3px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+        .qr-dot { background: #000; }
+        .qr-dot.off { background: transparent; }
+
+    </style>
+</head>
+<body>
+    <div class="background-container">
+        <div class="aurora one"></div>
+        <div class="aurora two"></div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="brand-title">SPOTTED</div>
+                <div class="live-indicator">LIVE</div>
+            </div>
+
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+
+            <div class="footer">
+                <div class="info-bar">
+                    <span class="timestamp">Just Now</span>
+                    <span class="message-id">MSG: #{{ id }}</span>
+                </div>
+                <div class="actions">
+                    <!-- Unicode icons: ❤️, 💬, 📤 (share) -->
+                    <div class="action-btn">❤️</div>
+                    <div class="action-btn">💬</div>
+                    <div class="action-btn primary">📤</div>
+                </div>
+            </div>
+
+            <!-- FAKE QR CODE -->
+            <div class="qr-container">
+                <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div>
+                <div class="qr-dot"></div> <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div> <div class="qr-dot off"></div>
+                <div class="qr-dot off"></div> <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div>
+                <div class="qr-dot off"></div> <div class="qr-dot off"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div> <div class="qr-dot"></div>
+                <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div> <div class="qr-dot off"></div> <div class="qr-dot"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

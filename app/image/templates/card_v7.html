@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V7 - Futurist Glow on V5</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        :root {
+            --glow-color-1: rgba(0, 122, 255, 0.9); /* Apple Blue */
+            --glow-color-2: rgba(255, 45, 85, 0.8); /* Apple Pink */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #000;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- NEW: Animated Grid + Aurora BG (from v6) --- */
+        .background-container {
+            position: absolute;
+            inset: 0;
+            background-color: #050508;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: pan-grid 70s linear infinite;
+        }
+        .aurora {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            filter: blur(180px);
+            opacity: 0.2;
+            animation: move-aurora 25s infinite alternate ease-in-out;
+        }
+        .aurora.one { background: var(--glow-color-1); top: -15%; left: -15%; }
+        .aurora.two { background: var(--glow-color-2); bottom: -15%; right: -15%; animation-delay: -12s; }
+
+        @keyframes pan-grid {
+            from { background-position: 0 0; }
+            to { background-position: -1200px 0; }
+        }
+        @keyframes move-aurora {
+            to { transform: translate(150px, 100px) scale(1.2); }
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Card with 3D Glow (from v5) + Polish */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 18, 18, 0.75);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 0 15px rgba(0, 122, 255, 0.3),
+                0 0 45px rgba(0, 122, 255, 0.2),
+                0 25px 60px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(50px) saturate(180%);
+            -webkit-backdrop-filter: blur(50px) saturate(180%);
+            display: flex;
+            flex-direction: column;
+            padding: 0; /* Padding will be handled by inner sections */
+            overflow: hidden;
+        }
+
+        /* Highlight is now part of header border */
+        
+        /* Header + NEW Functionality */
+        .header {
+            text-align: center;
+            padding: 60px 80px;
+            position: relative;
+            z-index: 2;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+        }
+
+        .brand {
+            font-family: 'Komika Axis', sans-serif;
+            font-size: 90px;
+            color: #fff;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 8px rgba(0, 122, 255, 0.6),
+                0 0 30px var(--glow-color-1),
+                0 2px 5px rgba(0, 0, 0, 0.7);
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(0, 122, 255, 0.15);
+            border-radius: 25px;
+            color: #87d3ff;
+            font-size: 26px;
+            font-weight: 600;
+        }
+        
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--glow-color-2);
+            text-shadow: 0 0 10px var(--glow-color-2);
+        }
+        .live-indicator::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--glow-color-2);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--glow-color-2), 0 0 20px var(--glow-color-2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            50% { opacity: 0.6; }
+        }
+
+        /* Body */
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 80px;
+            position: relative;
+            z-index: 2;
+            min-height: 0;
+        }
+
+        .message {
+            font-size: 64px;
+            line-height: 1.5;
+            text-align: center;
+            color: #f5f5f7;
+            font-weight: 500;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Footer + NEW Functionality */
+        .footer {
+            padding: 40px 80px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 40px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.5);
+        }
+        .action-btn.primary {
+            color: #fff;
+            background: var(--glow-color-1);
+            border-color: rgba(0, 122, 255, 0.8);
+            box-shadow: 0 0 25px var(--glow-color-1);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="background-container">
+        <div class="aurora one"></div>
+        <div class="aurora two"></div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+                <div class="header-info">
+                    <div class="badge">sp#{{ id }}</div>
+                    <div class="live-indicator">LIVE</div>
+                </div>
+            </div>
+            
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+            
+            <div class="footer">
+                <div class="actions">
+                    <!-- Unicode icons: ❤️, 💬, 📤 (share) -->
+                    <div class="action-btn">❤️</div>
+                    <div class="action-btn">💬</div>
+                    <div class="action-btn primary">📤</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

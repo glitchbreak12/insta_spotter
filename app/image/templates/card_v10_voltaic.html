@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V10 - Voltaic</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        :root {
+            --cyan-glow: #00FFFF;
+            --magenta-glow: #FF00FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: 'SF Mono', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated grid background */
+        .bg-container {
+            position: absolute;
+            inset: 0;
+            background-color: #080008;
+            background-image: 
+                linear-gradient(var(--magenta-glow, #FF00FF) 1px, transparent 1px),
+                linear-gradient(90deg, var(--cyan-glow, #00FFFF) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.1;
+            animation: pan-grid 30s linear infinite;
+        }
+        @keyframes pan-grid {
+            from { background-position: 0 0; }
+            to { background-position: -800px -800px; }
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Card with a cyberpunk feel */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 0, 10, 0.7);
+            border-radius: 40px;
+            border: 1px solid var(--cyan-glow);
+            box-shadow: 0 0 40px var(--cyan-glow), 0 0 60px var(--magenta-glow);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: flicker 10s infinite alternate;
+        }
+        
+        /* Scanline effect */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(0deg, transparent 50%, rgba(0,255,255,0.1) 50%);
+            background-size: 100% 4px;
+            animation: scanlines 0.2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 100% { box-shadow: 0 0 40px var(--cyan-glow), 0 0 60px var(--magenta-glow); }
+            50% { box-shadow: 0 0 45px var(--cyan-glow), 0 0 55px var(--magenta-glow); }
+        }
+        @keyframes scanlines {
+            from { top: 0; }
+            to { top: 2px; }
+        }
+
+        /* Header */
+        .header {
+            padding: 80px 80px 40px;
+            border-bottom: 1px solid var(--cyan-glow);
+            text-align: center;
+        }
+
+        .brand {
+            font-family: 'Komika Axis', sans-serif;
+            font-size: 100px;
+            color: #fff;
+            letter-spacing: 8px;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px var(--cyan-glow), 0 0 20px var(--cyan-glow), 0 0 40px var(--magenta-glow);
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--cyan-glow);
+            letter-spacing: 3px;
+        }
+        .live-indicator::before {
+            content: '>';
+            animation: blink-cursor 1s infinite;
+        }
+        @keyframes blink-cursor {
+            50% { opacity: 0; }
+        }
+
+        /* Body */
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            min-height: 0;
+        }
+
+        .message {
+            font-size: 56px;
+            line-height: 1.6;
+            text-align: left;
+            color: #E0FFFF; /* Light Cyan */
+            font-weight: 500;
+            text-shadow: 0 0 5px rgba(0,255,255,0.7);
+        }
+
+        /* Footer with "Functionality" */
+        .footer {
+            padding: 40px 80px 60px;
+            border-top: 1px solid var(--magenta-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .power-level {
+            font-size: 24px;
+            color: var(--magenta-glow);
+        }
+
+        .power-bars {
+            display: flex;
+            gap: 5px;
+        }
+        .power-bars span {
+            width: 15px;
+            height: 30px;
+            background: var(--magenta-glow);
+            box-shadow: 0 0 10px var(--magenta-glow);
+        }
+        .power-bars span.off { opacity: 0.3; }
+
+    </style>
+</head>
+<body>
+    <div class="bg-container"></div>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+                <div class="live-indicator">_ TRANSMITTING</div>
+            </div>
+            <div class="body">
+                <p class="message">// {{ message }}</p>
+            </div>
+            <div class="footer">
+                <div class="power-level">ID: {{ id }}</div>
+                <div class="power-bars">
+                    <span></span><span></span><span></span><span class="off"></span><span class="off"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

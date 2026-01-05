@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V4</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #000000;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- NEW: Animated Aurora Background --- */
+        .aurora-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .aurora-bg .aurora {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.25;
+        }
+
+        .aurora-1 {
+            width: 800px;
+            height: 800px;
+            background: #007aff; /* Apple Blue */
+            top: 10%;
+            left: 10%;
+            animation: move-aurora 20s infinite alternate ease-in-out;
+        }
+
+        .aurora-2 {
+            width: 700px;
+            height: 700px;
+            background: #5856d6; /* Apple Indigo */
+            bottom: 15%;
+            right: 5%;
+            animation: move-aurora 22s infinite alternate-reverse ease-in-out;
+        }
+        
+        .aurora-3 {
+            width: 600px;
+            height: 600px;
+            background: #ff2d55; /* Apple Pink */
+            top: 50%;
+            left: 20%;
+            animation: move-aurora 18s infinite alternate ease-in-out;
+        }
+
+        @keyframes move-aurora {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 50px) scale(1.2); }
+            100% { transform: translate(-50px, -100px) scale(1); }
+        }
+        
+        /* Main container */
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Improved Card */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 15, 15, 0.75); /* Slightly lighter background */
+            border-radius: 55px; /* Softer radius */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+            backdrop-filter: blur(60px) saturate(180%) brightness(1.1);
+            -webkit-backdrop-filter: blur(60px) saturate(180%) brightness(1.1);
+            display: flex;
+            flex-direction: column;
+            padding: 100px 90px;
+            overflow: hidden; /* Important for border shimmer */
+        }
+        
+        /* --- NEW: Border Shimmer Effect --- */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -200%;
+            width: 100%;
+            height: 100%;
+            transform: skewX(-30deg);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            animation: shimmer 8s infinite linear;
+        }
+
+        @keyframes shimmer {
+            0% { left: -200%; }
+            100% { left: 200%; }
+        }
+
+        /* Highlight remains similar */
+        .highlight {
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            height: 400px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 100%);
+            border-radius: 54px 54px 0 0;
+            pointer-events: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+            z-index: 2;
+            padding-top: 50px;
+        }
+
+        .brand {
+            font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 100px; /* Slightly larger */
+            color: #ffffff;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            text-shadow: 0 4px 35px rgba(0, 122, 255, 0.35);
+            line-height: 1.1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 14px 35px;
+            background: rgba(0, 122, 255, 0.15);
+            border: 1px solid rgba(0, 122, 255, 0.3);
+            border-radius: 30px;
+            color: #87d3ff; /* Lighter blue */
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 1.8px;
+            box-shadow: 0 5px 25px rgba(0, 122, 255, 0.2);
+        }
+
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            min-height: 0;
+        }
+
+        .message {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 64px;
+            line-height: 1.55; /* Improved line height */
+            text-align: center;
+            color: #f0f0f0; /* Slightly off-white */
+            font-weight: 500; /* Bolder for clarity */
+            max-width: 85%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5); /* Softer, wider shadow */
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: auto;
+            padding-top: 60px;
+            padding-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-text {
+            font-size: 32px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1.5px;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        .cta {
+            display: inline-block;
+            padding: 14px 30px;
+            background: rgba(0, 122, 255, 0.2);
+            border: 1px solid rgba(0, 122, 255, 0.4);
+            border-radius: 25px;
+            color: #87d3ff;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 20px rgba(0, 122, 255, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <div class="aurora-bg">
+        <div class="aurora aurora-1"></div>
+        <div class="aurora aurora-2"></div>
+        <div class="aurora aurora-3"></div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="highlight"></div>
+            
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+                <div class="badge">sp#{{ id }}</div>
+            </div>
+            
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+            
+            <div class="footer">
+                <div class="footer-text">@spottedatbz</div>
+                <div class="cta">Invia il tuo spotted dal link in bio</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

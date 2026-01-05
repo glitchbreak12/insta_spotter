@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotted Card V11 - Celestial</title>
+    <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
+        :root {
+            --deep-space: #0B0B1A;
+            --nebula-purple: #9b59b6;
+            --nebula-blue: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1080px;
+            height: 1920px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: var(--deep-space);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Animated starfield background */
+        .bg-container {
+            position: absolute;
+            inset: 0;
+        }
+        #stars, #stars2, #stars3 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-repeat: repeat;
+            background-position: 0 0;
+        }
+        #stars { background-image: radial-gradient(1px 1px at 20px 30px, #eee, transparent); background-size: 50px 50px; animation: move-stars 30s linear infinite; }
+        #stars2 { background-image: radial-gradient(1px 1px at 10px 40px, #fff, transparent); background-size: 100px 100px; animation: move-stars 60s linear infinite; }
+        #stars3 { background-image: radial-gradient(2px 2px at 30px 50px, #fff, transparent); background-size: 150px 150px; animation: move-stars 90s linear infinite; }
+
+        @keyframes move-stars {
+            from { background-position: 0 0; }
+            to { background-position: 0 -10000px; }
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Ethereal glass card */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 11, 26, 0.6); /* Deep space color */
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(30px) brightness(1.2);
+            -webkit-backdrop-filter: blur(30px) brightness(1.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 100px;
+        }
+        
+        /* Aurora glow */
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: -50px;
+            background: 
+                radial-gradient(circle at 25% 25%, var(--nebula-purple) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, var(--nebula-blue) 0%, transparent 40%);
+            filter: blur(100px);
+            opacity: 0.3;
+            animation: rotate-glow 20s infinite linear;
+            z-index: -1;
+        }
+        @keyframes rotate-glow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+
+        /* Header */
+        .header {
+            margin-bottom: 60px;
+        }
+        .brand {
+            font-family: 'Komika Axis', sans-serif;
+            font-size: 90px;
+            color: #fff;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--nebula-blue), 0 0 40px var(--nebula-purple);
+        }
+
+        /* Body */
+        .body {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 90%;
+        }
+
+        .message {
+            font-size: 64px;
+            line-height: 1.55;
+            color: #e0e0f0;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Footer with "Functionality" */
+        .footer {
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .constellation {
+            display: flex;
+            gap: 40px;
+        }
+        .star {
+            width: 20px;
+            height: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 30px;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+        .star:nth-child(2) { animation-delay: -1s; }
+        .star:nth-child(3) { animation-delay: -2s; }
+        .star:nth-child(4) { animation-delay: -3s; }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); text-shadow: 0 0 10px #fff; }
+        }
+
+        .message-id {
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="bg-container">
+        <div id="stars"></div>
+        <div id="stars2"></div>
+        <div id="stars3"></div>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="brand">SPOTTED</div>
+            </div>
+            
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
+            
+            <div class="footer">
+                <div class="constellation">
+                    <div class="star">✦</div>
+                    <div class="star">✧</div>
+                    <div class="star">✦</div>
+                    <div class="star">✧</div>
+                </div>
+                <div class="message-id">MSG #{{ id }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
