@@ -552,6 +552,11 @@
                 return;
             }
             
+            // Previeni doppio submit
+            if (submitBtn.disabled) {
+                return;
+            }
+            
             // Show loading state
             submitBtn.disabled = true;
             loadingSpinner.style.display = 'inline-block';
@@ -561,30 +566,37 @@
                 // Crea FormData dal form
                 const formData = new FormData(form);
                 
-                // Invia il form con fetch
+                // Invia il form con fetch (redirect: 'follow' per seguire i redirect automaticamente)
                 const response = await fetch('/spotted/submit', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    redirect: 'follow' // Segui i redirect automaticamente
                 });
                 
-                // Se la risposta è un redirect (303), segui il redirect
-                if (response.redirected || response.status === 303 || response.status === 302) {
-                    // Il redirect è già stato seguito dal browser, ricarica la pagina con success=true
-                    window.location.href = '/spotted/new?success=true';
-                } else if (response.ok) {
-                    // Se la risposta è OK, ricarica con success
+                // Se la risposta è OK o redirect, ricarica con success
+                if (response.ok || response.redirected || response.status === 303 || response.status === 302) {
+                    // Ricarica la pagina con success=true
                     window.location.href = '/spotted/new?success=true';
                 } else {
-                    // Errore
-                    const errorText = await response.text();
-                    showError('Errore nell\'invio del messaggio. Riprova.');
+                    // Errore - leggi il messaggio di errore se disponibile
+                    try {
+                        const errorText = await response.text();
+                        // Cerca di estrarre il messaggio di errore dalla risposta
+                        if (errorText.includes('CSRF') || errorText.includes('token')) {
+                            showError('Token di sicurezza scaduto. Ricarica la pagina e riprova.');
+                        } else {
+                            showError('Errore nell\'invio del messaggio. Riprova.');
+                        }
+                    } catch {
+                        showError('Errore nell\'invio del messaggio. Riprova.');
+                    }
                     submitBtn.disabled = false;
                     loadingSpinner.style.display = 'none';
                     submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
                 }
             } catch (error) {
                 console.error('Errore:', error);
-                showError('Errore di connessione. Riprova.');
+                showError('Errore di connessione. Verifica la connessione e riprova.');
                 submitBtn.disabled = false;
                 loadingSpinner.style.display = 'none';
                 submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
