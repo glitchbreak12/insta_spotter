@@ -162,6 +162,65 @@ async def keep_alive_task():
 
 # --- Eventi di Avvio e Spegnimento ---
 
+def check_and_install_wkhtmltopdf():
+    """Verifica e installa wkhtmltopdf se necessario (solo su Replit)."""
+    import shutil
+    import subprocess
+    
+    # Verifica se wkhtmltoimage è disponibile
+    wkhtmltoimage_path = shutil.which('wkhtmltoimage')
+    
+    if wkhtmltoimage_path:
+        logger.info(f"✓ wkhtmltoimage trovato: {wkhtmltoimage_path}")
+        return True
+    
+    # Se non trovato e siamo su Replit, prova a installarlo
+    if is_replit:
+        logger.warning("⚠ wkhtmltoimage non trovato. Tentativo di installazione automatica...")
+        try:
+            # Su Replit, usa apt-get per installare
+            result = subprocess.run(
+                ['apt-get', 'update'],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            result = subprocess.run(
+                ['apt-get', 'install', '-y', 'wkhtmltopdf'],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            
+            if result.returncode == 0:
+                # Verifica di nuovo
+                wkhtmltoimage_path = shutil.which('wkhtmltoimage')
+                if wkhtmltoimage_path:
+                    logger.info(f"✅ wkhtmltoimage installato con successo: {wkhtmltoimage_path}")
+                    return True
+                else:
+                    logger.warning("⚠ Installazione completata ma wkhtmltoimage non ancora nel PATH")
+            else:
+                logger.warning(f"⚠ Installazione fallita: {result.stderr}")
+        except subprocess.TimeoutExpired:
+            logger.warning("⚠ Timeout durante l'installazione di wkhtmltopdf")
+        except Exception as e:
+            logger.warning(f"⚠ Errore durante l'installazione: {e}")
+    
+    # Se arriviamo qui, wkhtmltoimage non è disponibile
+    logger.warning("""
+    ⚠ ATTENZIONE: wkhtmltoimage non è disponibile!
+    
+    Per installarlo manualmente su Replit:
+    1. Apri la Shell di Replit
+    2. Esegui: apt-get update && apt-get install -y wkhtmltopdf
+    3. Riavvia l'app
+    
+    Senza wkhtmltoimage, la generazione delle immagini non funzionerà.
+    """)
+    return False
+
 @app.on_event("startup")
 async def on_startup():
     """Funzioni da eseguire all'avvio dell'applicazione."""
@@ -173,6 +232,9 @@ async def on_startup():
     except Exception as e:
         logger.error(f"✗ Errore nell'inizializzazione del database: {e}")
         raise
+    
+    # Verifica e installa wkhtmltopdf se necessario
+    check_and_install_wkhtmltopdf()
     
     # Avvia il task di keep-alive in background per Replit
     asyncio.create_task(keep_alive_task())
