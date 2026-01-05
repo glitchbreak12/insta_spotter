@@ -83,7 +83,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con lo stesso stile dell'applicazione (Komika Axis font)."""
+        """Genera un'immagine con stile CSS glowing 3D liquid glass."""
         if not PIL_AVAILABLE:
             return False
         
@@ -96,64 +96,147 @@ class ImageGenerator:
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
-            padding = 80
+            padding = 60
             
-            # === SFONDO SCURO (stile applicazione) ===
-            img = Image.new('RGB', (width, height), color='#0f172a')
+            # === SFONDO CON GLOWING GRADIENT ===
+            img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente scuro con glow blu (simulato)
+            # Gradiente complesso con glow blu/viola
             for y in range(height):
                 progress = y / height
-                # Base scuro (#0f172a)
-                r, g, b = 15, 23, 42
                 
-                # Aggiungi glow blu ai bordi (simulato)
-                glow_strength = math.sin(progress * math.pi * 2) * 0.1
-                r = max(15, min(60, int(r + glow_strength * 45)))
-                g = max(23, min(80, int(g + glow_strength * 57)))
-                b = max(42, min(130, int(b + glow_strength * 88)))
+                # Gradiente: nero -> blu scuro -> viola -> blu
+                if progress < 0.25:
+                    # Top: nero -> blu scuro
+                    r = int(0 + (20 * progress * 4))
+                    g = int(0 + (30 * progress * 4))
+                    b = int(0 + (60 * progress * 4))
+                elif progress < 0.5:
+                    # Middle-top: blu scuro -> viola
+                    local = (progress - 0.25) * 4
+                    r = int(20 + (40 * local))
+                    g = int(30 + (20 * local))
+                    b = int(60 + (30 * local))
+                elif progress < 0.75:
+                    # Middle-bottom: viola -> blu brillante
+                    local = (progress - 0.5) * 4
+                    r = int(60 - (20 * local))
+                    g = int(50 - (10 * local))
+                    b = int(90 + (40 * local))
+                else:
+                    # Bottom: blu brillante -> blu scuro
+                    local = (progress - 0.75) * 4
+                    r = int(40 - (20 * local))
+                    g = int(40 - (10 * local))
+                    b = int(130 - (50 * local))
+                
+                # Aggiungi glow dinamico
+                glow = math.sin(progress * math.pi * 6) * 15
+                r = max(0, min(255, int(r + glow)))
+                g = max(0, min(255, int(g + glow)))
+                b = max(0, min(255, int(b + glow)))
                 
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # === CARD GLASS EFFECT (stile applicazione) ===
+            # === GLOWING BACKGROUND EFFECTS ===
+            glow_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_bg_draw = ImageDraw.Draw(glow_bg)
+            
+            # Glow radiali multipli (simulati)
+            center_x, center_y = width // 2, height // 2
+            for i in range(3):
+                radius = 300 + (i * 200)
+                alpha = int(80 - (i * 20))
+                # Glow blu
+                for angle in range(0, 360, 10):
+                    rad = math.radians(angle)
+                    x = int(center_x + radius * math.cos(rad))
+                    y = int(center_y + radius * math.sin(rad))
+                    if 0 <= x < width and 0 <= y < height:
+                        glow_bg_draw.ellipse(
+                            [x - 50, y - 50, x + 50, y + 50],
+                            fill=(59, 130, 246, alpha)
+                        )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), glow_bg).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # === LIQUID GLASS CARD 3D ===
             card_x = padding
             card_y = padding
             card_w = width - (padding * 2)
             card_h = height - (padding * 2)
             
-            # Glow esterno blu
-            glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glow_draw = ImageDraw.Draw(glow_layer)
+            # Glow esterno intenso (3D effect)
+            glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_card_draw = ImageDraw.Draw(glow_card)
             
-            # Glow blu attorno alla card
-            for i in range(20):
-                alpha = int(100 - (i * 4))
-                glow_color = (59, 130, 246, alpha)  # #3b82f6
-                glow_draw.rectangle(
-                    [card_x - i, card_y - i, 
-                     card_x + card_w + i, card_y + card_h + i],
-                    outline=glow_color,
-                    width=2
-                )
+            # Glow multipli per effetto 3D
+            glow_colors = [
+                (59, 130, 246, 120),   # Blu
+                (139, 92, 246, 100),   # Viola
+                (99, 102, 241, 80),    # Indigo
+            ]
             
-            img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+            for glow_idx, (gr, gg, gb, alpha) in enumerate(glow_colors):
+                for i in range(25):
+                    offset = i * 2
+                    glow_alpha = int(alpha * (1 - i / 25))
+                    glow_card_draw.rectangle(
+                        [card_x - offset, card_y - offset,
+                         card_x + card_w + offset, card_y + card_h + offset],
+                        outline=(gr, gg, gb, glow_alpha),
+                        width=3
+                    )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), glow_card).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # Card principale con glass effect (simulato)
-            # Sfondo card semi-trasparente scuro
-            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            card_draw = ImageDraw.Draw(card_layer)
+            # === LIQUID GLASS CARD ===
+            glass_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glass_draw = ImageDraw.Draw(glass_card)
             
-            # Sfondo card (#1e293b con trasparenza)
-            card_draw.rectangle(
+            # Sfondo glass con blur effect (simulato con gradiente)
+            # Bordo esterno glow
+            for i in range(15):
+                alpha = int(30 + (i * 2))
+                glass_draw.rectangle(
+                    [card_x - i, card_y - i,
+                     card_x + card_w + i, card_y + card_h + i],
+                    outline=(255, 255, 255, alpha),
+                    width=1
+                )
+            
+            # Sfondo glass principale (liquid glass)
+            glass_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(30, 41, 59, 180),  # #1e293b con alpha
-                outline=(59, 130, 246, 100),  # Bordo blu
-                width=2
+                fill=(30, 41, 59, 100),  # Semi-trasparente
+                outline=(255, 255, 255, 60),
+                width=3
             )
             
-            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            # Highlight superiore (riflesso glass)
+            highlight_y = card_y + 30
+            for i in range(40):
+                alpha = int(100 - (i * 2))
+                glass_draw.rectangle(
+                    [card_x + 30, highlight_y + i,
+                     card_x + card_w - 30, highlight_y + i + 2],
+                    fill=(255, 255, 255, alpha)
+                )
+            
+            # Bordo interno glow
+            for i in range(8):
+                alpha = int(120 - (i * 15))
+                glass_draw.rectangle(
+                    [card_x + 10 + i, card_y + 10 + i,
+                     card_x + card_w - 10 - i, card_y + card_h - 10 - i],
+                    outline=(59, 130, 246, alpha),
+                    width=1
+                )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), glass_card).convert('RGB')
             draw = ImageDraw.Draw(img)
             
             # === CARICA FONT KOMIKA AXIS ===
@@ -198,31 +281,50 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRANDING "SPOTTED" CON KOMIKA AXIS E GLOW ===
+            # === BRANDING "SPOTTED" CON GLOWING 3D EFFECT ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 60  # Top della card
+            brand_y = card_y + 80
             
-            # Glow blu per "SPOTTED"
-            for i in range(8):
-                offset = i * 2
-                alpha = int(150 - (i * 18))
-                glow_color = (59, 130, 246, alpha)  # Blu glow
+            # Glow multipli per effetto 3D glowing
+            glow_layers = [
+                (59, 130, 246, 200),   # Blu intenso
+                (139, 92, 246, 150),   # Viola
+                (99, 102, 241, 120),   # Indigo
+            ]
+            
+            for glow_idx, (gr, gg, gb, base_alpha) in enumerate(glow_layers):
+                for i in range(12):
+                    offset = i * 3
+                    alpha = int(base_alpha * (1 - i / 12))
+                    # Glow in tutte le direzioni
+                    for dx, dy in [(offset, offset), (-offset, offset), (offset, -offset), (-offset, -offset),
+                                   (offset, 0), (-offset, 0), (0, offset), (0, -offset)]:
+                        glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                        glow_draw = ImageDraw.Draw(glow_layer)
+                        glow_draw.text(
+                            (brand_x + dx, brand_y + dy),
+                            brand_text,
+                            fill=(gr, gg, gb, alpha),
+                            font=brand_font
+                        )
+                        img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                        draw = ImageDraw.Draw(img)
+            
+            # Ombra nera profonda per 3D
+            for offset in [(5, 5), (3, 3), (1, 1)]:
                 draw.text(
-                    (brand_x + offset, brand_y + offset),
+                    (brand_x + offset[0], brand_y + offset[1]),
                     brand_text,
-                    fill=glow_color,
+                    fill='#000000',
                     font=brand_font
                 )
             
-            # Ombra nera per profondità
-            draw.text((brand_x + 3, brand_y + 3), brand_text, fill='#000000', font=brand_font)
-            
-            # Testo principale con gradiente blu (simulato con blu brillante)
-            draw.text((brand_x, brand_y), brand_text, fill='#3b82f6', font=brand_font)
+            # Testo principale con gradiente (simulato con blu brillante)
+            draw.text((brand_x, brand_y), brand_text, fill='#60a5fa', font=brand_font)
             
             # === ID POST "sp#ID" (opzionale, più piccolo) ===
             id_text = f"sp#{message_id}"
@@ -267,7 +369,7 @@ class ImageGenerator:
             # Centra verticalmente il messaggio nell'area disponibile
             message_start_y = message_area_top + (message_area_height - total_message_height) // 2
             
-            # Disegna messaggio con ombre per leggibilità
+            # Disegna messaggio con glowing effect
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -277,26 +379,56 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Ombra nera per leggibilità
-                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
-                # Testo principale bianco
-                draw.text((line_x, y_pos), line, fill='#f8fafc', font=message_font)
+                # Glow per il messaggio
+                for glow_i in range(5):
+                    offset = glow_i * 2
+                    alpha = int(100 - (glow_i * 20))
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (line_x + offset, y_pos + offset),
+                        line,
+                        fill=(255, 255, 255, alpha),
+                        font=message_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+                
+                # Ombra nera per profondità
+                draw.text((line_x + 3, y_pos + 3), line, fill='#000000', font=message_font)
+                # Testo principale bianco brillante
+                draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
             
-            # === FOOTER "@spottedatbz" ===
+            # === FOOTER "@spottedatbz" CON GLOW ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 80  # Bottom della card
+            footer_y = card_y + card_h - 100
+            
+            # Glow per footer
+            for glow_i in range(4):
+                offset = glow_i * 1
+                alpha = int(80 - (glow_i * 20))
+                glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                glow_draw = ImageDraw.Draw(glow_layer)
+                glow_draw.text(
+                    (footer_x + offset, footer_y + offset),
+                    footer_text,
+                    fill=(139, 92, 246, alpha),  # Viola glow
+                    font=footer_font
+                )
+                img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                draw = ImageDraw.Draw(img)
             
             # Ombra
-            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
-            # Footer grigio chiaro
-            draw.text((footer_x, footer_y), footer_text, fill='#cbd5e1', font=footer_font)
+            draw.text((footer_x + 2, footer_y + 2), footer_text, fill='#000000', font=footer_font)
+            # Footer con glow
+            draw.text((footer_x, footer_y), footer_text, fill='#a78bfa', font=footer_font)
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile applicazione con Komika Axis): {output_path}")
+            print(f"✅ Immagine generata (stile CSS glowing 3D liquid glass): {output_path}")
             return True
             
         except Exception as e:
