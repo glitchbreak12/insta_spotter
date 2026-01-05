@@ -75,7 +75,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> str | None:
-        """Fallback di emergenza: genera un'immagine PIL con stile Apple quando wkhtmltoimage fallisce."""
+        """Fallback PIL che cerca di avvicinarsi allo stile card_v5.html con glow 3D."""
         if not PIL_AVAILABLE:
             raise RuntimeError("PIL non disponibile")
 
@@ -85,11 +85,11 @@ class ImageGenerator:
             height = 1920
             padding = 90
 
-            # === SFONDO NERO CON GLOWS DELICATI ===
+            # === SFONDO STILE APPLE CON GLOWS ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
 
-            # Gradiente nero sottile
+            # Gradiente sottile nero -> nero leggermente più scuro
             for y in range(height):
                 t = y / height
                 r = int(0 + 2 * t)
@@ -97,76 +97,82 @@ class ImageGenerator:
                 b = int(0 + 2 * t)
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-            # Glows radiali delicati
+            # Glows radiali stile Apple
             ambient = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             amb_draw = ImageDraw.Draw(ambient)
 
-            # Glow blu centrale
-            for radius, alpha in [(500, 30), (350, 18), (200, 10)]:
+            # Glow blu centrale (come card_v5)
+            for radius, alpha in [(500, 40), (350, 25), (200, 15)]:
                 amb_draw.ellipse(
                     [width//2 - radius, height//2 - radius,
                      width//2 + radius, height//2 + radius],
                     fill=(0, 122, 255, alpha)
                 )
 
-            # Glow azzurro laterale
-            for radius, alpha in [(300, 15), (180, 8)]:
+            # Glow viola-blu laterale (come card_v5)
+            for radius, alpha in [(300, 30), (180, 18)]:
                 amb_draw.ellipse(
-                    [int(width*0.3) - radius, int(height*0.4) - radius,
-                     int(width*0.3) + radius, int(height*0.4) + radius],
-                    fill=(90, 200, 250, alpha)
+                    [int(width*0.7) - radius, int(height*0.6) - radius,
+                     int(width*0.7) + radius, int(height*0.6) + radius],
+                    fill=(88, 86, 214, alpha)
                 )
 
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === CARD GLASSMORPHISM ===
+            # === CARD CON GLOW 3D STILE V5 ===
             card_x = padding
             card_y = padding
             card_w = width - (padding * 2)
             card_h = height - (padding * 2)
 
-            # Ombra morbida
+            # Glow 3D multi-layer (come box-shadow di card_v5)
+            glow_3d = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(glow_3d)
+
+            # Outer glow layers (3 layers come in card_v5)
+            for i, (offset, alpha) in enumerate([(20, 15), (40, 10), (80, 8)]):
+                glow_draw.rectangle(
+                    [card_x - offset, card_y - offset,
+                     card_x + card_w + offset, card_y + card_h + offset],
+                    outline=(0, 122, 255, alpha)
+                )
+
+            img = Image.alpha_composite(img.convert('RGBA'), glow_3d).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # Ombra profonda per depth (come card_v5)
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            for i in range(18):
-                alpha = int(55 - i * 2.8)
+            for i in range(25):  # Più layers per profondità
+                alpha = int(60 - i * 2.4)
                 shadow_draw.rectangle(
-                    [card_x + i + 6, card_y + i + 6,
-                     card_x + card_w + i + 6, card_y + card_h + i + 6],
+                    [card_x + i + 10, card_y + i + 20,  # Offset maggiore per profondità
+                     card_x + card_w + i + 10, card_y + card_h + i + 20],
                     fill=(0, 0, 0, alpha)
                 )
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Glow blu sottile
-            glow_outer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            glow_outer_draw = ImageDraw.Draw(glow_outer)
-            for i in range(10):
-                off = i * 2.5
-                alpha = int(45 - i * 4)
-                glow_outer_draw.rectangle(
-                    [card_x - off, card_y - off,
-                     card_x + card_w + off, card_y + card_h + off],
-                    outline=(0, 122, 255, alpha)
-                )
-            img = Image.alpha_composite(img.convert('RGBA'), glow_outer).convert('RGB')
-            draw = ImageDraw.Draw(img)
-
-            # Card principale glassmorphism
-            draw.rectangle(
+            # Card principale con glassmorphism
+            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_layer)
+            card_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(20, 20, 20, 200),
+                fill=(20, 20, 20, 220),  # Più opaco per glassmorphism
                 outline=(255, 255, 255, 20)
             )
 
-            # Highlight superiore
+            # Highlight superiore (come card_v5)
             for i in range(350):
-                alpha = max(0, 70 - int(i * 0.2))
-                draw.line(
+                alpha = max(0, 25 - int(i * 0.07))  # Più sottile come card_v5
+                card_draw.line(
                     [(card_x, card_y + i), (card_x + card_w, card_y + i)],
                     fill=(255, 255, 255, alpha)
                 )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
 
             # === CARICA FONT KOMIKA AXIS ===
             font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
@@ -178,10 +184,10 @@ class ImageGenerator:
 
             if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
                 try:
-                    brand_font = ImageFont.truetype(font_path, 95)
-                    message_font = ImageFont.truetype(font_path, 62)
-                    id_font = ImageFont.truetype(font_path, 26)
-                    footer_font = ImageFont.truetype(font_path, 30)
+                    brand_font = ImageFont.truetype(font_path, 95)  # Come card_v5
+                    message_font = ImageFont.truetype(font_path, 62)  # Come card_v5
+                    id_font = ImageFont.truetype(font_path, 26)  # Come card_v5
+                    footer_font = ImageFont.truetype(font_path, 30)  # Come card_v5
                 except Exception as e:
                     print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
 
@@ -206,19 +212,25 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
 
-            # === BRAND "SPOTTED" ===
+            # === BRAND "SPOTTED" CON GLOW 3D ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 150
+            brand_y = card_y + 50 + 50  # Come card_v5: padding-top: 50px + margin
 
-            # Ombra leggera
-            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            shadow_draw = ImageDraw.Draw(shadow_layer)
-            shadow_draw.text((brand_x + 2, brand_y + 2), brand_text, fill=(0, 122, 255, 25), font=brand_font)
-            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
-            draw = ImageDraw.Draw(img)
+            # Multiple text shadows per glow 3D (come card_v5)
+            for offset, color, alpha in [
+                (0, (0, 122, 255), 128),  # Inner glow blu
+                (0, (0, 122, 255), 77),   # Medium glow blu
+                (0, (0, 122, 255), 25),   # Outer glow blu
+                (2, (0, 0, 0), 204)       # Dark shadow for lift
+            ]:
+                shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                shadow_draw = ImageDraw.Draw(shadow_layer)
+                shadow_draw.text((brand_x + offset, brand_y + offset), brand_text, fill=color + (alpha,), font=brand_font)
+                img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+                draw = ImageDraw.Draw(img)
 
             draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
 
@@ -227,28 +239,28 @@ class ImageGenerator:
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_x = (width - id_width) // 2
-            id_y = brand_y + 120
+            id_y = brand_y + brand_bbox[3] - brand_bbox[1] + 35  # margin-bottom: 35px come card_v5
 
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
-            pad_x, pad_y = 30, 12
+            pad_x, pad_y = 30, 12  # Come card_v5
             bdraw.rounded_rectangle(
                 [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + 32 + pad_y],
                 radius=25,
-                fill=(0, 122, 255, 30),
-                outline=(0, 122, 255, 60)
+                fill=(0, 122, 255, 30),  # rgba(0, 122, 255, 0.12) ≈ 30/255
+                outline=(0, 122, 255, 64)  # rgba(0, 122, 255, 0.25) ≈ 64/255
             )
             img = Image.alpha_composite(img.convert('RGBA'), badge).convert('RGB')
             draw = ImageDraw.Draw(img)
             draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)
 
-            # === MESSAGGIO ===
+            # === MESSAGGIO CON SHADOW 3D ===
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            max_width = card_w - 200
-            line_height = 93
+            max_width = int(card_w * 0.8)  # max-width: 80% come card_v5
+            line_height = int(62 * 1.5)  # line-height: 1.5 come card_v5
 
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -265,9 +277,15 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
 
-            message_start_y = id_y + 140
+            # Centro verticale nel body (come flexbox center in card_v5)
+            body_top = id_y + 80  # Dopo header con margin-bottom: 80px
+            body_bottom = card_y + card_h - 100  # Prima del footer
+            body_height = body_bottom - body_top
 
-            for i, line in enumerate(lines[:3]):  # Max 3 righe
+            total_message_height = len(lines) * line_height
+            message_start_y = body_top + (body_height - total_message_height) // 2
+
+            for i, line in enumerate(lines[:5]):  # Più righe possibili
                 if not line.strip():
                     continue
 
@@ -276,11 +294,20 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
 
-                shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                shadow_draw = ImageDraw.Draw(shadow_layer)
-                shadow_draw.text((line_x + 1, y_pos + 1), line, fill=(0, 0, 0, 45), font=message_font)
-                img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
-                draw = ImageDraw.Draw(img)
+                if y_pos > body_bottom - line_height:
+                    break  # Non andare oltre il body
+
+                # Multiple shadows per glow 3D (come card_v5)
+                for offset_x, offset_y, color, alpha in [
+                    (0, 0, (255, 255, 255), 77),  # Subtle white glow
+                    (0, 0, (0, 0, 0), 153),       # Medium dark shadow
+                    (5, 5, (0, 0, 0), 204)        # Deep dark shadow for lift
+                ]:
+                    shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    shadow_draw = ImageDraw.Draw(shadow_layer)
+                    shadow_draw.text((line_x + offset_x, y_pos + offset_y), line, fill=color + (alpha,), font=message_font)
+                    img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
 
                 draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
 
@@ -289,7 +316,7 @@ class ImageGenerator:
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 200
+            footer_y = card_y + card_h - 100  # padding-top: 60px + padding-bottom: 40px
 
             draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)
 
