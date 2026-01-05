@@ -90,6 +90,9 @@ class ImageGenerator:
         try:
             import math
             
+            # Percorso root del progetto
+            project_root = Path(__file__).parent.parent.parent
+            
             # Dimensioni per Instagram Stories (1080x1920)
             width = self.image_width
             height = 1920
@@ -154,23 +157,42 @@ class ImageGenerator:
             draw = ImageDraw.Draw(img)
             
             # === CARICA FONT KOMIKA AXIS ===
-            font_path = os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf')
-            try:
-                if os.path.exists(font_path):
-                    brand_font = ImageFont.truetype(font_path, 120)
-                    message_font = ImageFont.truetype(font_path, 68)
-                    id_font = ImageFont.truetype(font_path, 36)
-                    footer_font = ImageFont.truetype(font_path, 38)
-                else:
-                    raise FileNotFoundError
-            except:
+            font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
+            
+            brand_font = None
+            message_font = None
+            id_font = None
+            footer_font = None
+            
+            # Prova a caricare Komika Axis (verifica che non sia un placeholder)
+            if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
                 try:
-                    # Fallback a font di sistema se Komika non disponibile
-                    brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
-                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 68)
-                    id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
-                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
+                    brand_font = ImageFont.truetype(font_path, 80)  # Come nel template HTML
+                    message_font = ImageFont.truetype(font_path, 64)  # Come nel template HTML
+                    id_font = ImageFont.truetype(font_path, 32)
+                    footer_font = ImageFont.truetype(font_path, 32)  # Come nel template HTML
+                except Exception as e:
+                    print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
+            
+            # Se Komika Axis non disponibile, usa font di sistema
+            if not brand_font:
+                try:
+                    if os.name == 'nt':  # Windows
+                        # Prova Arial Bold per il branding
+                        try:
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 80)
+                        except:
+                            brand_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 80)
+                        message_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 64)
+                        id_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 32)
+                        footer_font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 32)
+                    else:  # Linux/Mac
+                        brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 80)
+                        message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
+                        id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
+                        footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
                 except:
+                    # Ultimo fallback
                     brand_font = ImageFont.load_default()
                     message_font = ImageFont.load_default()
                     id_font = ImageFont.load_default()
@@ -180,8 +202,9 @@ class ImageGenerator:
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
+            brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 120
+            brand_y = card_y + 60  # Top della card
             
             # Glow blu per "SPOTTED"
             for i in range(8):
@@ -201,23 +224,27 @@ class ImageGenerator:
             # Testo principale con gradiente blu (simulato con blu brillante)
             draw.text((brand_x, brand_y), brand_text, fill='#3b82f6', font=brand_font)
             
-            # === ID POST "sp#ID" ===
+            # === ID POST "sp#ID" (opzionale, più piccolo) ===
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_x = (width - id_width) // 2
-            id_y = brand_y + 150
+            id_y = brand_y + brand_height + 40
             
             draw.text((id_x, id_y), id_text, fill='#cbd5e1', font=id_font)
             
-            # === MESSAGGIO CON WORD WRAP ===
-            message_y = id_y + 100
+            # === MESSAGGIO CON WORD WRAP (centrato verticalmente) ===
+            # Calcola l'area disponibile per il messaggio
+            message_area_top = id_y + 80
+            message_area_bottom = card_y + card_h - 120  # Lascia spazio per footer
+            message_area_height = message_area_bottom - message_area_top
+            
             max_width = card_w - (padding * 2)
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 95
+            line_height = 96  # 64px * 1.5 (line-height del template)
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -234,6 +261,12 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
+            # Calcola l'altezza totale del messaggio
+            total_message_height = len(lines) * line_height
+            
+            # Centra verticalmente il messaggio nell'area disponibile
+            message_start_y = message_area_top + (message_area_height - total_message_height) // 2
+            
             # Disegna messaggio con ombre per leggibilità
             for i, line in enumerate(lines):
                 if not line.strip():
@@ -242,7 +275,7 @@ class ImageGenerator:
                 line_bbox = draw.textbbox((0, 0), line, font=message_font)
                 line_width = line_bbox[2] - line_bbox[0]
                 line_x = (width - line_width) // 2
-                y_pos = message_y + i * line_height
+                y_pos = message_start_y + i * line_height
                 
                 # Ombra nera per leggibilità
                 draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
@@ -254,7 +287,7 @@ class ImageGenerator:
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 120
+            footer_y = card_y + card_h - 80  # Bottom della card
             
             # Ombra
             draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
