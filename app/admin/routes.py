@@ -147,11 +147,11 @@ def schedule_daily_post(background_tasks: BackgroundTasks, db: Session = Depends
     print(f"Found {len(messages_to_post)} messages to schedule for today")
     
     # Schedule the posting task
-    background_tasks.add_task(post_daily_messages, messages_to_post)
+    background_tasks.add_task(post_daily_messages, messages_to_post, db)
     
     return {"status": "success", "message": f"Scheduled {len(messages_to_post)} messages for 8 PM posting", "count": len(messages_to_post)}
 
-async def post_daily_messages(messages):
+async def post_daily_messages(messages, db: Session):
     """Post all approved messages from today at 8 PM"""
     from app.image.generator import ImageGenerator
     from app.bot.poster import InstagramBot
@@ -199,12 +199,12 @@ async def post_daily_messages(messages):
             message.error_message = str(e)
     
     # Commit all changes
-    db = SessionLocal()
     try:
         db.commit()
         print("Daily posting completed")
-    finally:
-        db.close()
+    except Exception as e:
+        print(f"Error committing daily posts: {e}")
+        db.rollback()
 
 @router.post("/messages/{message_id}/edit")
 async def edit_message(message_id: int, request: Request, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
