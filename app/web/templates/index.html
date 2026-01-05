@@ -574,41 +574,55 @@
                     redirect: 'manual' // Gestisci manualmente i redirect
                 });
                 
-                // Controlla se è un redirect (303, 302, 301)
-                if (response.status === 303 || response.status === 302 || response.status === 301) {
-                    // Redirect riuscito - ricarica con success
+                // Con redirect: 'manual', i redirect hanno status 0, 301, 302, 303, 307, o 308
+                // Se status è 0, 303, 302, 301, 307, 308 -> è un redirect (successo)
+                // Se status è 200-299 -> successo
+                // Se status è 400-499 -> errore client
+                // Se status è 500-599 -> errore server
+                
+                const status = response.status;
+                
+                // Redirect o successo -> ricarica con success
+                if (status === 0 || status === 303 || status === 302 || status === 301 || status === 307 || status === 308 || (status >= 200 && status < 300)) {
                     window.location.href = '/spotted/new?success=true';
                     return;
                 }
                 
-                // Se la risposta è OK (200), anche questo è un successo
-                if (response.ok) {
-                    window.location.href = '/spotted/new?success=true';
-                    return;
-                }
-                
-                // Se la risposta è un errore, leggi il messaggio
-                try {
-                    const errorText = await response.text();
-                    if (errorText.includes('CSRF') || errorText.includes('token')) {
-                        showError('Token di sicurezza scaduto. Ricarica la pagina e riprova.');
-                    } else if (response.status === 400) {
-                        showError('Richiesta non valida. Verifica il messaggio e riprova.');
-                    } else if (response.status >= 500) {
-                        showError('Errore del server. Riprova tra qualche momento.');
-                    } else {
+                // Se è un errore client (400-499), mostra messaggio specifico
+                if (status >= 400 && status < 500) {
+                    try {
+                        const errorText = await response.text();
+                        if (errorText.includes('CSRF') || errorText.includes('token')) {
+                            showError('Token di sicurezza scaduto. Ricarica la pagina e riprova.');
+                        } else if (status === 400) {
+                            showError('Richiesta non valida. Verifica il messaggio e riprova.');
+                        } else {
+                            showError('Errore nell\'invio del messaggio. Riprova.');
+                        }
+                    } catch {
                         showError('Errore nell\'invio del messaggio. Riprova.');
                     }
-                } catch {
-                    showError('Errore nell\'invio del messaggio. Riprova.');
+                    submitBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                    submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                    return;
                 }
-                submitBtn.disabled = false;
-                loadingSpinner.style.display = 'none';
-                submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                
+                // Se è un errore server (500-599), mostra messaggio
+                if (status >= 500) {
+                    showError('Errore del server. Riprova tra qualche momento.');
+                    submitBtn.disabled = false;
+                    loadingSpinner.style.display = 'none';
+                    submitBtn.innerHTML = '<div class="loading-spinner" id="loading-spinner"></div><i class="fas fa-paper-plane"></i> Invia Messaggio';
+                    return;
+                }
+                
+                // Se arriviamo qui, è uno status sconosciuto - considera successo (il messaggio potrebbe essere stato salvato)
+                window.location.href = '/spotted/new?success=true';
             } catch (error) {
                 console.error('Errore fetch:', error);
                 // Se è un errore di rete, potrebbe essere che il messaggio sia stato comunque inviato
-                // Prova a ricaricare la pagina dopo un breve delay
+                // Prova a ricaricare la pagina dopo un breve delay (il messaggio potrebbe essere stato salvato)
                 setTimeout(() => {
                     window.location.href = '/spotted/new?success=true';
                 }, 1000);
