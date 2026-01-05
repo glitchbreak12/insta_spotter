@@ -129,9 +129,20 @@ async def keep_alive_task():
     """Task in background che fa ping a se stesso ogni 5 minuti per mantenere Replit attivo."""
     await asyncio.sleep(60)  # Attendi 1 minuto dopo l'avvio
     
-    base_url = os.getenv("REPLIT_URL", "http://localhost:8000")
-    # Rimuovi trailing slash se presente
-    base_url = base_url.rstrip('/')
+    # Costruisci l'URL corretto per Replit
+    replit_url = os.getenv("REPLIT_URL")
+    if replit_url:
+        # Se REPLIT_URL è impostato, usalo
+        base_url = replit_url.rstrip('/')
+        # Assicurati che sia un URL valido (non l'URL di Replit stesso)
+        if "replit.com" in base_url and not base_url.endswith(".replit.app"):
+            # Se è l'URL di Replit, prova a costruire l'URL dell'app
+            # Formato: https://NOME-REPL.utente.replit.app
+            base_url = "http://localhost:8000"  # Fallback a localhost
+            logger.warning("⚠ REPLIT_URL sembra essere l'URL di Replit invece dell'app. Uso localhost.")
+    else:
+        # Se non è impostato, usa localhost (per Replit interno)
+        base_url = "http://localhost:8000"
     
     logger.info(f"🔄 Keep-alive task avviato. URL: {base_url}")
     

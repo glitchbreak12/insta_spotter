@@ -69,8 +69,9 @@ def handle_submission(
         # ============================================
         if csrf_token not in csrf_tokens_store:
             logger.warning(f"⚠️ CSRF token invalido da IP {hashed_ip}")
+            redirect_url = f"{request.url.scheme}://{request.url.netloc}/spotted/new?error=Token+di+sicurezza+invalido.+Riprova."
             return RedirectResponse(
-                url=str(request.url_for('show_submission_form')) + "?error=Token+di+sicurezza+invalido.+Riprova.",
+                url=redirect_url,
                 status_code=303
             )
         
@@ -84,8 +85,9 @@ def handle_submission(
             validated_message = InputValidator.validate_message(message)
         except ValueError as e:
             logger.info(f"⚠️ Messaggio invalido da IP {hashed_ip}: {str(e)}")
+            redirect_url = f"{request.url.scheme}://{request.url.netloc}/spotted/new?error={str(e).replace(' ', '+')}"
             return RedirectResponse(
-                url=str(request.url_for('show_submission_form')) + f"?error={str(e).replace(' ', '+')}", 
+                url=redirect_url, 
                 status_code=303
             )
         
@@ -107,14 +109,18 @@ def handle_submission(
         # ============================================
         background_tasks.add_task(moderate_message_task, new_message.id)
         
+        # Costruisci l'URL di redirect in modo sicuro
+        redirect_url = f"{request.url.scheme}://{request.url.netloc}/spotted/new?success=true"
+        
         return RedirectResponse(
-            url=str(request.url_for('show_submission_form')) + "?success=true",
+            url=redirect_url,
             status_code=303
         )
     
     except Exception as e:
         logger.error(f"✗ Errore nell'invio messaggio da IP {hashed_ip}: {str(e)}")
+        redirect_url = f"{request.url.scheme}://{request.url.netloc}/spotted/new?error=Errore+del+server.+Riprova."
         return RedirectResponse(
-            url=str(request.url_for('show_submission_form')) + "?error=Errore+del+server.+Riprova.",
+            url=redirect_url,
             status_code=303
         )

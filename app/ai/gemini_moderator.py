@@ -105,13 +105,26 @@ Tua Risposta:
 }
 """
         
-        self.model = genai.GenerativeModel(
-            'gemini-1.5-pro',
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json"
-            ),
-            system_instruction=system_prompt
-        )
+        # Usa gemini-pro che è più stabile e disponibile gratuitamente
+        # gemini-1.5-pro potrebbe non essere disponibile per tutti gli account
+        try:
+            self.model = genai.GenerativeModel(
+                'gemini-pro',
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json"
+                ),
+                system_instruction=system_prompt
+            )
+        except Exception as e:
+            # Fallback a gemini-1.5-flash se gemini-pro non è disponibile
+            print(f"--- [Moderator] Tentativo con gemini-pro fallito: {e}. Provo con gemini-1.5-flash ---")
+            self.model = genai.GenerativeModel(
+                'gemini-1.5-flash',
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json"
+                ),
+                system_instruction=system_prompt
+            )
 
     def moderate_message(self, text: str) -> ModerationResult:
         """
