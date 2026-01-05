@@ -5,9 +5,28 @@ File Replit bloccano il download del codice.
 
 ## ✅ SOLUZIONE SEMPLICISSIMA:
 
-### **COMANDO UNICO (copia tutto):**
+### **OPZIONE 1 - COMANDO UNICO:**
 ```bash
 cd /home/runner/workspace && echo "=== SALVA FILE ===" && mkdir -p /tmp/replit_backup && cp .env.example /tmp/replit_backup/ 2>/dev/null || true && cp .gitignore /tmp/replit_backup/ 2>/dev/null || true && cp .replit /tmp/replit_backup/ 2>/dev/null || true && cp replit.nix /tmp/replit_backup/ 2>/dev/null || true && echo "=== RIMUOVI BLOCCANTI ===" && rm -f .env.example .gitignore .replit replit.nix && echo "=== PULL CODICE ===" && git pull origin main && echo "=== RIPRISTINA FILE ===" && cp /tmp/replit_backup/* . 2>/dev/null || true && echo "✅ FATTO!"
+```
+
+### **OPZIONE 2 - PASSO PER PASSO (se il comando unico non funziona):**
+```bash
+# PASSO 1: Salva file importanti
+mkdir -p /tmp/replit_backup
+cp .env.example /tmp/replit_backup/ 2>/dev/null || true
+cp .gitignore /tmp/replit_backup/ 2>/dev/null || true
+cp .replit /tmp/replit_backup/ 2>/dev/null || true
+
+# PASSO 2: Rimuovi file che bloccano
+rm -f .env.example .gitignore .replit
+
+# PASSO 3: Scarica codice
+git pull origin main
+
+# PASSO 4: Ripristina file
+cp /tmp/replit_backup/* . 2>/dev/null || true
+echo "✅ CODICE AGGIORNATO!"
 ```
 
 ### **VERIFICA:**
