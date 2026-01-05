@@ -240,7 +240,7 @@ class ImageGenerator:
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 100  # Posizionamento corretto
+            brand_y = card_y + 120  # Posizionamento più in basso per più spazio
             
             # Ombra leggera stile Apple
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
@@ -258,14 +258,16 @@ class ImageGenerator:
             id_width = id_bbox[2] - id_bbox[0]
             id_height = id_bbox[3] - id_bbox[1]
             id_x = (width - id_width) // 2
-            id_y = brand_y + brand_height + 50  # Spacing aumentato per evitare sovrapposizioni
+            id_y = brand_y + brand_height + 60  # Spacing aumentato significativamente
             
             # Badge stile Apple - pulito
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
-            pad_x, pad_y = 24, 10
+            pad_x, pad_y = 24, 12
+            badge_top = id_y - pad_y
+            badge_bottom = id_y + id_height + pad_y
             bdraw.rounded_rectangle(
-                [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + id_height + pad_y],
+                [id_x - pad_x, badge_top, id_x + id_width + pad_x, badge_bottom],
                 radius=20,
                 fill=(0, 122, 255, 40),  # Blu Apple trasparente
                 outline=(0, 122, 255, 80),  # Bordo blu Apple
@@ -277,22 +279,22 @@ class ImageGenerator:
             
             # === MESSAGGIO STILE APPLE - Bianco pulito ===
             # Calcola l'altezza totale del badge incluso padding
-            badge_total_height = id_height + (pad_y * 2)
-            message_area_top = id_y + badge_total_height + 80  # Spacing aumentato
-            message_area_bottom = card_y + card_h - 250  # Spazio footer aumentato
+            badge_total_height = badge_bottom - badge_top
+            message_area_top = badge_bottom + 100  # Spacing molto aumentato
+            message_area_bottom = card_y + card_h - 280  # Spazio footer molto aumentato
             message_area_height = message_area_bottom - message_area_top
             
             # Verifica che ci sia spazio sufficiente
-            if message_area_height < 100:
-                message_area_bottom = card_y + card_h - 200
+            if message_area_height < 150:
+                message_area_bottom = card_y + card_h - 250
                 message_area_height = message_area_bottom - message_area_top
             
-            max_width = card_w - (padding * 2) - 60
+            max_width = card_w - (padding * 2) - 80  # Margini laterali aumentati
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 102  # 64px * 1.6 (line-height Apple)
+            line_height = 100  # Line height ridotto per più spazio
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -311,12 +313,13 @@ class ImageGenerator:
             
             total_message_height = len(lines) * line_height
             
-            # Verifica che il messaggio non sia troppo alto
+            # Verifica che il messaggio non sia troppo alto e riduci se necessario
             if total_message_height > message_area_height:
                 # Riduci line_height se necessario
-                line_height = max(80, message_area_height // len(lines))
+                line_height = max(70, (message_area_height - 20) // max(len(lines), 1))
                 total_message_height = len(lines) * line_height
             
+            # Centra il messaggio verticalmente nell'area disponibile
             message_start_y = message_area_top + max(0, (message_area_height - total_message_height) // 2)
             
             # Messaggio bianco stile Apple - senza glow eccessivo
@@ -330,7 +333,7 @@ class ImageGenerator:
                 y_pos = message_start_y + i * line_height
                 
                 # Verifica che non si sovrapponga al footer
-                if y_pos + line_height > message_area_bottom:
+                if y_pos + line_height > message_area_bottom - 20:
                     break
                 
                 # Ombra leggera
@@ -349,12 +352,27 @@ class ImageGenerator:
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_height = footer_bbox[3] - footer_bbox[1]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 150  # Posizionamento sicuro
+            footer_y = card_y + card_h - 180  # Posizionamento sicuro con più spazio
             
-            # Verifica che il footer non si sovrapponga al messaggio
-            last_message_y = message_start_y + (len(lines) - 1) * line_height + line_height
-            if footer_y < last_message_y + 50:
-                footer_y = last_message_y + 80
+            # Calcola l'ultima posizione del messaggio effettivamente disegnato
+            last_message_y = message_start_y
+            for i, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                y_pos = message_start_y + i * line_height
+                if y_pos + line_height > message_area_bottom - 20:
+                    break
+                last_message_y = y_pos + line_height
+            
+            # Verifica che il footer non si sovrapponga al messaggio con margine di sicurezza
+            min_footer_y = last_message_y + 100  # Margine di sicurezza di 100px
+            if footer_y < min_footer_y:
+                footer_y = min_footer_y
+            
+            # Assicura che il footer non esca dalla card
+            max_footer_y = card_y + card_h - 50
+            if footer_y > max_footer_y:
+                footer_y = max_footer_y
             
             # Footer grigio stile Apple
             draw.text((footer_x, footer_y), footer_text, fill=(153, 153, 153), font=footer_font)  # Grigio 60% opacità
