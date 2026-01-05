@@ -102,105 +102,137 @@ class ImageGenerator:
             img = Image.new('RGB', (width, height), color='#0a1628')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente azzurro/blu
+            # Gradiente azzurro/blu intenso
             for y in range(height):
                 progress = y / height
-                # Gradiente: blu scuro -> azzurro -> blu
+                # Gradiente: blu scuro -> azzurro brillante -> blu
                 if progress < 0.5:
-                    # Top: blu scuro -> azzurro
-                    r = int(10 + (30 * progress * 2))
-                    g = int(22 + (80 * progress * 2))
-                    b = int(40 + (120 * progress * 2))
+                    # Top: blu scuro -> azzurro brillante
+                    r = int(10 + (50 * progress * 2))
+                    g = int(22 + (130 * progress * 2))
+                    b = int(40 + (200 * progress * 2))
                 else:
-                    # Bottom: azzurro -> blu scuro
+                    # Bottom: azzurro brillante -> blu scuro
                     local = (progress - 0.5) * 2
-                    r = int(40 - (30 * local))
-                    g = int(102 - (80 * local))
-                    b = int(160 - (120 * local))
+                    r = int(60 - (50 * local))
+                    g = int(152 - (130 * local))
+                    b = int(240 - (200 * local))
                 
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # === LIQUID GLASS CARD 3D CON GLOW ===
+            # === GLOW BACKGROUND AZZURRO ===
+            glow_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_bg_draw = ImageDraw.Draw(glow_bg)
+            
+            # Glow radiali azzurri
+            center_x, center_y = width // 2, height // 2
+            for i in range(2):
+                radius = 400 + (i * 500)
+                alpha = int(70 - (i * 20))
+                for angle in range(0, 360, 15):
+                    rad = math.radians(angle)
+                    x = int(center_x + radius * math.cos(rad))
+                    y = int(center_y + radius * math.sin(rad))
+                    if 0 <= x < width and 0 <= y < height:
+                        glow_bg_draw.ellipse(
+                            [x - 120, y - 120, x + 120, y + 120],
+                            fill=(100, 200, 255, alpha)  # Azzurro glow intenso
+                        )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), glow_bg).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # === OMBRA 3D PRONUNCIATA ===
             card_x = padding
             card_y = padding + 40
             card_w = width - (padding * 2)
             card_h = height - (padding * 2) - 80
             
-            # Glow esterno azzurro/blu per effetto 3D
+            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(shadow_layer)
+            # Ombra 3D grande e pronunciata
+            for i in range(25):
+                alpha = int(60 - (i * 2))
+                shadow_draw.rectangle(
+                    [card_x + i + 15, card_y + i + 15,
+                     card_x + card_w + i + 15, card_y + card_h + i + 15],
+                    fill=(0, 0, 0, alpha)
+                )
+            
+            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # === GLOW ESTERNO AZZURRO INTENSO (3D) ===
             glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glow_draw = ImageDraw.Draw(glow_card)
             
-            # Glow azzurro/blu multipli
-            for i in range(20):
-                offset = i * 1.5
-                glow_alpha = int(120 - (i * 5))
+            # Glow azzurro/blu multipli e intensi per 3D
+            for i in range(40):
+                offset = i * 1.2
+                glow_alpha = int(200 - (i * 4))
                 glow_draw.rectangle(
                     [card_x - offset, card_y - offset,
                      card_x + card_w + offset, card_y + card_h + offset],
-                    outline=(100, 180, 255, glow_alpha),  # Azzurro/blu glow
-                    width=2
+                    outline=(100, 200, 255, glow_alpha),  # Azzurro glow intenso
+                    width=3
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), glow_card).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === LIQUID GLASS CARD ===
+            # === LIQUID GLASS CARD PRONUNCIATO ===
             glass_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             glass_draw = ImageDraw.Draw(glass_card)
             
-            # Bordo esterno glow bianco
-            for i in range(15):
-                alpha = int(40 + (i * 3))
+            # Bordo esterno glow bianco (liquid glass)
+            for i in range(25):
+                alpha = int(60 + (i * 4))
                 glass_draw.rectangle(
                     [card_x - i, card_y - i,
                      card_x + card_w + i, card_y + card_h + i],
                     outline=(255, 255, 255, alpha),
-                    width=1
+                    width=2
                 )
             
-            # Sfondo glass principale (liquid glass)
+            # Sfondo glass principale (liquid glass molto trasparente)
             glass_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill=(20, 40, 70, 130),  # Blu scuro semi-trasparente
-                outline=(150, 200, 255, 100),  # Bordo azzurro
-                width=2
+                fill=(15, 35, 65, 100),  # Blu scuro molto trasparente per liquid glass
+                outline=(200, 230, 255, 150),  # Bordo azzurro brillante
+                width=3
             )
             
-            # Highlight superiore (riflesso glass)
-            highlight_y = card_y + 40
-            for i in range(50):
-                alpha = int(100 - (i * 2))
+            # Highlight superiore pronunciato (riflesso liquid glass)
+            highlight_y = card_y + 50
+            for i in range(80):
+                alpha = int(150 - (i * 1.8))
                 glass_draw.rectangle(
-                    [card_x + 40, highlight_y + i,
-                     card_x + card_w - 40, highlight_y + i + 1],
+                    [card_x + 50, highlight_y + i,
+                     card_x + card_w - 50, highlight_y + i + 1],
                     fill=(255, 255, 255, alpha)
                 )
             
-            # Bordo interno glow azzurro
-            for i in range(10):
-                alpha = int(100 - (i * 10))
+            # Bordo interno glow azzurro intenso
+            for i in range(15):
+                alpha = int(150 - (i * 10))
                 glass_draw.rectangle(
-                    [card_x + 15 + i, card_y + 15 + i,
-                     card_x + card_w - 15 - i, card_y + card_h - 15 - i],
-                    outline=(100, 180, 255, alpha),  # Azzurro glow
+                    [card_x + 20 + i, card_y + 20 + i,
+                     card_x + card_w - 20 - i, card_y + card_h - 20 - i],
+                    outline=(100, 200, 255, alpha),  # Azzurro glow intenso
+                    width=2
+                )
+            
+            # Glow interno aggiuntivo per liquid glass
+            for i in range(8):
+                alpha = int(80 - (i * 10))
+                glass_draw.rectangle(
+                    [card_x + 35 + i, card_y + 35 + i,
+                     card_x + card_w - 35 - i, card_y + card_h - 35 - i],
+                    outline=(150, 220, 255, alpha),  # Azzurro glow chiaro
                     width=1
                 )
             
             img = Image.alpha_composite(img.convert('RGBA'), glass_card).convert('RGB')
-            draw = ImageDraw.Draw(img)
-            
-            # Ombra 3D
-            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            shadow_draw = ImageDraw.Draw(shadow_layer)
-            for i in range(12):
-                alpha = int(40 - (i * 3))
-                shadow_draw.rectangle(
-                    [card_x + i + 8, card_y + i + 8,
-                     card_x + card_w + i + 8, card_y + card_h + i + 8],
-                    fill=(0, 0, 0, alpha)
-                )
-            
-            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
             # === CARICA FONT KOMIKA AXIS ===
@@ -245,31 +277,42 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRANDING "SPOTTED" CON GLOW AZZURRO ===
+            # === BRANDING "SPOTTED" CON GLOW AZZURRO INTENSO 3D ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 80
+            brand_y = card_y + 100
             
-            # Glow azzurro per "SPOTTED"
-            for i in range(8):
-                offset = i * 2
-                alpha = int(150 - (i * 18))
-                glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                glow_draw = ImageDraw.Draw(glow_layer)
-                glow_draw.text(
-                    (brand_x + offset, brand_y + offset),
+            # Glow azzurro intenso multiplo per "SPOTTED" (3D effect)
+            for i in range(20):
+                offset = i * 2.5
+                alpha = int(220 - (i * 10))
+                # Glow in tutte le direzioni per effetto 3D
+                for dx, dy in [(offset, offset), (-offset, offset), (offset, -offset), (-offset, -offset),
+                               (offset, 0), (-offset, 0), (0, offset), (0, -offset),
+                               (offset*0.7, offset*0.7), (-offset*0.7, offset*0.7)]:
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (brand_x + int(dx), brand_y + int(dy)),
+                        brand_text,
+                        fill=(100, 200, 255, alpha),  # Azzurro glow intenso
+                        font=brand_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+            
+            # Ombre multiple per 3D pronunciato
+            for offset in [(6, 6), (4, 4), (2, 2)]:
+                draw.text(
+                    (brand_x + offset[0], brand_y + offset[1]),
                     brand_text,
-                    fill=(100, 180, 255, alpha),  # Azzurro glow
+                    fill='#000000',
                     font=brand_font
                 )
-                img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                draw = ImageDraw.Draw(img)
             
-            # Ombra per 3D
-            draw.text((brand_x + 3, brand_y + 3), brand_text, fill='#000000', font=brand_font)
             # Testo principale azzurro brillante
             draw.text((brand_x, brand_y), brand_text, fill='#64b5f6', font=brand_font)
             
@@ -324,24 +367,27 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Glow azzurro leggero per messaggio
-                for glow_i in range(4):
-                    offset = glow_i * 1
-                    alpha = int(80 - (glow_i * 20))
-                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                    glow_draw = ImageDraw.Draw(glow_layer)
-                    glow_draw.text(
-                        (line_x + offset, y_pos + offset),
-                        line,
-                        fill=(150, 200, 255, alpha),  # Azzurro glow chiaro
-                        font=message_font
-                    )
-                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                    draw = ImageDraw.Draw(img)
+                # Glow azzurro intenso per messaggio (3D)
+                for glow_i in range(8):
+                    offset = glow_i * 1.5
+                    alpha = int(120 - (glow_i * 14))
+                    # Glow in più direzioni
+                    for dx, dy in [(offset, offset), (offset, 0), (0, offset)]:
+                        glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                        glow_draw = ImageDraw.Draw(glow_layer)
+                        glow_draw.text(
+                            (line_x + int(dx), y_pos + int(dy)),
+                            line,
+                            fill=(150, 220, 255, alpha),  # Azzurro glow intenso
+                            font=message_font
+                        )
+                        img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                        draw = ImageDraw.Draw(img)
                 
-                # Ombra per 3D
-                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
-                # Testo principale bianco
+                # Ombre multiple per 3D pronunciato
+                for offset in [(4, 4), (2, 2)]:
+                    draw.text((line_x + offset[0], y_pos + offset[1]), line, fill='#000000', font=message_font)
+                # Testo principale bianco brillante
                 draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
             
             # === FOOTER "@spottedatbz" CON GLOW ===
@@ -351,24 +397,27 @@ class ImageGenerator:
             footer_x = (width - footer_width) // 2
             footer_y = card_y + card_h - 90
             
-            # Glow azzurro per footer
-            for glow_i in range(4):
-                offset = glow_i * 1
-                alpha = int(90 - (glow_i * 22))
-                glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                glow_draw = ImageDraw.Draw(glow_layer)
-                glow_draw.text(
-                    (footer_x + offset, footer_y + offset),
-                    footer_text,
-                    fill=(100, 180, 255, alpha),  # Azzurro glow
-                    font=footer_font
-                )
-                img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
-                draw = ImageDraw.Draw(img)
+            # Glow azzurro intenso per footer (3D)
+            for glow_i in range(8):
+                offset = glow_i * 1.2
+                alpha = int(140 - (glow_i * 17))
+                # Glow in più direzioni
+                for dx, dy in [(offset, offset), (offset, 0), (0, offset)]:
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (footer_x + int(dx), footer_y + int(dy)),
+                        footer_text,
+                        fill=(100, 200, 255, alpha),  # Azzurro glow intenso
+                        font=footer_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
             
-            # Ombra
-            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
-            # Footer azzurro
+            # Ombre per 3D
+            for offset in [(3, 3), (1, 1)]:
+                draw.text((footer_x + offset[0], footer_y + offset[1]), footer_text, fill='#000000', font=footer_font)
+            # Footer azzurro brillante
             draw.text((footer_x, footer_y), footer_text, fill='#90caf9', font=footer_font)
             
             # Salva con qualità massima
