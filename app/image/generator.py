@@ -437,10 +437,13 @@ class ImageGenerator:
 
             draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)  # rgba(255,255,255,0.55) ≈ 140/255
 
-            # Salva con qualità massima
+            # Salva e ottimizza per Instagram
             img.save(output_path, 'PNG', quality=100, optimize=False)
             print(f"✅ Immagine generata con successo (PIL fallback): {output_path}")
-            return output_path
+
+            # Ottimizza per Instagram
+            optimized_path = self._optimize_for_instagram(output_path)
+            return optimized_path
 
         except Exception as e:
             print(f"❌ Errore PIL fallback: {e}")
@@ -531,7 +534,13 @@ class ImageGenerator:
                     )
 
                     print(f"✅ Screenshot HTML diretto completato: {output_path}")
-                    return output_path
+
+                    # Ottimizza per Instagram dopo la generazione
+                    optimized_path = self._optimize_for_instagram(output_path)
+                    if optimized_path != output_path:
+                        print(f"📱 Ottimizzato per Instagram: {optimized_path}")
+
+                    return optimized_path
 
                 finally:
                     browser.close()
@@ -547,6 +556,39 @@ class ImageGenerator:
                     print("🧹 File HTML temporaneo pulito")
                 except:
                     pass
+
+    def _optimize_for_instagram(self, image_path: str) -> str:
+        """Ottimizza l'immagine per Instagram Stories"""
+        try:
+            from PIL import Image
+            import os
+
+            with Image.open(image_path) as img:
+                original_size = os.path.getsize(image_path)
+
+                # Converti a RGB se necessario
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                    print("🔄 Converted to RGB for Instagram")
+
+                # Ridimensiona se troppo grande (Instagram Stories: max 1080x1920)
+                max_width, max_height = 1080, 1920
+                if img.size[0] > max_width or img.size[1] > max_height:
+                    img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+                    print(f"📐 Resized to Instagram specs: {img.size}")
+
+                # Salva con ottimizzazione
+                img.save(image_path, 'PNG', optimize=True, quality=95)
+
+                final_size = os.path.getsize(image_path)
+                compression_ratio = (original_size - final_size) / original_size * 100
+                print(f"📱 Instagram optimization: {original_size} → {final_size} bytes ({compression_ratio:.1f}% reduction)")
+
+                return image_path
+
+        except Exception as e:
+            print(f"⚠️ Instagram optimization failed: {e}")
+            return image_path
 
     def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:
         """
@@ -601,7 +643,10 @@ class ImageGenerator:
                 imgkit.from_string(html_content, output_path, options=options, config=self.config)
 
                 print(f"Immagine generata con successo (wkhtmltoimage): {output_path}")
-                return output_path
+
+                # Ottimizza per Instagram anche le immagini wkhtmltoimage
+                optimized_path = self._optimize_for_instagram(output_path)
+                return optimized_path
 
             except Exception as e:
                 # Controlla se è un errore di compatibilità GLIBC o librerie
