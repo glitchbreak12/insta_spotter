@@ -83,7 +83,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> bool:
-        """Genera un'immagine con stile Apple 3D semplice e pulito."""
+        """Genera un'immagine con lo stesso stile dell'applicazione (Komika Axis font)."""
         if not PIL_AVAILABLE:
             return False
         
@@ -95,110 +95,129 @@ class ImageGenerator:
             height = 1920
             padding = 80
             
-            # === SFONDO GRADIENTE SEMPLICE ===
-            img = Image.new('RGB', (width, height), color='#f5f5f7')
+            # === SFONDO SCURO (stile applicazione) ===
+            img = Image.new('RGB', (width, height), color='#0f172a')
             draw = ImageDraw.Draw(img)
             
-            # Gradiente verticale semplice (bianco -> grigio chiaro)
+            # Gradiente scuro con glow blu (simulato)
             for y in range(height):
                 progress = y / height
-                # Bianco (#f5f5f7) -> grigio chiaro (#e5e5e7)
-                r = int(245 - (10 * progress))
-                g = int(245 - (10 * progress))
-                b = int(247 - (10 * progress))
+                # Base scuro (#0f172a)
+                r, g, b = 15, 23, 42
+                
+                # Aggiungi glow blu ai bordi (simulato)
+                glow_strength = math.sin(progress * math.pi * 2) * 0.1
+                r = max(15, min(60, int(r + glow_strength * 45)))
+                g = max(23, min(80, int(g + glow_strength * 57)))
+                b = max(42, min(130, int(b + glow_strength * 88)))
+                
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
             
-            # === CARD 3D SEMPLICE (stile Apple) ===
+            # === CARD GLASS EFFECT (stile applicazione) ===
             card_x = padding
-            card_y = padding + 100
+            card_y = padding
             card_w = width - (padding * 2)
-            card_h = height - (padding * 2) - 200
+            card_h = height - (padding * 2)
             
-            # Ombra card (semplice)
-            shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            shadow_draw = ImageDraw.Draw(shadow_layer)
+            # Glow esterno blu
+            glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(glow_layer)
             
-            # Ombra morbida
-            for i in range(15):
-                alpha = int(20 - (i * 1.2))
-                shadow_draw.rectangle(
-                    [card_x + i, card_y + i + 8, 
-                     card_x + card_w + i, card_y + card_h + i + 8],
-                    fill=(0, 0, 0, alpha)
+            # Glow blu attorno alla card
+            for i in range(20):
+                alpha = int(100 - (i * 4))
+                glow_color = (59, 130, 246, alpha)  # #3b82f6
+                glow_draw.rectangle(
+                    [card_x - i, card_y - i, 
+                     card_x + card_w + i, card_y + card_h + i],
+                    outline=glow_color,
+                    width=2
                 )
             
-            img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+            img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # Card principale (bianco con bordi arrotondati simulati)
-            # Sfondo card
-            draw.rectangle(
+            # Card principale con glass effect (simulato)
+            # Sfondo card semi-trasparente scuro
+            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_layer)
+            
+            # Sfondo card (#1e293b con trasparenza)
+            card_draw.rectangle(
                 [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill='#ffffff',
-                outline='#d1d1d6',
+                fill=(30, 41, 59, 180),  # #1e293b con alpha
+                outline=(59, 130, 246, 100),  # Bordo blu
                 width=2
             )
             
-            # Highlight superiore (effetto 3D)
-            highlight_y = card_y + 2
-            for i in range(3):
-                alpha = 30 - (i * 10)
-                draw.rectangle(
-                    [card_x + 2, highlight_y + i, card_x + card_w - 2, highlight_y + i + 1],
-                    fill=(255, 255, 255, alpha)
-                )
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
             
-            # === CARICA FONT ===
+            # === CARICA FONT KOMIKA AXIS ===
             font_path = os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf')
             try:
                 if os.path.exists(font_path):
-                    brand_font = ImageFont.truetype(font_path, 110)
-                    message_font = ImageFont.truetype(font_path, 64)
-                    id_font = ImageFont.truetype(font_path, 32)
-                    footer_font = ImageFont.truetype(font_path, 34)
+                    brand_font = ImageFont.truetype(font_path, 120)
+                    message_font = ImageFont.truetype(font_path, 68)
+                    id_font = ImageFont.truetype(font_path, 36)
+                    footer_font = ImageFont.truetype(font_path, 38)
                 else:
                     raise FileNotFoundError
             except:
                 try:
-                    brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 110)
-                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 64)
-                    id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 34)
+                    # Fallback a font di sistema se Komika non disponibile
+                    brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
+                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 68)
+                    id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 36)
+                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
                 except:
                     brand_font = ImageFont.load_default()
                     message_font = ImageFont.load_default()
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
             
-            # === BRANDING "SPOTTED" SEMPLICE ===
+            # === BRANDING "SPOTTED" CON KOMIKA AXIS E GLOW ===
             brand_text = "SPOTTED"
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_x = (width - brand_width) // 2
             brand_y = card_y + 120
             
-            # Ombra leggera
-            draw.text((brand_x + 2, brand_y + 2), brand_text, fill='#e0e0e0', font=brand_font)
-            # Testo principale
-            draw.text((brand_x, brand_y), brand_text, fill='#1d1d1f', font=brand_font)
+            # Glow blu per "SPOTTED"
+            for i in range(8):
+                offset = i * 2
+                alpha = int(150 - (i * 18))
+                glow_color = (59, 130, 246, alpha)  # Blu glow
+                draw.text(
+                    (brand_x + offset, brand_y + offset),
+                    brand_text,
+                    fill=glow_color,
+                    font=brand_font
+                )
+            
+            # Ombra nera per profondità
+            draw.text((brand_x + 3, brand_y + 3), brand_text, fill='#000000', font=brand_font)
+            
+            # Testo principale con gradiente blu (simulato con blu brillante)
+            draw.text((brand_x, brand_y), brand_text, fill='#3b82f6', font=brand_font)
             
             # === ID POST "sp#ID" ===
             id_text = f"sp#{message_id}"
             id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_x = (width - id_width) // 2
-            id_y = brand_y + 130
+            id_y = brand_y + 150
             
-            draw.text((id_x, id_y), id_text, fill='#8e8e93', font=id_font)
+            draw.text((id_x, id_y), id_text, fill='#cbd5e1', font=id_font)
             
             # === MESSAGGIO CON WORD WRAP ===
-            message_y = id_y + 80
+            message_y = id_y + 100
             max_width = card_w - (padding * 2)
             words = message_text.split()
             lines = []
             current_line = []
             current_width = 0
-            line_height = 85
+            line_height = 95
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -215,7 +234,7 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
-            # Disegna messaggio
+            # Disegna messaggio con ombre per leggibilità
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -225,21 +244,26 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_y + i * line_height
                 
-                # Testo principale
-                draw.text((line_x, y_pos), line, fill='#1d1d1f', font=message_font)
+                # Ombra nera per leggibilità
+                draw.text((line_x + 2, y_pos + 2), line, fill='#000000', font=message_font)
+                # Testo principale bianco
+                draw.text((line_x, y_pos), line, fill='#f8fafc', font=message_font)
             
             # === FOOTER "@spottedatbz" ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 100
+            footer_y = card_y + card_h - 120
             
-            draw.text((footer_x, footer_y), footer_text, fill='#8e8e93', font=footer_font)
+            # Ombra
+            draw.text((footer_x + 1, footer_y + 1), footer_text, fill='#000000', font=footer_font)
+            # Footer grigio chiaro
+            draw.text((footer_x, footer_y), footer_text, fill='#cbd5e1', font=footer_font)
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile Apple 3D semplice): {output_path}")
+            print(f"✅ Immagine generata (stile applicazione con Komika Axis): {output_path}")
             return True
             
         except Exception as e:
