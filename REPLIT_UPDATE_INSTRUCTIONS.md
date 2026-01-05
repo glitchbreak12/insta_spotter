@@ -12,8 +12,15 @@ cd /home/runner/workspace && echo "=== SALVA FILE ===" && mkdir -p /tmp/replit_b
 
 ### **VERIFICA:**
 ```bash
-python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
-# Ora dovrebbe funzionare e mostrare card_v5.html
+# Su Replit potrebbe essere 'python' o 'python3':
+python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)" 2>/dev/null || python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+# Dovrebbe mostrare: card_v5.html
+```
+
+### **SE PYTHON NON FUNZIONA:**
+```bash
+# Verifica quale versione Python è disponibile:
+which python || which python3 || echo "Python non trovato - riavvia Replit"
 ```
 
 ### **RIAVVIA:**
