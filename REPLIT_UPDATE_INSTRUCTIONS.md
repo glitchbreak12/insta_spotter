@@ -1,56 +1,31 @@
-# 🚨 REPLIT - TEMPLATE DORATO RISOLTO
+# 🚨 REPLIT - FIX FINALE
 
-## ✅ SUCCESSO FINALE!
+## 🔥 PROBLEMA:
+File Replit bloccano il download del codice.
 
-Hai ricreato il repository ma ci sono file di Replit da salvare.
+## ✅ SOLUZIONE SEMPLICISSIMA:
 
-### **SALVA I FILE IMPORTANTI:**
+### **COMANDO UNICO (copia tutto):**
 ```bash
-# Salva i file di configurazione Replit
-mkdir -p /tmp/replit_backup
-cp .env.example /tmp/replit_backup/ 2>/dev/null || true
-cp .gitignore /tmp/replit_backup/ 2>/dev/null || true
-cp .replit /tmp/replit_backup/ 2>/dev/null || true
-cp replit.nix /tmp/replit_backup/ 2>/dev/null || true
-echo "File Replit salvati!"
-```
-
-### **PULISCI E RICREA:**
-```bash
-# Rimuovi tutto tranne i file salvati
-rm -rf * .git
-echo "Repository pulito"
-```
-
-### **RIPRISTINA FILE E CODICE:**
-```bash
-# Ripristina file Replit
-cp /tmp/replit_backup/* . 2>/dev/null || true
-echo "File Replit ripristinati"
-
-# Ricrea repository con codice aggiornato
-git init
-git remote add origin https://github.com/glitchbreak12/insta_spotter.git
-git pull origin main
-echo "✅ REPOSITORY AGGIORNATO CON card_v5.html!"
+cd /home/runner/workspace && echo "=== SALVA FILE ===" && mkdir -p /tmp/replit_backup && cp .env.example /tmp/replit_backup/ 2>/dev/null || true && cp .gitignore /tmp/replit_backup/ 2>/dev/null || true && cp .replit /tmp/replit_backup/ 2>/dev/null || true && cp replit.nix /tmp/replit_backup/ 2>/dev/null || true && echo "=== RIMUOVI BLOCCANTI ===" && rm -f .env.example .gitignore .replit replit.nix && echo "=== PULL CODICE ===" && git pull origin main && echo "=== RIPRISTINA FILE ===" && cp /tmp/replit_backup/* . 2>/dev/null || true && echo "✅ FATTO!"
 ```
 
 ### **VERIFICA:**
 ```bash
 python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
-# Dovrebbe mostrare: card_v5.html
+# Ora dovrebbe funzionare e mostrare card_v5.html
 ```
 
 ### **RIAVVIA:**
 - Premi **Restart** in Replit
 - **TESTA** uno spot
-- **VEDRAI** card_v5.html glow blu (non più dorato!)
+- **VEDRAI** card_v5.html glow blu!
 
 ---
 
 ## 🎯 **RISULTATO:**
-✅ Template dorato eliminato
-✅ card_v5.html attivo
-✅ Glow blu professionale
+✅ Template dorato eliminato  
+✅ card_v5.html attivo  
+✅ Tutto funziona  
 
-**FATTO!** Ora hai card_v5.html! 🚀✨
+**COPIA IL COMANDO UNICO E FATTO!** 🚀✨
