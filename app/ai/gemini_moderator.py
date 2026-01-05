@@ -1,9 +1,12 @@
 # Usa il vecchio pacchetto google-generativeai (più stabile e funzionante)
 # Il nuovo google-genai ha un'API completamente diversa e non è ancora stabile
+import warnings
+# Sopprimi completamente il warning FutureWarning per google.generativeai
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
+warnings.filterwarnings("ignore", message=".*google.generativeai.*")
+
 try:
     import google.generativeai as genai
-    import warnings
-    warnings.filterwarnings("ignore", category=FutureWarning, message=".*google.generativeai.*")
 except ImportError:
     # Se non è installato, solleverà un errore più chiaro
     genai = None
@@ -154,9 +157,12 @@ Tua Risposta:
         except Exception as e:
             error_msg = str(e)
             print(f"--- ERRORE [Moderator]: Impossibile analizzare il messaggio. Errore: {error_msg} ---")
-            # Se è un errore 404 sui modelli, rilancia l'eccezione per gestirla nel task
-            if "404" in error_msg and "models" in error_msg.lower():
-                raise ValueError(f"Modelli Gemini non disponibili: {error_msg}")
+            # Se è un errore 404 sui modelli o API non disponibile, rilancia l'eccezione
+            if "404" in error_msg and ("models" in error_msg.lower() or "not found" in error_msg.lower()):
+                raise ValueError(f"Modelli Gemini non disponibili per questo account: {error_msg}")
+            # Se è un errore di API o autenticazione, rilancia
+            if "403" in error_msg or "401" in error_msg or "API" in error_msg.upper():
+                raise ValueError(f"Errore API Gemini: {error_msg}")
             # In caso di altri errori, metti in pending per sicurezza
             return ModerationResult(
                 decision="PENDING",

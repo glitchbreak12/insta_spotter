@@ -28,32 +28,24 @@ def moderate_message_task(message_id: int):
             moderator = GeminiModerator()
             result: ModerationResult = moderator.moderate_message(message.text)
         except (ValueError, ImportError) as e:
-            # GEMINI_API_KEY non configurata o pacchetto non installato - messaggio rimane in PENDING
+            # GEMINI_API_KEY non configurata, pacchetto non installato, o modelli non disponibili
             error_msg = str(e)
-            if "GEMINI_API_KEY" in error_msg or "google-generativeai" in error_msg.lower():
-                print(f"--- [TASK] Moderazione AI non disponibile: {error_msg}. Messaggio ID {message_id} rimane in PENDING per approvazione manuale. ---")
+            if any(keyword in error_msg for keyword in ["GEMINI_API_KEY", "google-generativeai", "non disponibili", "404", "not found"]):
+                print(f"--- [TASK] Moderazione AI non disponibile: {error_msg[:200]}. Messaggio ID {message_id} rimane in PENDING per approvazione manuale. ---")
                 message.gemini_analysis = "Moderazione AI non disponibile - richiede approvazione manuale"
                 message.status = MessageStatus.PENDING
                 db.commit()
                 return
             else:
                 raise
-        except (AttributeError, Exception) as e:
-            # Errore con l'API del pacchetto o modelli non disponibili
+        except Exception as e:
+            # Qualsiasi altro errore - disabilita moderazione AI per questo messaggio
             error_msg = str(e)
-            # Se è un errore 404 sui modelli, disabilita completamente la moderazione AI
-            if "404" in error_msg and "models" in error_msg.lower():
-                print(f"--- [TASK] Modelli Gemini non disponibili: {error_msg}. Messaggio ID {message_id} rimane in PENDING per approvazione manuale. ---")
-                message.gemini_analysis = "Modelli AI non disponibili - richiede approvazione manuale"
-                message.status = MessageStatus.PENDING
-                db.commit()
-                return
-            else:
-                print(f"--- [TASK] Errore moderazione AI: {e}. Messaggio ID {message_id} rimane in PENDING. ---")
-                message.gemini_analysis = f"Errore tecnico moderazione AI: {error_msg[:100]}"
-                message.status = MessageStatus.PENDING
-                db.commit()
-                return
+            print(f"--- [TASK] Errore moderazione AI: {error_msg[:200]}. Messaggio ID {message_id} rimane in PENDING. ---")
+            message.gemini_analysis = f"Errore tecnico moderazione AI - richiede approvazione manuale"
+            message.status = MessageStatus.PENDING
+            db.commit()
+            return
         
         print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
 
