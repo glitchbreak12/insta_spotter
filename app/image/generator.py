@@ -447,43 +447,91 @@ class ImageGenerator:
             raise
 
     def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> str | None:
-        """Genera immagine usando Playwright per rendering HTML perfetto."""
+        """Screenshot diretto dell'HTML renderizzato in browser reale."""
         if not self.playwright_available:
             raise RuntimeError("Playwright non disponibile")
+
+        import tempfile
+        temp_html_path = None
 
         try:
             # Renderizza l'HTML
             html_content = self._render_html(message_text, message_id)
 
+            # Crea file HTML temporaneo
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
+                f.write(html_content)
+                temp_html_path = f.name
+
+            print(f"📄 File HTML temporaneo creato: {temp_html_path}")
+
             with sync_playwright() as p:
-                # Lancia browser in modalità headless
-                browser = p.chromium.launch(headless=True)
+                # Lancia browser con configurazione ottimale per screenshot
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-web-security',  # Permetti file locali
+                        '--allow-file-access-from-files',
+                        '--disable-features=VizDisplayCompositor'
+                    ]
+                )
 
                 try:
-                    # Crea una nuova pagina
-                    page = browser.new_page()
+                    # Crea pagina con viewport fisso
+                    page = browser.new_page(
+                        viewport={'width': self.image_width, 'height': 1920},
+                        device_scale_factor=1
+                    )
 
-                    # Imposta viewport esatto (1080x1920 per Instagram Stories)
-                    page.set_viewport_size({"width": self.image_width, "height": 1920})
+                    # Naviga direttamente al file HTML
+                    file_url = f'file://{temp_html_path}'
+                    page.goto(file_url, wait_until='networkidle', timeout=10000)
 
-                    # Carica l'HTML
-                    page.set_content(html_content)
+                    # Aspetta caricamento completo (font, CSS, etc.)
+                    page.wait_for_timeout(3000)  # 3 secondi per sicurezza
 
-                    # Aspetta che tutto sia caricato (font, immagini, etc.)
-                    page.wait_for_load_state('networkidle')
+                    # Verifica rendering
+                    is_visible = page.evaluate('''
+                        () => {
+                            const body = document.body;
+                            const card = document.querySelector('.card');
+                            return body && card && body.scrollHeight > 100;
+                        }
+                    ''')
 
-                    # Fai screenshot della pagina intera
-                    page.screenshot(path=output_path, full_page=True)
+                    if not is_visible:
+                        raise RuntimeError("HTML non renderizzato correttamente - elementi mancanti")
 
-                    print(f"✅ Immagine generata perfettamente (Playwright): {output_path}")
+                    print("🎨 HTML renderizzato correttamente, catturo screenshot...")
+
+                    # Screenshot della viewport completa
+                    page.screenshot(
+                        path=output_path,
+                        full_page=True,
+                        type='png',
+                        omit_background=False
+                    )
+
+                    print(f"✅ Screenshot HTML diretto completato: {output_path}")
                     return output_path
 
                 finally:
                     browser.close()
 
         except Exception as e:
-            print(f"❌ Errore Playwright: {e}")
+            print(f"❌ Errore screenshot HTML diretto: {e}")
             raise
+        finally:
+            # Pulisci file temporaneo
+            if temp_html_path and os.path.exists(temp_html_path):
+                try:
+                    os.unlink(temp_html_path)
+                    print("🧹 File HTML temporaneo pulito")
+                except:
+                    pass
 
     def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:
         """
