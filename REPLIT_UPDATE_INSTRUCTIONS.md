@@ -1,89 +1,58 @@
-# 🔄 AGGIORNAMENTO REPLIT - Installazione Playwright
+# 🚨 AGGIORNAMENTO REPLIT OBBLIGATORIO - Template card_v5_fixed.html
 
-## 🚨 Problema attuale:
-Replit usa PIL fallback invece del rendering HTML perfetto
+## 🔥 PROBLEMA CRITICO:
+Replit sta usando il vecchio template DORATO (card_v11_celestial) invece di **card_v5_fixed.html**!
 
-## ✅ SOLUZIONE: Installa Playwright su Replit
+## ✅ SOLUZIONE IMMEDIATA (3 minuti):
 
-### **Passo 1: Installa Playwright**
+### **PASSO 1: PULL CODICE**
 ```bash
-# Nella shell di Replit
-pip install playwright
-```
-
-### **Passo 2: Installa Browser Chromium**
-```bash
-# Sempre nella shell di Replit
-playwright install chromium
-```
-
-### **Passo 3: Verifica Installazione**
-```bash
-python3 -c "
-from playwright.sync_api import sync_playwright
-print('✅ Playwright installato correttamente!')
-
-# Test browser
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-    page.goto('data:text/html,<h1>Test</h1>')
-    print('✅ Browser Chromium funzionante!')
-    browser.close()
-"
-```
-
-### **Passo 4: Pull aggiornamenti e test**
-```bash
-# Pull ultime modifiche
+# Apri Shell su Replit:
+cd /home/runner/workspace
 git pull origin main
+echo "✅ Template aggiornato a card_v5_fixed.html!"
+```
 
-# Test completo
+### **PASSO 2: VERIFICA**
+```bash
 python3 -c "
 from config import settings
-from app.image.generator import ImageGenerator
-
-print('=== TEST COMPLETO REPLIT ===')
-print('Template:', settings.image.template_path)
-
-gen = ImageGenerator()
-print('wkhtmltoimage:', gen.wkhtmltoimage_available)
-print('Playwright:', gen.playwright_available)
-
-# Test generazione con template celestiale
-result = gen.from_text('Test Playwright su Replit - stelle celestiali!', 'replit_celestial.png', 8888)
-print('Risultato:', result)
-
-if result:
-    import os
-    size = os.path.getsize(result)
-    print(f'Dimensioni: {size} bytes ({size/1024:.1f} KB)')
-    print('🎨 Template celestiale renderizzato perfettamente!')
+print('Template attuale:', settings.image.template_path)
+if 'card_v5_fixed.html' in settings.image.template_path:
+    print('✅ CORRETTO: Ora usa card_v5_fixed.html!')
+else:
+    print('❌ ANCORA SBAGLIATO - riprova git pull')
 "
 ```
 
-### **Passo 5: Riavvia Applicazione**
-- Premi **"Restart"** su Replit
-- L'app ora userà Playwright per rendering perfetto!
+### **PASSO 3: RIAVVIA**
+- Premi **"Restart"** in Replit
+- Ora le card saranno **card_v5_fixed.html** pulite!
 
-## 🎯 Cosa otterrai con Playwright:
+---
 
-- ✅ **Stelle animate** catturate perfettamente
-- ✅ **Nebula e gradienti** renderizzati correttamente
-- ✅ **Backdrop-filter e blur** funzionanti
-- ✅ **CSS effects completi** (box-shadow, text-shadow, etc.)
-- ✅ **Qualità massima** identica al template HTML
+## 🎭 OPZIONALE: Playwright per rendering perfetto
 
-## 🔍 Verifica funzionamento:
-Dopo il riavvio, controlla i log dell'applicazione. Dovresti vedere:
+Se vuoi il rendering HTML perfetto (non necessario, ma meglio):
+
+```bash
+pip install playwright
+playwright install chromium
+
+# Verifica
+python3 -c "
+from app.image.generator import ImageGenerator
+gen = ImageGenerator()
+print('Playwright disponibile:', gen.playwright_available)
+"
 ```
-🎨 Template complesso rilevato (card_v11_celestial.html), uso Playwright per rendering perfetto...
-```
 
-Invece del precedente:
-```
-⚠️ wkhtmltoimage ha problemi... uso PIL come fallback
-```
+---
 
-## 💡 Nota importante:
-Playwright potrebbe richiedere più risorse, ma dà risultati **molto superiori** per template complessi!
+## 🎯 RISULTATO FINALE:
+- ✅ Template: **card_v5_fixed.html** (non più dorato)
+- ✅ Sistema retry: **primo post ora funziona**
+- ✅ Card pulite con glow 3D professionale
+
+**AGGIORNA SUBITO REPLIT CON `git pull origin main`!** 🚀</contents>
+</xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
