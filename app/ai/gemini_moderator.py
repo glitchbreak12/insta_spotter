@@ -105,26 +105,29 @@ Tua Risposta:
 }
 """
         
-        # Usa gemini-pro che è più stabile e disponibile gratuitamente
-        # gemini-1.5-pro potrebbe non essere disponibile per tutti gli account
-        try:
-            self.model = genai.GenerativeModel(
-                'gemini-pro',
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json"
-                ),
-                system_instruction=system_prompt
-            )
-        except Exception as e:
-            # Fallback a gemini-1.5-flash se gemini-pro non è disponibile
-            print(f"--- [Moderator] Tentativo con gemini-pro fallito: {e}. Provo con gemini-1.5-flash ---")
-            self.model = genai.GenerativeModel(
-                'gemini-1.5-flash',
-                generation_config=genai.GenerationConfig(
-                    response_mime_type="application/json"
-                ),
-                system_instruction=system_prompt
-            )
+        # Prova diversi modelli Gemini disponibili
+        # Lista dei modelli da provare in ordine di preferenza
+        models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro']
+        last_error = None
+        
+        for model_name in models_to_try:
+            try:
+                self.model = genai.GenerativeModel(
+                    model_name,
+                    generation_config=genai.GenerationConfig(
+                        response_mime_type="application/json"
+                    ),
+                    system_instruction=system_prompt
+                )
+                print(f"--- [Moderator] Modello {model_name} inizializzato con successo ---")
+                return  # Modello trovato, esci
+            except Exception as e:
+                last_error = e
+                print(f"--- [Moderator] Tentativo con {model_name} fallito: {e} ---")
+                continue
+        
+        # Se nessun modello funziona, solleva un errore
+        raise ValueError(f"Nessun modello Gemini disponibile. Ultimo errore: {last_error}")
 
     def moderate_message(self, text: str) -> ModerationResult:
         """
@@ -149,11 +152,15 @@ Tua Risposta:
                 category=data.get("category", "Uncertain")
             )
         except Exception as e:
-            print(f"--- ERRORE [Moderator]: Impossibile analizzare il messaggio. Errore: {e} ---")
-            # In caso di errore, metti in pending per sicurezza
+            error_msg = str(e)
+            print(f"--- ERRORE [Moderator]: Impossibile analizzare il messaggio. Errore: {error_msg} ---")
+            # Se è un errore 404 sui modelli, rilancia l'eccezione per gestirla nel task
+            if "404" in error_msg and "models" in error_msg.lower():
+                raise ValueError(f"Modelli Gemini non disponibili: {error_msg}")
+            # In caso di altri errori, metti in pending per sicurezza
             return ModerationResult(
                 decision="PENDING",
-                reason=f"Errore tecnico durante l'analisi AI: {e}",
+                reason=f"Errore tecnico durante l'analisi AI: {error_msg[:100]}",
                 category="Error"
             )
 

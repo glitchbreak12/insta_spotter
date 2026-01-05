@@ -38,13 +38,22 @@ def moderate_message_task(message_id: int):
                 return
             else:
                 raise
-        except AttributeError as e:
-            # Errore con l'API del pacchetto (es. google-genai vs google-generativeai)
-            print(f"--- [TASK] Errore API moderazione: {e}. Messaggio ID {message_id} rimane in PENDING. ---")
-            message.gemini_analysis = f"Errore tecnico moderazione AI: {e}"
-            message.status = MessageStatus.PENDING
-            db.commit()
-            return
+        except (AttributeError, Exception) as e:
+            # Errore con l'API del pacchetto o modelli non disponibili
+            error_msg = str(e)
+            # Se è un errore 404 sui modelli, disabilita completamente la moderazione AI
+            if "404" in error_msg and "models" in error_msg.lower():
+                print(f"--- [TASK] Modelli Gemini non disponibili: {error_msg}. Messaggio ID {message_id} rimane in PENDING per approvazione manuale. ---")
+                message.gemini_analysis = "Modelli AI non disponibili - richiede approvazione manuale"
+                message.status = MessageStatus.PENDING
+                db.commit()
+                return
+            else:
+                print(f"--- [TASK] Errore moderazione AI: {e}. Messaggio ID {message_id} rimane in PENDING. ---")
+                message.gemini_analysis = f"Errore tecnico moderazione AI: {error_msg[:100]}"
+                message.status = MessageStatus.PENDING
+                db.commit()
+                return
         
         print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
 
