@@ -11,6 +11,13 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
+# Import Playwright come alternativa headless quando wkhtmltoimage non funziona
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
 class ImageGenerator:
     """Gestisce la creazione di immagini per le storie di Instagram."""
 
@@ -63,6 +70,9 @@ class ImageGenerator:
         # Verifica se wkhtmltoimage è disponibile
         import shutil
         self.wkhtmltoimage_available = bool(shutil.which('wkhtmltoimage'))
+
+        # Verifica disponibilità Playwright
+        self.playwright_available = PLAYWRIGHT_AVAILABLE
 
     def _render_html(self, message_text: str, message_id: int) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
@@ -436,10 +446,52 @@ class ImageGenerator:
             print(f"❌ Errore PIL fallback: {e}")
             raise
 
+    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> str | None:
+        """Genera immagine usando Playwright per rendering HTML perfetto."""
+        if not self.playwright_available:
+            raise RuntimeError("Playwright non disponibile")
+
+        try:
+            # Renderizza l'HTML
+            html_content = self._render_html(message_text, message_id)
+
+            with sync_playwright() as p:
+                # Lancia browser in modalità headless
+                browser = p.chromium.launch(headless=True)
+
+                try:
+                    # Crea una nuova pagina
+                    page = browser.new_page()
+
+                    # Imposta viewport esatto (1080x1920 per Instagram Stories)
+                    page.set_viewport_size({"width": self.image_width, "height": 1920})
+
+                    # Carica l'HTML
+                    page.set_content(html_content)
+
+                    # Aspetta che tutto sia caricato (font, immagini, etc.)
+                    page.wait_for_load_state('networkidle')
+
+                    # Fai screenshot della pagina intera
+                    page.screenshot(path=output_path, full_page=True)
+
+                    print(f"✅ Immagine generata perfettamente (Playwright): {output_path}")
+                    return output_path
+
+                finally:
+                    browser.close()
+
+        except Exception as e:
+            print(f"❌ Errore Playwright: {e}")
+            raise
+
     def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:
         """
-        Genera un'immagine PNG da un testo utilizzando wkhtmltoimage con template HTML (preferenziale)
-        o PIL come fallback di emergenza per problemi di compatibilità.
+        Genera un'immagine PNG da un testo con gerarchia di metodi:
+
+        1. wkhtmltoimage (principale - rendering nativo)
+        2. Playwright (alternativa headless - rendering perfetto CSS)
+        3. PIL (fallback finale - simulazione PIL)
 
         Args:
             message_text: Il testo da inserire nell'immagine.
@@ -484,25 +536,43 @@ class ImageGenerator:
                     print(f"⚠️ Errore con wkhtmltoimage: {e}")
                     print("Provo con PIL come fallback...")
 
-                # Se wkhtmltoimage fallisce, prova PIL come fallback di emergenza
+                # Se wkhtmltoimage fallisce, prova Playwright come seconda opzione
+                if self.playwright_available:
+                    try:
+                        print("🎭 Provo Playwright per rendering HTML accurato...")
+                        return self._generate_with_playwright(message_text, output_path, message_id)
+                    except Exception as pw_error:
+                        print(f"❌ Playwright fallito: {pw_error}")
+                        print("Cado su PIL come ultimo fallback...")
+
+                # Terza opzione: PIL come fallback finale
                 if PIL_AVAILABLE:
                     try:
+                        print("🔄 Uso PIL come fallback finale...")
                         return self._generate_with_pil(message_text, output_path, message_id)
                     except Exception as pil_error:
                         print(f"❌ Anche PIL ha fallito: {pil_error}")
-                        raise RuntimeError(f"Entrambi i metodi di generazione immagini hanno fallito. HTML error: {e}, PIL error: {pil_error}") from pil_error
+                        raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
                 else:
-                    raise RuntimeError(f"wkhtmltoimage fallito e PIL non disponibile: {e}") from e
+                    raise RuntimeError(f"wkhtmltoimage fallito e nessun fallback disponibile: {e}") from e
         else:
-            # wkhtmltoimage non disponibile, usa direttamente PIL come fallback
-            print("⚠ wkhtmltoimage non disponibile, uso PIL come fallback...")
+            # wkhtmltoimage non disponibile, prova prima Playwright poi PIL
+            if self.playwright_available:
+                try:
+                    print("🎭 wkhtmltoimage non disponibile, provo Playwright...")
+                    return self._generate_with_playwright(message_text, output_path, message_id)
+                except Exception as pw_error:
+                    print(f"❌ Playwright fallito: {pw_error}")
+
+            # Fallback finale: PIL
+            print("🔄 wkhtmltoimage e Playwright non disponibili, uso PIL...")
             if PIL_AVAILABLE:
                 try:
                     return self._generate_with_pil(message_text, output_path, message_id)
                 except Exception as pil_error:
-                    raise RuntimeError(f"PIL fallback fallito: {pil_error}") from pil_error
+                    raise RuntimeError(f"Tutti i fallback hanno fallito: {pil_error}") from pil_error
             else:
-                raise RuntimeError("ERRORE CRITICO: né wkhtmltoimage né PIL sono disponibili per generare immagini.")
+                raise RuntimeError("ERRORE CRITICO: wkhtmltoimage, Playwright e PIL non disponibili.")
 
 # Esempio di utilizzo (per testare questo file singolarmente)
 if __name__ == '__main__':
