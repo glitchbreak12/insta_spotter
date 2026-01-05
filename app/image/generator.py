@@ -94,11 +94,11 @@ class ImageGenerator:
             width = self.image_width
             height = 1920
 
-            # === SFONDO STILE APPLE ===
+            # === SFONDO STILE card_v5.html ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
 
-            # Sfondo con gradiente sottile (come card_v5)
+            # Gradiente sfondo sottile come card_v5
             for y in range(height):
                 t = y / height
                 r = int(0 + 2 * t)
@@ -106,11 +106,11 @@ class ImageGenerator:
                 b = int(0 + 2 * t)
                 draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-            # Glows radiali come bg-container in card_v5
+            # Glows radiali come nel CSS di card_v5
             ambient = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             amb_draw = ImageDraw.Draw(ambient)
 
-            # Glow centrale a 30% 40%
+            # Glow centrale blu a 30% 40%
             for radius, alpha in [(400, 30), (250, 18)]:  # rgba(0, 122, 255, 0.12) ≈ 30/255
                 amb_draw.ellipse(
                     [int(width*0.3) - radius, int(height*0.4) - radius,
@@ -118,7 +118,7 @@ class ImageGenerator:
                     fill=(0, 122, 255, alpha)
                 )
 
-            # Glow laterale a 70% 60%
+            # Glow laterale viola-blu a 70% 60%
             for radius, alpha in [(400, 25), (250, 15)]:  # rgba(88, 86, 214, 0.1) ≈ 25/255
                 amb_draw.ellipse(
                     [int(width*0.7) - radius, int(height*0.6) - radius,
@@ -129,10 +129,66 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === TEMPLATE CELESTIAL - Rendering OTTIMIZZATO ===
-            # Sfondo spaziale con stelle simulate come nel CSS
-            stars_layer = Image.new('RGBA', (width, height), (11, 11, 26, 255))  # #0B0B1A
-            stars_draw = ImageDraw.Draw(stars_layer)
+            # === TEMPLATE card_v5.html - CARD GLASS EFFECT ===
+            # Card rettangolare con backdrop-filter simulato (rgba(20, 20, 20, 0.8))
+            card_x = 90  # padding: 90px come nel template
+            card_y = 100  # padding-top: 100px
+            card_w = width - 180
+            card_h = height - 280  # spazio per footer
+
+            # Box-shadow multi-layer come in card_v5.html
+            card_shadow = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(card_shadow)
+
+            # Simula: box-shadow: 0 0 10px rgba(0, 122, 255, 0.3), 0 0 40px rgba(0, 122, 255, 0.2), etc.
+            shadow_specs = [
+                (10, (0, 122, 255, 76)),   # 0.3 * 255 ≈ 76
+                (40, (0, 122, 255, 51)),   # 0.2 * 255 ≈ 51
+                (80, (0, 122, 255, 38)),   # 0.15 * 255 ≈ 38
+                (0, 60, (0, 0, 0, 191))    # 0 20px 60px rgba(0,0,0,0.7) - ultimo valore è offset Y
+            ]
+
+            for spec in shadow_specs:
+                if len(spec) == 2:
+                    blur_radius, color = spec
+                    offset_y = 0
+                else:
+                    blur_radius, color, offset_y = spec
+
+                # Crea un'ellisse sfocata per simulare il blur
+                for i in range(blur_radius, 0, -2):
+                    alpha = max(0, color[3] - (blur_radius - i) * 3)
+                    shadow_draw.rounded_rectangle(
+                        [card_x - i, card_y - i + offset_y,
+                         card_x + card_w + i, card_y + card_h + i + offset_y],
+                        radius=45,
+                        fill=(color[0], color[1], color[2], alpha)
+                    )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_shadow).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # Card principale con glass effect (rgba(20, 20, 20, 0.8))
+            card_main = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_main)
+
+            # Riempimento card con colore semi-trasparente
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45,
+                fill=(20, 20, 20, 204)  # rgba(20, 20, 20, 0.8) = 204/255
+            )
+
+            # Bordo sottile (rgba(255, 255, 255, 0.08))
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45,
+                outline=(255, 255, 255, 20),  # 0.08 * 255 ≈ 20
+                width=1
+            )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_main).convert('RGB')
+            draw = ImageDraw.Draw(img)
 
             # Stelle casuali come nel template CSS
             import random
@@ -226,45 +282,6 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # Card principale con gradiente metallico come nel template
-            card_main = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            card_draw = ImageDraw.Draw(card_main)
-
-            # Gradiente metallico da #2E2E2E a #1F1F1F
-            for y in range(card_h):
-                t = y / card_h
-                r = int(46 - 15 * t)  # 2E=46, 1F=31
-                g = int(46 - 15 * t)
-                b = int(46 - 15 * t)
-                card_draw.line(
-                    [(card_x, card_y + y), (card_x + card_w, card_y + y)],
-                    fill=(r, g, b, 255)
-                )
-
-            # Bordo dorato come nel template (#d4af37)
-            card_draw.rounded_rectangle(
-                [card_x, card_y, card_x + card_w, card_y + card_h],
-                radius=45,
-                outline=(212, 175, 55, 204),  # #d4af37 con alpha
-                width=4
-            )
-
-            # Effetto shimmer metallico come nel CSS
-            shimmer_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            shimmer_draw = ImageDraw.Draw(shimmer_layer)
-
-            # Linee diagonali shimmer animate
-            for i in range(0, card_w + card_h, 60):
-                shimmer_draw.line(
-                    [(card_x + i - card_h//2, card_y), (card_x + i - card_h//2 + card_h//5, card_y + card_h)],
-                    fill=(255, 255, 255, 35),
-                    width=3
-                )
-
-            img = Image.alpha_composite(img.convert('RGBA'), card_main).convert('RGB')
-            img = Image.alpha_composite(img.convert('RGBA'), shimmer_layer).convert('RGB')
-            draw = ImageDraw.Draw(img)
-
             # === CARICA FONT KOMIKA AXIS ===
             font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
 
@@ -302,6 +319,113 @@ class ImageGenerator:
                     message_font = ImageFont.load_default()
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
+
+            # === CARD GLASS EFFECT come card_v5.html ===
+            card_x = 90
+            card_y = 100
+            card_w = width - 180
+            card_h = height - 280
+
+            # Card principale con glass effect
+            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_layer)
+
+            # Background della card (rgba(20, 20, 20, 0.8))
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45,
+                fill=(20, 20, 20, 204)
+            )
+
+            # Bordo sottile (rgba(255, 255, 255, 0.08))
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45,
+                outline=(255, 255, 255, 20),
+                width=1
+            )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # === RENDERING TESTO ===
+
+            # BRAND "SPOTTED" in alto centrato
+            brand_text = "SPOTTED"
+            brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+            brand_width = brand_bbox[2] - brand_bbox[0]
+            brand_x = (width - brand_width) // 2
+            brand_y = card_y + 60
+
+            # Testo bianco con glow blu come card_v5
+            for offset in [3, 2, 1]:
+                glow_color = (0, 122, 255, max(0, 150 - offset * 50))
+                glow_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                glow_draw = ImageDraw.Draw(glow_img)
+                glow_draw.text((brand_x, brand_y), brand_text, font=brand_font, fill=glow_color)
+                img = Image.alpha_composite(img.convert('RGBA'), glow_img).convert('RGB')
+                draw = ImageDraw.Draw(img)
+
+            draw.text((brand_x, brand_y), brand_text, font=brand_font, fill=(255, 255, 255))
+
+            # MESSAGGIO centrato
+            message_y = brand_y + 150
+            max_width = card_w - 100
+
+            # Word wrap del messaggio
+            words = message_text.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                test_line = current_line + " " + word if current_line else word
+                bbox = draw.textbbox((0, 0), test_line, font=message_font)
+                if bbox[2] - bbox[0] <= max_width:
+                    current_line = test_line
+                else:
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = word
+            if current_line:
+                lines.append(current_line)
+
+            # Render delle linee con glow blu
+            line_height = 80
+            total_text_height = len(lines) * line_height
+            start_y = message_y
+
+            for line in lines:
+                bbox = draw.textbbox((0, 0), line, font=message_font)
+                text_width = bbox[2] - bbox[0]
+                text_x = (width - text_width) // 2
+
+                # Glow bianco-blu
+                for offset in [2, 1]:
+                    glow_color = (0, 122, 255, max(0, 100 - offset * 30))
+                    glow_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_img)
+                    glow_draw.text((text_x, start_y), line, font=message_font, fill=glow_color)
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_img).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+
+                draw.text((text_x, start_y), line, font=message_font, fill=(255, 255, 255))
+                start_y += line_height
+
+            # ID del messaggio in basso a destra
+            id_text = f"#{message_id}"
+            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            id_x = width - 120
+            id_y = height - 120
+
+            draw.text((id_x, id_y), id_text, font=id_font, fill=(255, 255, 255, 128))
+
+            # FOOTER "spotted.to" in basso centrato
+            footer_text = "spotted.to"
+            footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
+            footer_width = footer_bbox[2] - footer_bbox[0]
+            footer_x = (width - footer_width) // 2
+            footer_y = height - 80
+
+            draw.text((footer_x, footer_y), footer_text, font=footer_font, fill=(255, 255, 255, 180))
 
             # === HEADER CON BRAND E BADGE (esatto come card_v5.html) ===
             header_y = card_y + 50  # padding-top: 50px
