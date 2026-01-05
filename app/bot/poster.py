@@ -1,6 +1,5 @@
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired, TwoFactorRequired, ChallengeRequired
-from instagrapi.types import ChallengeChoice
 import os
 import time
 
@@ -67,24 +66,28 @@ class InstagramBot:
             
             # Prova a risolvere la challenge automaticamente
             try:
-                # Scegli EMAIL come metodo di verifica (più comune)
-                challenge_choice = ChallengeChoice.EMAIL
-                print(f"--- DEBUG [POSTER]: Scelto metodo di verifica: {challenge_choice} ---")
-                
-                # Invia la richiesta di codice (se non è già stato inviato)
+                # In instagrapi, le challenge vengono gestite automaticamente
+                # Prova a selezionare il metodo EMAIL (valore numerico o stringa)
                 try:
-                    self.client.challenge_select_method(challenge_choice)
-                    print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata. ---")
+                    # Prova con valore numerico 1 per EMAIL (comune in instagrapi)
+                    self.client.challenge_select_method(1)  # 1 = EMAIL
+                    print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata (EMAIL). ---")
                     print("--- DEBUG [POSTER]: ⏳ Attendi 10-30 secondi e controlla la tua email. ---")
                 except Exception as select_error:
-                    # Potrebbe essere che il metodo è già stato selezionato
-                    if "already" in str(select_error).lower() or "selected" in str(select_error).lower():
-                        print("--- DEBUG [POSTER]: Metodo di verifica già selezionato. ---")
-                    else:
-                        print(f"--- DEBUG [POSTER]: Errore selezione metodo: {select_error} ---")
+                    error_str = str(select_error).lower()
+                    # Prova con stringa "email" o "1"
+                    try:
+                        self.client.challenge_select_method("email")
+                        print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata (email). ---")
+                    except:
+                        # Potrebbe essere che il metodo è già stato selezionato
+                        if "already" in error_str or "selected" in error_str:
+                            print("--- DEBUG [POSTER]: Metodo di verifica già selezionato. ---")
+                        else:
+                            print(f"--- DEBUG [POSTER]: Errore selezione metodo: {select_error} ---")
+                            print("--- DEBUG [POSTER]: La challenge potrebbe richiedere intervento manuale. ---")
                 
                 # Aspetta un po' per dare tempo all'email di arrivare
-                import time
                 print("--- DEBUG [POSTER]: Attendo 15 secondi per l'arrivo dell'email... ---")
                 time.sleep(15)
                 
