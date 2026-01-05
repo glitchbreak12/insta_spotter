@@ -11,24 +11,16 @@
         :root {
             --primary: #3b82f6;
             --primary-hover: #2563eb;
-            --secondary: #1e40af;
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
-            --info: #3b82f6;
             --dark: #0f172a;
-            --darker: #020617;
             --card-bg: #1e293b;
-            --card-hover: #334155;
             --text-primary: #f8fafc;
             --text-secondary: #cbd5e1;
             --text-muted: #64748b;
             --border: #334155;
-            --border-light: #475569;
             --shadow: rgba(0, 0, 0, 0.3);
-            --glow: 0 0 20px rgba(59, 130, 246, 0.3);
-            --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-            --gradient-secondary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         }
 
         * {
@@ -38,14 +30,10 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--dark);
-            background-image: 
-                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
             color: var(--text-primary);
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .dashboard-container {
@@ -53,18 +41,16 @@
             min-height: 100vh;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 280px;
-            background: var(--gradient-secondary);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border-right: 1px solid var(--border);
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
             z-index: 1000;
-            transition: transform 0.3s ease;
-            box-shadow: 5px 0 20px var(--shadow);
+            overflow-y: auto;
         }
 
         .sidebar-header {
@@ -74,26 +60,11 @@
         }
 
         .sidebar-header h2 {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             font-size: 1.5rem;
             font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar-header p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .sidebar-nav {
-            padding: 1rem 0;
-        }
-
-        .nav-item {
-            margin: 0.25rem 1rem;
         }
 
         .nav-link {
@@ -103,137 +74,37 @@
             color: var(--text-secondary);
             text-decoration: none;
             border-radius: 12px;
+            margin: 0.25rem 1rem;
             transition: all 0.3s ease;
-            font-weight: 500;
-            position: relative;
-            overflow: hidden;
         }
 
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--gradient-primary);
-            opacity: 0.1;
-            transition: left 0.3s ease;
-        }
-
-        .nav-link:hover::before,
-        .nav-link.active::before {
-            left: 0;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
+        .nav-link:hover, .nav-link.active {
+            background: rgba(59, 130, 246, 0.1);
             color: var(--text-primary);
-            background: rgba(99, 102, 241, 0.1);
-            box-shadow: var(--glow);
-            transform: translateX(5px);
         }
 
         .nav-link i {
             margin-right: 0.75rem;
             width: 20px;
-            text-align: center;
         }
 
-        /* Main Content */
         .main-content {
             margin-left: 280px;
             flex: 1;
             padding: 2rem;
-            min-height: 100vh;
         }
 
         .header {
-            background: var(--gradient-secondary);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 1.5rem 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 20px var(--shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--gradient-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--gradient-secondary);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 4px 20px var(--shadow);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px var(--shadow), var(--glow);
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem;
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .card-title {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .card-text {
-            color: var(--text-secondary);
-        }
-
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -242,13 +113,12 @@
         }
 
         .stat-card {
-            background: var(--gradient-secondary);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 1.5rem;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
         }
 
         .stat-card::before {
@@ -258,12 +128,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: var(--gradient-primary);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px var(--shadow);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
         }
 
         .stat-icon {
@@ -277,7 +142,7 @@
             margin-bottom: 1rem;
         }
 
-        .stat-icon.primary { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .stat-icon.primary { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
         .stat-icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
         .stat-icon.success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
         .stat-icon.error { background: rgba(239, 68, 68, 0.2); color: var(--error); }
@@ -285,23 +150,37 @@
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--text-primary);
             margin-bottom: 0.25rem;
         }
 
         .stat-label {
             color: var(--text-muted);
             font-size: 0.9rem;
-            font-weight: 500;
         }
 
-        /* Tables */
+        .card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
         .table-container {
-            background: var(--gradient-secondary);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 20px var(--shadow);
         }
 
         .table {
@@ -320,140 +199,12 @@
         .table tbody td {
             padding: 1rem;
             border-bottom: 1px solid var(--border);
-            vertical-align: middle;
         }
 
         .table tbody tr:hover {
-            background: rgba(99, 102, 241, 0.05);
+            background: rgba(59, 130, 246, 0.05);
         }
 
-        /* Mobile-first cards */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-
-        .post-card {
-            background: var(--gradient-secondary);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1rem;
-            box-shadow: 0 6px 18px var(--shadow);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px var(--shadow), var(--glow);
-        }
-
-        .post-card .card-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .post-card .card-actions {
-            display: flex;
-            gap: 0.4rem;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }
-
-        .mobile-only {
-            display: none;
-        }
-
-        .desktop-only {
-            display: block;
-        }
-
-        /* Bottom action bar for mobile */
-        .mobile-action-bar {
-            position: sticky;
-            bottom: 12px;
-            width: 100%;
-            z-index: 1100;
-        }
-
-        .mobile-action-bar .bar {
-            margin: 0 0.25rem;
-            padding: 0.65rem 0.75rem;
-            border-radius: 14px;
-            background: rgba(15, 23, 42, 0.92);
-            border: 1px solid var(--border);
-            box-shadow: 0 8px 30px var(--shadow), var(--glow);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            gap: 0.5rem;
-        }
-
-        .mobile-action-bar button {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.35rem;
-            font-weight: 600;
-        }
-
-        /* Sticky search bar */
-        .sticky-search {
-            position: sticky;
-            top: 0;
-            z-index: 900;
-            background: var(--dark);
-            padding: 0.5rem 0;
-        }
-
-        /* Chip filters on mobile */
-        .chip-group {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding-bottom: 0.25rem;
-        }
-
-        .chip {
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.4rem 0.75rem;
-            border-radius: 999px;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .chip.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-            box-shadow: var(--glow);
-        }
-
-        /* Skeleton placeholders */
-        .skeleton-block {
-            height: 14px;
-            border-radius: 6px;
-            background: linear-gradient(90deg, var(--border) 25%, var(--card-bg) 50%, var(--border) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.2s infinite;
-        }
-
-        .skeleton-card {
-            padding: 1rem;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            background: var(--gradient-secondary);
-            box-shadow: 0 4px 18px var(--shadow);
-        }
-
-        /* Status Indicators */
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -462,7 +213,6 @@
             font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .status-badge.pending {
@@ -483,31 +233,18 @@
             border: 1px solid var(--error);
         }
 
-        .status-badge.posted {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--info);
-            border: 1px solid var(--info);
-        }
-
-        /* Buttons */
         .btn {
             border-radius: 8px;
             font-weight: 600;
             padding: 0.5rem 1rem;
-            transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .btn-primary {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
         }
 
         .btn-success {
@@ -525,103 +262,22 @@
             font-size: 0.8rem;
         }
 
-        /* Filter Buttons */
-        .filter-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
         .filter-btn {
             padding: 0.5rem 1rem;
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-secondary);
             border-radius: 8px;
-            transition: all 0.3s ease;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .filter-btn:hover,
-        .filter-btn.active {
+        .filter-btn:hover, .filter-btn.active {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
         }
 
-        /* Charts */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin: 1rem 0;
-        }
-
-        /* Moderation Cards */
-        .moderation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .moderation-card {
-            background: var(--gradient-secondary);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .moderation-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
-        }
-
-        .moderation-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px var(--shadow), var(--glow);
-        }
-
-        .moderation-card h4 {
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .moderation-card p {
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
-        }
-
-        .ai-insight {
-            background: rgba(99, 102, 241, 0.1);
-            border-left: 4px solid var(--primary);
-            padding: 1rem;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-
-        .ai-insight strong {
-            color: var(--primary);
-        }
-
-        .moderation-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        /* Loading States */
         .loading {
             display: flex;
             align-items: center;
@@ -645,64 +301,11 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .filter-buttons {
-                flex-direction: column;
-            }
-            
-            .moderation-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .desktop-only {
-                display: none !important;
-            }
-
-            .mobile-only {
-                display: block !important;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .fade-in-up {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        /* Notifications */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--gradient-secondary);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 1rem 1.5rem;
@@ -724,200 +327,22 @@
             border-left: 4px solid var(--error);
         }
 
-        /* Mini Stats Cards */
-        .stat-mini-card {
-            background: var(--gradient-secondary);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
+        .chart-container {
+            position: relative;
+            height: 300px;
         }
 
-        .stat-mini-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px var(--shadow);
-        }
-
-        .stat-mini-card i {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .stat-mini-card span {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-mini-card small {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        /* Search and Filter Styles */
-        .input-group-text {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-
-        .form-control, .form-select {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .form-control:focus, .form-select:focus {
-            background: var(--card-bg);
-            border-color: var(--primary);
-            color: var(--text-primary);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-        }
-
-        .form-control::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .pagination .page-link:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* Enhanced Table Styles */
-        .table th {
-            background: var(--card-bg);
-            border-bottom: 2px solid var(--border);
-            color: var(--text-primary);
-            font-weight: 600;
-            padding: 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        .table tbody tr:hover {
-            background: rgba(99, 102, 241, 0.05);
-        }
-
-        /* Content Preview */
-        .content-preview {
-            max-width: 300px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .content-preview:hover {
-            white-space: normal;
-            max-width: 500px;
-            background: rgba(99, 102, 241, 0.1);
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
-
-        /* Media Preview */
-        .media-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .media-preview:hover {
-            transform: scale(1.2);
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 0.25rem;
-        }
-
-        .action-btn {
-            padding: 0.25rem 0.5rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.8rem;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .action-btn.view {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--info);
-        }
-
-        .action-btn.approve {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-
-        .action-btn.reject {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--error);
-        }
-
-        .action-btn.edit {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-        }
-
-        /* Modal Styles */
-        .modal-content {
-            background: var(--gradient-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-footer {
-            border-top: 1px solid var(--border);
-        }
-
-        /* Loading States */
-        .skeleton {
-            background: linear-gradient(90deg, var(--border) 25%, var(--card-bg) 50%, var(--border) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -927,45 +352,29 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <h2>InstaSpotter</h2>
-                <p>Admin Dashboard</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Admin Dashboard</p>
             </div>
-            <nav class="sidebar-nav">
-                <div class="nav-item">
+            <nav>
                 <a class="nav-link active" href="#overview">
-                        <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-tachometer-alt"></i>
                     Overview
                 </a>
-                </div>
-                <div class="nav-item">
                 <a class="nav-link" href="#posts">
-                        <i class="fas fa-newspaper"></i>
+                    <i class="fas fa-newspaper"></i>
                     Posts
                 </a>
-                </div>
-                <div class="nav-item">
                 <a class="nav-link" href="#moderation">
-                        <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt"></i>
                     Moderation
                 </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link" href="#analytics">
-                        <i class="fas fa-chart-line"></i>
-                        Analytics
-                    </a>
-                </div>
-                <div class="nav-item">
+                <a class="nav-link" href="#analytics">
+                    <i class="fas fa-chart-line"></i>
+                    Analytics
+                </a>
                 <a class="nav-link" href="#settings">
-                        <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog"></i>
                     Settings
                 </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link" href="#users">
-                        <i class="fas fa-users"></i>
-                        Users
-                    </a>
-                </div>
             </nav>
         </div>
 
@@ -973,10 +382,9 @@
         <div class="main-content">
             <header class="header">
                 <h1>Dashboard Overview</h1>
-                <div class="user-info">
-                    <div class="user-avatar">A</div>
-                    <div>
-                        <div style="font-weight: 600;">Admin User</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="text-align: right;">
+                        <div style="font-weight: 600;">{{ current_user }}</div>
                         <div style="font-size: 0.9rem; color: var(--text-muted);">Online</div>
                     </div>
                     <a href="/admin/logout" class="btn btn-primary btn-sm">
@@ -986,22 +394,22 @@
             </header>
 
             <!-- Overview Section -->
-            <section id="overview" class="fade-in-up">
+            <section id="overview">
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon primary">
                             <i class="fas fa-newspaper"></i>
-                            </div>
+                        </div>
                         <div class="stat-value" id="totalPosts">0</div>
                         <div class="stat-label">Total Posts</div>
-                        </div>
+                    </div>
                     <div class="stat-card">
                         <div class="stat-icon warning">
                             <i class="fas fa-clock"></i>
-                    </div>
+                        </div>
                         <div class="stat-value" id="pendingModeration">0</div>
                         <div class="stat-label">Pending Review</div>
-                            </div>
+                    </div>
                     <div class="stat-card">
                         <div class="stat-icon success">
                             <i class="fas fa-check-circle"></i>
@@ -1012,42 +420,15 @@
                     <div class="stat-card">
                         <div class="stat-icon error">
                             <i class="fas fa-times-circle"></i>
-                            </div>
+                        </div>
                         <div class="stat-value" id="rejectedPosts">0</div>
                         <div class="stat-label">Rejected Posts</div>
-                        </div>
                     </div>
+                </div>
 
-                <!-- System Health Card -->
-                <div class="card" style="margin-top: 2rem;">
-                            <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h5 class="card-title">
-                                    <i class="fas fa-heartbeat text-success"></i>
-                                    System Health
-                                </h5>
-                                <p class="card-text mb-0">
-                                    <span class="status-badge approved">Online</span>
-                                    All services operational
-                                </p>
-                                <small class="text-muted">Last checked: Just now</small>
-                            </div>
-                            <div class="text-end">
-                                <div class="h4 text-success mb-0">99.9%</div>
-                                <small class="text-muted">Uptime</small>
-                        </div>
-                    </div>
-                            </div>
-                        </div>
-
-                <!-- Analytics Chart -->
-                <div class="card" style="margin-top: 2rem;">
+                <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title">
-                            <i class="fas fa-chart-line"></i>
-                            Activity Overview (Last 7 Days)
-                        </h5>
+                        <h5><i class="fas fa-chart-line"></i> Activity Overview (Last 7 Days)</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
@@ -1058,20 +439,17 @@
             </section>
 
             <!-- Posts Section -->
-            <section id="posts" class="fade-in-up" style="margin-top: 3rem;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h4 mb-0">
-                        <i class="fas fa-newspaper"></i>
-                        Content Management
-                    </h2>
-                    <div class="d-flex gap-2">
+            <section id="posts" style="margin-top: 3rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2><i class="fas fa-newspaper"></i> Content Management</h2>
+                    <div style="display: flex; gap: 0.5rem;">
                         <button class="btn btn-primary btn-sm" onclick="refreshPosts()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
                         <button class="btn btn-success btn-sm" onclick="bulkApprove()">
                             <i class="fas fa-check-double"></i> Bulk Approve
                         </button>
-                        <button class="btn btn-info btn-sm" onclick="exportData()">
+                        <button class="btn btn-primary btn-sm" onclick="exportData()">
                             <i class="fas fa-download"></i> Export
                         </button>
                         <button class="btn btn-warning btn-sm" onclick="scheduleDailyPost()">
@@ -1080,26 +458,20 @@
                     </div>
                 </div>
 
-                <!-- Search and Filter Bar (sticky on mobile) -->
-                <div class="row mb-3 sticky-search mobile-only">
-                    <div class="col-12 mb-2">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                            <input type="text" class="form-control" id="searchInput" placeholder="Search messages..." onkeyup="searchMessages()">
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <select class="form-select" id="dateFilter" onchange="filterByDate()">
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search messages..." 
+                               style="flex: 1; min-width: 200px; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-primary);"
+                               onkeyup="searchMessages()">
+                        <select class="form-select" id="dateFilter" onchange="filterByDate()"
+                                style="width: 150px; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-primary);">
                             <option value="">All Time</option>
                             <option value="today">Today</option>
                             <option value="week">This Week</option>
                             <option value="month">This Month</option>
                         </select>
-                    </div>
-                    <div class="col-6">
-                        <select class="form-select" id="sortBy" onchange="sortMessages()">
+                        <select class="form-select" id="sortBy" onchange="sortMessages()"
+                                style="width: 150px; background: var(--card-bg); border: 1px solid var(--border); color: var(--text-primary);">
                             <option value="newest">Newest First</option>
                             <option value="oldest">Oldest First</option>
                             <option value="status">By Status</option>
@@ -1107,151 +479,51 @@
                     </div>
                 </div>
 
-                <!-- Desktop search/filter -->
-                <div class="row mb-3 desktop-only">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-search"></i>
-                            </span>
-                            <input type="text" class="form-control" id="searchInput" placeholder="Search messages..." onkeyup="searchMessages()">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" id="dateFilter" onchange="filterByDate()">
-                            <option value="">All Time</option>
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" id="sortBy" onchange="sortMessages()">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="status">By Status</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Filter Buttons -->
-                <div class="filter-buttons desktop-only">
-                    <button class="filter-btn active" data-status="">All Posts</button>
-                    <button class="filter-btn" data-status="PENDING">Pending</button>
-                    <button class="filter-btn" data-status="APPROVED">Approved</button>
-                    <button class="filter-btn" data-status="REJECTED">Rejected</button>
-                    <button class="filter-btn" data-status="POSTED">Posted</button>
-                    <button class="filter-btn" data-status="FAILED">Failed</button>
-                </div>
-
-                <!-- Mobile chip filters -->
-                <div class="chip-group mobile-only">
-                    <div class="chip active filter-btn" data-status="">All</div>
-                    <div class="chip filter-btn" data-status="PENDING">Pending</div>
-                    <div class="chip filter-btn" data-status="APPROVED">Approved</div>
-                    <div class="chip filter-btn" data-status="REJECTED">Rejected</div>
-                    <div class="chip filter-btn" data-status="POSTED">Posted</div>
-                    <div class="chip filter-btn" data-status="FAILED">Failed</div>
-                </div>
-
-                <!-- Stats Bar -->
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <div class="stat-mini-card">
-                            <i class="fas fa-eye text-primary"></i>
-                            <span id="totalFiltered">0</span>
-                            <small>Filtered</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-mini-card">
-                            <i class="fas fa-clock text-warning"></i>
-                            <span id="pendingCount">0</span>
-                            <small>Pending</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-mini-card">
-                            <i class="fas fa-check text-success"></i>
-                            <span id="approvedCount">0</span>
-                            <small>Approved</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-mini-card">
-                            <i class="fas fa-robot text-info"></i>
-                            <span id="aiAnalyzedCount">0</span>
-                            <small>AI Analyzed</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mobile cards view -->
-                <div id="postsCards" class="cards-grid mobile-only">
-                    <!-- Filled by JS -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button class="filter-btn active" data-status="" onclick="setFilter('')">All Posts</button>
+                    <button class="filter-btn" data-status="PENDING" onclick="setFilter('PENDING')">Pending</button>
+                    <button class="filter-btn" data-status="APPROVED" onclick="setFilter('APPROVED')">Approved</button>
+                    <button class="filter-btn" data-status="REJECTED" onclick="setFilter('REJECTED')">Rejected</button>
+                    <button class="filter-btn" data-status="POSTED" onclick="setFilter('POSTED')">Posted</button>
+                    <button class="filter-btn" data-status="FAILED" onclick="setFilter('FAILED')">Failed</button>
                 </div>
 
                 <div class="table-container">
-                        <div class="table-responsive desktop-only">
-                        <table class="table" id="postsTable">
-                                <thead>
-                                    <tr>
-                                    <th>
-                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                                    </th>
-                                        <th>ID</th>
-                                    <th>Content</th>
-                                        <th>Status</th>
-                                    <th>Created</th>
-                                    <th>AI Analysis</th>
-                                    <th>Media</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td colspan="8" class="text-center">
-                                        <div class="loading">
-                                            <div class="spinner"></div>
-                                            Loading posts...
-                                        </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                <th>ID</th>
+                                <th>Content</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>AI Analysis</th>
+                                <th>Media</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center">
+                                    <div class="loading">
+                                        <div class="spinner"></div>
+                                        Loading posts...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
-                <!-- Pagination -->
-                <nav aria-label="Posts pagination" class="mt-3 desktop-only">
-                    <ul class="pagination justify-content-center" id="pagination">
-                        <!-- Pagination will be generated by JavaScript -->
-                    </ul>
+                <nav aria-label="Posts pagination" class="mt-3">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
                 </nav>
-
-                <!-- Mobile action bar -->
-                <div class="mobile-action-bar mobile-only">
-                    <div class="bar">
-                        <button class="btn btn-primary btn-sm w-100" onclick="refreshPosts()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                        <button class="btn btn-success btn-sm w-100" onclick="bulkApprove()">
-                            <i class="fas fa-check-double"></i> Approve
-                        </button>
-                        <button class="btn btn-info btn-sm w-100" onclick="exportData()">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
             </section>
 
             <!-- Moderation Section -->
-            <section id="moderation" class="fade-in-up" style="margin-top: 3rem;">
-                <h2 class="h4 mb-3">
-                    <i class="fas fa-shield-alt"></i>
-                    AI Moderation Queue
-                </h2>
-                <div class="moderation-grid" id="moderationGrid">
+            <section id="moderation" style="margin-top: 3rem;">
+                <h2 class="mb-3"><i class="fas fa-shield-alt"></i> AI Moderation Queue</h2>
+                <div id="moderationGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
                     <div class="loading">
                         <div class="spinner"></div>
                         Loading moderation queue...
@@ -1260,33 +532,26 @@
             </section>
 
             <!-- Analytics Section -->
-            <section id="analytics" class="fade-in-up" style="margin-top: 3rem;">
-                <h2 class="h4 mb-3">
-                    <i class="fas fa-chart-line"></i>
-                    Analytics & Insights
-                </h2>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">Moderation Trends</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="moderationChart"></canvas>
-                                </div>
+            <section id="analytics" style="margin-top: 3rem;">
+                <h2 class="mb-3"><i class="fas fa-chart-line"></i> Analytics & Insights</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Moderation Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="moderationChart"></canvas>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">Content Distribution</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="chart-container">
-                                    <canvas id="distributionChart"></canvas>
-                                </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Content Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="distributionChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -1294,74 +559,43 @@
             </section>
 
             <!-- Settings Section -->
-            <section id="settings" class="fade-in-up" style="margin-top: 3rem;">
-                <h2 class="h4 mb-3">
-                    <i class="fas fa-cog"></i>
-                    System Settings
-                </h2>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="fas fa-robot"></i>
-                                    AI Moderation Settings
-                                </h5>
-                                <p class="card-text">Configure AI moderation parameters and sensitivity levels.</p>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="autonomousMode" checked>
-                                    <label class="form-check-label" for="autonomousMode">
-                                        Autonomous Mode
-                                    </label>
-                                </div>
-                                <button class="btn btn-primary mt-3" onclick="updateAISettings()">
-                                    <i class="fas fa-save"></i> Save Settings
-                                </button>
+            <section id="settings" style="margin-top: 3rem;">
+                <h2 class="mb-3"><i class="fas fa-cog"></i> System Settings</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5><i class="fas fa-robot"></i> AI Moderation Settings</h5>
+                            <p style="color: var(--text-secondary); margin: 1rem 0;">Configure AI moderation parameters and sensitivity levels.</p>
+                            <div class="form-check form-switch" style="margin: 1rem 0;">
+                                <input class="form-check-input" type="checkbox" id="autonomousMode" checked>
+                                <label class="form-check-label" for="autonomousMode">Autonomous Mode</label>
                             </div>
+                            <button class="btn btn-primary" onclick="updateAISettings()">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">
-                                    <i class="fas fa-bell"></i>
-                                    Notifications
-                                </h5>
-                                <p class="card-text">Manage notification preferences and alerts.</p>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
-                                    <label class="form-check-label" for="emailNotifications">
-                                        Email Notifications
-                                    </label>
-                                </div>
-                                <button class="btn btn-primary mt-3" onclick="updateNotifications()">
-                                    <i class="fas fa-save"></i> Save Settings
-                                </button>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5><i class="fas fa-bell"></i> Notifications</h5>
+                            <p style="color: var(--text-secondary); margin: 1rem 0;">Manage notification preferences and alerts.</p>
+                            <div class="form-check form-switch" style="margin: 1rem 0;">
+                                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                <label class="form-check-label" for="emailNotifications">Email Notifications</label>
                             </div>
+                            <button class="btn btn-primary" onclick="updateNotifications()">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
                         </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Users Section -->
-            <section id="users" class="fade-in-up" style="margin-top: 3rem;">
-                <h2 class="h4 mb-3">
-                    <i class="fas fa-users"></i>
-                    User Management
-                </h2>
-                <div class="card">
-                    <div class="card-body">
-                        <p class="card-text">User management features coming soon...</p>
                     </div>
                 </div>
             </section>
         </div>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Global variables
+        // Global state
         let allMessages = [];
         let filteredMessages = [];
         let selectedMessages = new Set();
@@ -1373,118 +607,639 @@
         let itemsPerPage = 15;
         const charts = {};
 
-        // Initialize dashboard
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            initializeDashboard();
+            console.log('Dashboard initializing...');
             initializeCharts();
             loadDashboardData();
             setupEventListeners();
-            setupFilterButtons();
         });
 
-        // Main function to fetch and render all dashboard data
+        // Load dashboard data
         async function loadDashboardData() {
-            const postsTableBody = document.querySelector('#postsTable tbody');
+            console.log('Loading dashboard data...');
+            const postsTableBody = document.getElementById('postsTableBody');
             const moderationGrid = document.getElementById('moderationGrid');
-            const postsCards = document.getElementById('postsCards');
             
-            // 1. Set loading state
+            // Show loading
             if (postsTableBody) {
-                postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center"><div class="loading"><div class="spinner"></div>Loading posts...</div></td></tr>`;
-            }
-            if (postsCards) {
-                postsCards.innerHTML = `<div class="loading"><div class="spinner"></div>Loading posts...</div>`;
+                postsTableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="loading"><div class="spinner"></div>Loading posts...</div></td></tr>';
             }
             if (moderationGrid) {
-                moderationGrid.innerHTML = `<div class="loading"><div class="spinner"></div>Loading moderation queue...</div>`;
+                moderationGrid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading moderation queue...</div>';
             }
 
             try {
-                // 2. Fetch data from the new, reliable endpoint
-                // IMPORTANT: Include credentials to send cookies for authentication
                 const response = await fetch('/admin/api/dashboard-data', {
                     method: 'GET',
-                    credentials: 'include', // Include cookies for authentication
+                    credentials: 'include',
                     headers: {
                         'Accept': 'application/json',
                     }
                 });
 
-                // 3. Check for HTTP errors (like 500, 404, 401)
+                console.log('Response status:', response.status);
+
                 if (!response.ok) {
                     if (response.status === 401) {
-                        // Not authenticated - redirect to login
                         window.location.href = '/admin/login';
                         return;
                     }
                     const errorText = await response.text();
-                    throw new Error(`Network response was not ok: ${response.status} ${response.statusText}. Server says: ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
-                // 4. Parse the JSON data
                 const data = await response.json();
-                const messages = data.messages || [];
-                allMessages = messages; // Store globally
+                console.log('Data received:', data);
+                
+                allMessages = data.messages || [];
+                console.log(`Loaded ${allMessages.length} messages`);
 
-                console.log(`Loaded ${messages.length} messages from API`);
-
-                // 5. Render everything
+                // Render everything
                 renderPostsTable();
                 renderModerationQueue();
                 updateStatsCards();
-                updateCharts(messages);
+                updateCharts(allMessages);
 
             } catch (error) {
-                // 6. If anything fails, show a clear error message
-                console.error('--- A critical error occurred while loading dashboard data ---', error);
-                const errorMessage = `Failed to load data. Please check the browser console for details. Error: ${error.message}`;
+                console.error('Error loading dashboard data:', error);
+                const errorMsg = `Failed to load data: ${error.message}`;
                 if (postsTableBody) {
-                    postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errorMessage}</td></tr>`;
-                }
-                const postsCards = document.getElementById('postsCards');
-                if (postsCards) {
-                    postsCards.innerHTML = `<div class="text-center text-danger">${errorMessage}</div>`;
+                    postsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${errorMsg}</td></tr>`;
                 }
                 if (moderationGrid) {
-                    moderationGrid.innerHTML = `<div class="text-center text-danger">Failed to load moderation queue.</div>`;
+                    moderationGrid.innerHTML = `<div class="text-center text-danger">${errorMsg}</div>`;
                 }
-                showNotification('Critical Error: Could not load data.', 'error');
+                showNotification('Error loading dashboard data', 'error');
             }
         }
 
-        // --- NEW: Function to update charts with dynamic data ---
-        function updateCharts(messages) {
-            if (!messages || messages.length === 0) {
-                console.warn("No message data available to update charts.");
+        // Render posts table
+        function renderPostsTable() {
+            applyFilters();
+            const postsTableBody = document.getElementById('postsTableBody');
+            if (!postsTableBody) return;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageMessages = filteredMessages.slice(startIndex, endIndex);
+
+            postsTableBody.innerHTML = '';
+
+            if (pageMessages.length === 0) {
+                postsTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No messages found</td></tr>';
+                updatePagination();
                 return;
             }
 
-            // 1. Update Moderation Trends Chart (Doughnut)
-            const statusCounts = messages.reduce((acc, msg) => {
-                const status = msg.status.toLowerCase();
-                acc[status] = (acc[status] || 0) + 1;
-                return acc;
-            }, {});
+            pageMessages.forEach(message => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="message-checkbox" value="${message.id}" onchange="toggleMessageSelection(${message.id})"></td>
+                    <td>${message.id}</td>
+                    <td><div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(message.text)}">${escapeHtml(message.text.substring(0, 100))}${message.text.length > 100 ? '...' : ''}</div></td>
+                    <td><span class="status-badge ${message.status.toLowerCase()}">${message.status}</span></td>
+                    <td>${formatDate(message.created_at)}</td>
+                    <td>${message.gemini_analysis ? '<span class="badge bg-info">AI Analyzed</span>' : '<span class="badge bg-secondary">Pending</span>'}</td>
+                    <td>${message.media_pk ? '<span class="badge bg-success">Yes</span>' : '<span class="text-muted">No</span>'}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="handleMessageAction(${message.id}, 'approve')" title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="handleMessageAction(${message.id}, 'reject')" title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="editMessage(${message.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                postsTableBody.appendChild(row);
+            });
 
-            const moderationData = {
-                labels: ['Approved', 'Pending', 'Rejected', 'Posted', 'Failed'],
-                datasets: [{
-                    data: [
-                        statusCounts.approved || 0,
-                        statusCounts.pending || 0,
-                        statusCounts.rejected || 0,
-                        statusCounts.posted || 0,
-                        statusCounts.failed || 0
-                    ],
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#64748b']
-                }]
-            };
-            if (charts.moderation) {
-                charts.moderation.data = moderationData;
-                charts.moderation.update();
+            updatePagination();
+        }
+
+        // Render moderation queue
+        function renderModerationQueue() {
+            const moderationGrid = document.getElementById('moderationGrid');
+            if (!moderationGrid) return;
+
+            const pendingMessages = allMessages.filter(m => m.status === 'PENDING' || m.status === 'pending');
+
+            moderationGrid.innerHTML = '';
+
+            if (pendingMessages.length === 0) {
+                moderationGrid.innerHTML = '<div class="text-center text-muted">No pending messages for moderation.</div>';
+                return;
             }
 
-            // 2. Update Activity Overview (Line Chart - last 7 days)
+            pendingMessages.forEach(message => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-body">
+                        <h5>Message #${message.id}</h5>
+                        <p style="color: var(--text-secondary); margin: 1rem 0;">${escapeHtml(message.text.substring(0, 200))}${message.text.length > 200 ? '...' : ''}</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Created: ${formatDate(message.created_at)}</p>
+                        ${message.gemini_analysis ? `<div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--primary); padding: 1rem; border-radius: 8px; margin: 1rem 0;"><strong>AI Analysis:</strong> ${escapeHtml(message.gemini_analysis)}</div>` : ''}
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button class="btn btn-success btn-sm" onclick="handleMessageAction(${message.id}, 'approve')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="handleMessageAction(${message.id}, 'reject')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                `;
+                moderationGrid.appendChild(card);
+            });
+        }
+
+        // Update stats cards
+        function updateStatsCards() {
+            const stats = {
+                total: allMessages.length,
+                pending: allMessages.filter(m => (m.status === 'PENDING' || m.status === 'pending')).length,
+                approved: allMessages.filter(m => (m.status === 'APPROVED' || m.status === 'approved')).length,
+                rejected: allMessages.filter(m => (m.status === 'REJECTED' || m.status === 'rejected')).length,
+            };
+
+            animateNumber('totalPosts', stats.total);
+            animateNumber('pendingModeration', stats.pending);
+            animateNumber('approvedPosts', stats.approved);
+            animateNumber('rejectedPosts', stats.rejected);
+        }
+
+        // Animate number
+        function animateNumber(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            const startValue = parseInt(element.textContent) || 0;
+            const duration = 1000;
+            const startTime = performance.now();
+
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const currentValue = Math.floor(startValue + (targetValue - startValue) * progress);
+                element.textContent = currentValue;
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                }
+            }
+            requestAnimationFrame(updateNumber);
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const searchInput = document.getElementById('searchInput');
+            const dateFilterSelect = document.getElementById('dateFilter');
+            const sortBySelect = document.getElementById('sortBy');
+
+            searchTerm = searchInput ? searchInput.value : '';
+            dateFilter = dateFilterSelect ? dateFilterSelect.value : '';
+            sortBy = sortBySelect ? sortBySelect.value : 'newest';
+
+            filteredMessages = allMessages.filter(message => {
+                // Status filter
+                if (currentFilter) {
+                    const msgStatus = (message.status || '').toUpperCase();
+                    const filterStatus = currentFilter.toUpperCase();
+                    if (msgStatus !== filterStatus) return false;
+                }
+
+                // Search filter
+                if (searchTerm && !message.text.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    return false;
+                }
+
+                // Date filter
+                if (dateFilter) {
+                    const messageDate = new Date(message.created_at);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const msgDateOnly = new Date(messageDate);
+                    msgDateOnly.setHours(0, 0, 0, 0);
+                    const daysDiff = Math.floor((today - msgDateOnly) / (1000 * 60 * 60 * 24));
+
+                    switch (dateFilter) {
+                        case 'today':
+                            if (daysDiff !== 0) return false;
+                            break;
+                        case 'week':
+                            if (daysDiff > 7 || daysDiff < 0) return false;
+                            break;
+                        case 'month':
+                            if (daysDiff > 30 || daysDiff < 0) return false;
+                            break;
+                    }
+                }
+
+                return true;
+            });
+
+            // Sort
+            switch (sortBy) {
+                case 'newest':
+                    filteredMessages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                    break;
+                case 'oldest':
+                    filteredMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                    break;
+                case 'status':
+                    filteredMessages.sort((a, b) => (a.status || '').localeCompare(b.status || ''));
+                    break;
+            }
+        }
+
+        // Set filter
+        function setFilter(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.status === status) {
+                    btn.classList.add('active');
+                }
+            });
+            currentPage = 1;
+            renderPostsTable();
+        }
+
+        // Search messages
+        function searchMessages() {
+            currentPage = 1;
+            renderPostsTable();
+        }
+
+        // Filter by date
+        function filterByDate() {
+            currentPage = 1;
+            renderPostsTable();
+        }
+
+        // Sort messages
+        function sortMessages() {
+            renderPostsTable();
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            if (!pagination) return;
+
+            const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Previous</a></li>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a></li>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Next</a></li>`;
+
+            pagination.innerHTML = html;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderPostsTable();
+            }
+        }
+
+        // Handle message action
+        async function handleMessageAction(messageId, action) {
+            if (!confirm(`Are you sure you want to ${action} message ${messageId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/messages/${messageId}/${action}`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok || response.redirected || response.status === 200) {
+                    showNotification(`Message ${messageId} ${action}d successfully!`, 'success');
+                    loadDashboardData();
+                } else {
+                    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+                    showNotification(`Failed to ${action} message: ${errorData.detail || response.statusText}`, 'error');
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing message ${messageId}:`, error);
+                showNotification(`Action for message ${messageId} sent. Reloading...`, 'success');
+                loadDashboardData();
+            }
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.message-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    selectedMessages.add(parseInt(checkbox.value));
+                } else {
+                    selectedMessages.delete(parseInt(checkbox.value));
+                }
+            });
+        }
+
+        // Toggle message selection
+        function toggleMessageSelection(messageId) {
+            if (selectedMessages.has(messageId)) {
+                selectedMessages.delete(messageId);
+            } else {
+                selectedMessages.add(messageId);
+            }
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.message-checkbox');
+            const checkedCount = document.querySelectorAll('.message-checkbox:checked').length;
+            selectAll.checked = checkedCount === checkboxes.length;
+        }
+
+        // Bulk approve
+        async function bulkApprove() {
+            if (selectedMessages.size === 0) {
+                showNotification('Please select messages to approve', 'error');
+                return;
+            }
+
+            if (!confirm(`Approve ${selectedMessages.size} selected messages?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/messages/bulk-update', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message_ids: Array.from(selectedMessages),
+                        action: 'approve'
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification(`${selectedMessages.size} messages approved successfully!`, 'success');
+                    selectedMessages.clear();
+                    loadDashboardData();
+                } else {
+                    const errorData = await response.json();
+                    showNotification(`Failed to approve messages: ${errorData.detail}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error bulk approving messages:', error);
+                showNotification('An error occurred while approving messages', 'error');
+            }
+        }
+
+        // Refresh posts
+        function refreshPosts() {
+            loadDashboardData();
+            showNotification('Posts refreshed', 'success');
+        }
+
+        // Export data
+        function exportData() {
+            const csvContent = generateCSV(filteredMessages);
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `insta_spotter_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showNotification('Data exported successfully', 'success');
+        }
+
+        // Generate CSV
+        function generateCSV(messages) {
+            const headers = ['ID', 'Content', 'Status', 'Created At', 'AI Analysis', 'Media PK'];
+            const rows = messages.map(msg => [
+                msg.id,
+                `"${(msg.text || '').replace(/"/g, '""')}"`,
+                msg.status || '',
+                msg.created_at || '',
+                (msg.gemini_analysis || '').replace(/"/g, '""'),
+                msg.media_pk || ''
+            ]);
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Schedule daily post
+        async function scheduleDailyPost() {
+            if (confirm('Schedule all approved messages for today to be posted at 8 PM?')) {
+                try {
+                    const response = await fetch('/admin/schedule-daily-post', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        showNotification(data.message || 'Daily post scheduled successfully', 'success');
+                        loadDashboardData();
+                    } else {
+                        showNotification('Failed to schedule daily post', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error scheduling daily post:', error);
+                    showNotification('Error scheduling daily post', 'error');
+                }
+            }
+        }
+
+        // Edit message
+        function editMessage(messageId) {
+            const message = allMessages.find(m => m.id === messageId);
+            if (!message) return;
+
+            const newText = prompt('Edit message:', message.text);
+            if (newText && newText !== message.text) {
+                fetch(`/admin/messages/${messageId}/edit`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `text=${encodeURIComponent(newText)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Message updated successfully', 'success');
+                        loadDashboardData();
+                    } else {
+                        showNotification('Failed to update message', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating message:', error);
+                    showNotification('Error updating message', 'error');
+                });
+            }
+        }
+
+        // Update AI settings
+        async function updateAISettings() {
+            const autonomousMode = document.getElementById('autonomousMode').checked;
+            try {
+                const response = await fetch('/admin/settings/autonomous-mode', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ enabled: autonomousMode })
+                });
+
+                if (response.ok) {
+                    showNotification('AI settings updated successfully', 'success');
+                } else {
+                    showNotification('Failed to update AI settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating AI settings:', error);
+                showNotification('Error updating AI settings', 'error');
+            }
+        }
+
+        // Update notifications
+        async function updateNotifications() {
+            showNotification('Notification settings saved', 'success');
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Activity Chart
+            const activityCtx = document.getElementById('activityChart');
+            if (activityCtx) {
+                charts.activity = new Chart(activityCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Posts',
+                            data: [],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Moderation Chart
+            const moderationCtx = document.getElementById('moderationChart');
+            if (moderationCtx) {
+                charts.moderation = new Chart(moderationCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Approved', 'Pending', 'Rejected', 'Posted', 'Failed'],
+                        datasets: [{
+                            data: [0, 0, 0, 0, 0],
+                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart');
+            if (distributionCtx) {
+                charts.distribution = new Chart(distributionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: [{
+                            label: 'Posts',
+                            data: Array(24).fill(0),
+                            backgroundColor: '#6366f1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            },
+                            x: {
+                                ticks: { color: '#cbd5e1' },
+                                grid: { color: '#334155' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update charts
+        function updateCharts(messages) {
+            if (!messages || messages.length === 0) return;
+
+            // Activity Chart (last 7 days)
             const activityData = Array(7).fill(0);
             const today = new Date();
             const labels = [];
@@ -1509,110 +1264,43 @@
                 charts.activity.update();
             }
 
-            // 3. Update Content Distribution (Bar Chart - by hour of day)
+            // Moderation Chart
+            const statusCounts = messages.reduce((acc, msg) => {
+                const status = (msg.status || '').toLowerCase();
+                acc[status] = (acc[status] || 0) + 1;
+                return acc;
+            }, {});
+
+            if (charts.moderation) {
+                charts.moderation.data.datasets[0].data = [
+                    statusCounts.approved || 0,
+                    statusCounts.pending || 0,
+                    statusCounts.rejected || 0,
+                    statusCounts.posted || 0,
+                    statusCounts.failed || 0
+                ];
+                charts.moderation.update();
+            }
+
+            // Distribution Chart (by hour)
             const distributionData = Array(24).fill(0);
             messages.forEach(msg => {
                 const hour = new Date(msg.created_at).getHours();
                 distributionData[hour]++;
             });
-            
+
             if (charts.distribution) {
                 charts.distribution.data.datasets[0].data = distributionData;
-                charts.distribution.data.labels = Array.from({length: 24}, (_, i) => `${i}:00`);
                 charts.distribution.update();
             }
         }
 
-        // Renders the main posts table with filters
-        function renderPostsTable() {
-            applyFilters();
-            displayMessagesTable();
-            renderCards();
-            updateMiniStats();
-        }
-
-        // Renders the moderation queue cards
-        function renderModerationQueue() {
-            const moderationGrid = document.getElementById('moderationGrid');
-            moderationGrid.innerHTML = ''; // Clear previous content
-
-            const pendingMessages = allMessages.filter(m => m.status === 'pending');
-
-            if (pendingMessages.length === 0) {
-                moderationGrid.innerHTML = '<div class="text-center text-muted">No pending messages for moderation.</div>';
-                return;
-            }
-
-            pendingMessages.forEach(message => {
-                const card = document.createElement('div');
-                card.className = 'moderation-card';
-                card.innerHTML = `
-                    <h4>Message #${message.id}</h4>
-                    <p><strong>Content:</strong> ${message.text.substring(0, 200)}...</p>
-                    <p><strong>Created:</strong> ${formatDate(message.created_at)}</p>
-                    ${message.gemini_analysis ? `<div class="ai-insight"><strong>AI Analysis:</strong> ${message.gemini_analysis}</div>` : '<div class="ai-insight"><strong>AI Analysis:</strong> Not yet analyzed.</div>'}
-                    <div class="moderation-actions">
-                        <button class="btn btn-success btn-sm" onclick="handleMessageAction(${message.id}, 'approve')"><i class="fas fa-check"></i> Approve</button>
-                        <button class="btn btn-danger btn-sm" onclick="handleMessageAction(${message.id}, 'reject')"><i class="fas fa-times"></i> Reject</button>
-                    </div>
-                `;
-                moderationGrid.appendChild(card);
-            });
-        }
-
-        // Update the main stats cards
-        function updateStatsCards() {
-            const stats = {
-                total: allMessages.length,
-                pending: allMessages.filter(m => m.status === 'pending').length,
-                approved: allMessages.filter(m => m.status === 'approved').length,
-                rejected: allMessages.filter(m => m.status === 'rejected').length,
-            };
-            animateNumber('totalPosts', stats.total);
-            animateNumber('pendingModeration', stats.pending);
-            animateNumber('approvedPosts', stats.approved);
-            animateNumber('rejectedPosts', stats.rejected);
-        }
-
-        // Animate number counting
-        function animateNumber(elementId, targetValue) {
-            const element = document.getElementById(elementId);
-            if (!element) return; // Guard against missing elements
-            const startValue = parseInt(element.textContent) || 0;
-            const duration = 1000;
-            const startTime = performance.now();
-
-            function updateNumber(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const currentValue = Math.floor(startValue + (targetValue - startValue) * progress);
-                
-                element.textContent = currentValue;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateNumber);
-                }
-            }
-            
-            requestAnimationFrame(updateNumber);
-        }
-
-        // --- END OF NEW LOGIC ---
-
-        // Initialize dashboard components
-        function initializeDashboard() {
-            const sections = document.querySelectorAll('section');
-            sections.forEach((section, index) => {
-                section.style.animationDelay = `${index * 0.1}s`;
-            });
-        }
-
         // Setup event listeners
         function setupEventListeners() {
-            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                     this.classList.add('active');
                     const targetId = this.getAttribute('href').substring(1);
                     const targetElement = document.getElementById(targetId);
@@ -1623,212 +1311,6 @@
             });
         }
 
-        // Setup filter buttons
-        function setupFilterButtons() {
-            // Desktop filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    currentFilter = this.dataset.status || '';
-                    currentPage = 1;
-                    renderPostsTable();
-                });
-            });
-            
-            // Mobile chip filters
-            document.querySelectorAll('.chip-group .chip').forEach(chip => {
-                chip.addEventListener('click', function() {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    currentFilter = this.dataset.status || '';
-                    currentPage = 1;
-                    renderPostsTable();
-                });
-            });
-        }
-
-        // Format date strings
-        const formatDate = (dateString) => {
-            if (!dateString) return 'N/A';
-            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        };
-
-        // Animate number counting
-        function animateNumber(elementId, targetValue) {
-            const element = document.getElementById(elementId);
-            const startValue = parseInt(element.textContent) || 0;
-            const duration = 1000;
-            const startTime = performance.now();
-
-            function updateNumber(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const currentValue = Math.floor(startValue + (targetValue - startValue) * progress);
-                
-                element.textContent = currentValue;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(updateNumber);
-                }
-            }
-            
-            requestAnimationFrame(updateNumber);
-        }
-
-        // Handle message actions
-        async function handleMessageAction(messageId, action) {
-            if (!confirm(`Are you sure you want to ${action} message ${messageId}?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/admin/messages/${messageId}/${action}`, {
-                    method: 'POST',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                // The server responds with a redirect, which is fine.
-                // We just need to reload the data to see the change.
-                if (response.ok || response.redirected || response.status === 200) {
-                    showNotification(`Message ${messageId} ${action}d successfully!`, 'success');
-                    // Reload all data to reflect the change
-                    loadDashboardData(); 
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Failed to ${action} message: ${errorData.detail || response.statusText}`, 'error');
-                }
-            } catch (error) {
-                console.error(`Error ${action}ing message ${messageId}:`, error);
-                // This might happen on network errors, but also because of the redirect.
-                // We optimistically assume success and reload.
-                showNotification(`Action for message ${messageId} sent. Reloading...`, 'success');
-                loadDashboardData();
-            }
-        }
-
-        // Toggle message selection
-        function toggleMessageSelection(messageId) {
-            if (selectedMessages.has(messageId)) {
-                selectedMessages.delete(messageId);
-            } else {
-                selectedMessages.add(messageId);
-            }
-            updateSelectAllCheckbox();
-        }
-
-        // Toggle select all
-        function toggleSelectAll() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.message-checkbox');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-                if (selectAll.checked) {
-                    selectedMessages.add(parseInt(checkbox.value));
-                } else {
-                    selectedMessages.delete(parseInt(checkbox.value));
-                }
-            });
-        }
-
-        // Update select all checkbox state
-        function updateSelectAllCheckbox() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.message-checkbox');
-            const checkedCount = document.querySelectorAll('.message-checkbox:checked').length;
-            
-            selectAll.checked = checkedCount === checkboxes.length;
-            selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
-        }
-
-        // Bulk approve selected messages
-        async function bulkApprove() {
-            if (selectedMessages.size === 0) {
-                showNotification('Please select messages to approve', 'warning');
-                return;
-            }
-
-            if (!confirm(`Approve ${selectedMessages.size} selected messages?`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/admin/messages/bulk-update', {
-                    method: 'POST',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message_ids: Array.from(selectedMessages),
-                        action: 'approve'
-                    })
-                });
-
-                if (response.ok) {
-                    showNotification(`${selectedMessages.size} messages approved successfully!`, 'success');
-                    selectedMessages.clear();
-                    loadDashboardData();
-                } else {
-                    const errorData = await response.json();
-                    showNotification(`Failed to approve messages: ${errorData.detail}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error bulk approving messages:', error);
-                showNotification('An error occurred while approving messages', 'error');
-            }
-        }
-
-        // View message details
-        function viewMessage(messageId) {
-            // This would open a modal with full message details
-            showNotification(`Viewing message ${messageId}`, 'info');
-        }
-
-        // Refresh posts
-        function refreshPosts() {
-            loadDashboardData();
-            showNotification('Posts refreshed', 'success');
-        }
-
-        // Update AI settings
-        async function updateAISettings() {
-            const autonomousMode = document.getElementById('autonomousMode').checked;
-            try {
-                const response = await fetch('/admin/settings/autonomous-mode', {
-                    method: 'POST',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ enabled: autonomousMode })
-                });
-                
-                if (response.ok) {
-                    showNotification('AI settings updated successfully', 'success');
-                } else {
-                    showNotification('Failed to update AI settings', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating AI settings:', error);
-                showNotification('Error updating AI settings', 'error');
-            }
-        }
-
-        // Update notifications
-        async function updateNotifications() {
-            const emailNotifications = document.getElementById('emailNotifications').checked;
-            // For now, just show notification (can be implemented later with backend)
-            showNotification('Notification settings saved (feature coming soon)', 'success');
-        }
-
         // Show notification
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
@@ -1837,582 +1319,28 @@
                 <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
                 ${message}
             `;
-            
             document.body.appendChild(notification);
-            
-            // Show notification
             setTimeout(() => notification.classList.add('show'), 100);
-            
-            // Hide notification after 3 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
 
-        // Apply filters and search
-        function applyFilters() {
-            const searchInput = document.getElementById('searchInput');
-            const dateFilterSelect = document.getElementById('dateFilter');
-            const sortBySelect = document.getElementById('sortBy');
-            
-            searchTerm = searchInput ? searchInput.value : '';
-            dateFilter = dateFilterSelect ? dateFilterSelect.value : '';
-            sortBy = sortBySelect ? sortBySelect.value : 'newest';
-            
-            filteredMessages = allMessages.filter(message => {
-                // Status filter (case-insensitive)
-                if (currentFilter) {
-                    const msgStatus = message.status.toUpperCase();
-                    const filterStatus = currentFilter.toUpperCase();
-                    if (msgStatus !== filterStatus) {
-                        return false;
-                    }
-                }
-                
-                // Search filter
-                if (searchTerm && !message.text.toLowerCase().includes(searchTerm.toLowerCase())) {
-                    return false;
-                }
-                
-                // Date filter
-                if (dateFilter) {
-                    const messageDate = new Date(message.created_at);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const msgDateOnly = new Date(messageDate);
-                    msgDateOnly.setHours(0, 0, 0, 0);
-                    const daysDiff = Math.floor((today - msgDateOnly) / (1000 * 60 * 60 * 24));
-                    
-                    switch (dateFilter) {
-                        case 'today':
-                            if (daysDiff !== 0) return false;
-                            break;
-                        case 'week':
-                            if (daysDiff > 7 || daysDiff < 0) return false;
-                            break;
-                        case 'month':
-                            if (daysDiff > 30 || daysDiff < 0) return false;
-                            break;
-                    }
-                }
-                
-                return true;
-            });
-            
-            // Sort messages
-            sortMessages();
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
         }
 
-        // Sort messages
-        function sortMessages() {
-            const sortValue = document.getElementById('sortBy')?.value || sortBy;
-            switch (sortValue) {
-                case 'newest':
-                    filteredMessages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
-                case 'oldest':
-                    filteredMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                    break;
-                case 'status':
-                    filteredMessages.sort((a, b) => a.status.localeCompare(b.status));
-                    break;
-            }
-        }
-
-        // Display messages table with pagination
-        function displayMessagesTable() {
-            const postsTableBody = document.querySelector('#postsTable tbody');
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageMessages = filteredMessages.slice(startIndex, endIndex);
-            
-            postsTableBody.innerHTML = '';
-            
-            if (pageMessages.length === 0) {
-                postsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center text-muted">
-                            <i class="fas fa-inbox"></i>
-                            No messages found
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            pageMessages.forEach(message => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <input type="checkbox" class="message-checkbox" value="${message.id}" 
-                               onchange="toggleMessageSelection(${message.id})">
-                    </td>
-                    <td>${message.id}</td>
-                    <td>
-                        <div class="content-preview" onclick="viewMessage(${message.id})" title="Click to view full content">
-                            ${message.text.substring(0, 100)}${message.text.length > 100 ? '...' : ''}
-            </div>
-                    </td>
-                    <td>
-                        <span class="status-badge ${message.status.toLowerCase()}">${message.status}</span>
-                    </td>
-                    <td>${formatDate(message.created_at)}</td>
-                    <td>
-                        ${message.gemini_analysis ? 
-                            `<span class="badge bg-info" title="${message.gemini_analysis}">
-                                <i class="fas fa-robot"></i> AI Analyzed
-                            </span>` : 
-                            '<span class="badge bg-secondary">Pending</span>'
-                        }
-                    </td>
-                    <td>
-                        ${message.media_pk ? 
-                            `<span class="badge bg-success" title="Media PK: ${message.media_pk}"><i class="fas fa-image"></i> Media</span>` :
-                            '<span class="text-muted">No media</span>'
-                        }
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-btn view" onclick="viewMessage(${message.id})" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn approve" onclick="handleMessageAction(${message.id}, 'approve')" title="Approve">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="action-btn reject" onclick="handleMessageAction(${message.id}, 'reject')" title="Reject">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            <button class="action-btn edit" onclick="editMessage(${message.id})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                postsTableBody.appendChild(row);
-            });
-            
-            // Update pagination
-            updatePagination();
-        }
-
-        // Render mobile cards view with pagination
-        function renderCards() {
-            const cardsContainer = document.getElementById('postsCards');
-            if (!cardsContainer) return;
-
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageMessages = filteredMessages.slice(startIndex, endIndex);
-
-            cardsContainer.innerHTML = '';
-
-            if (pageMessages.length === 0) {
-                cardsContainer.innerHTML = `
-                    <div class="post-card text-center text-muted">
-                        <i class="fas fa-inbox"></i>
-                        <div>No messages found</div>
-                    </div>
-                `;
-                return;
-            }
-
-            pageMessages.forEach(message => {
-                const card = document.createElement('div');
-                card.className = 'post-card';
-                card.innerHTML = `
-                    <div class="card-header-row">
-                        <div style="display:flex;align-items:center;gap:0.5rem;">
-                            <input type="checkbox" class="message-checkbox" value="${message.id}" onchange="toggleMessageSelection(${message.id})">
-                            <div>
-                                <div class="text-muted" style="font-size:0.9rem;">#${message.id}</div>
-                                <div class="status-badge ${message.status.toLowerCase()}">${message.status}</div>
-                            </div>
-                        </div>
-                        <div style="font-size:0.85rem;color:var(--text-muted);">${formatDate(message.created_at)}</div>
-                    </div>
-                    <div class="mb-2" style="color:var(--text-primary);line-height:1.45;">
-                        ${message.text.substring(0, 200)}${message.text.length > 200 ? '…' : ''}
-                    </div>
-                    <div class="d-flex align-items-center gap-2 mb-2" style="flex-wrap:wrap;">
-                        ${message.gemini_analysis ? `<span class="badge bg-info"><i class="fas fa-robot"></i> AI</span>` : '<span class="badge bg-secondary">Pending</span>'}
-                        ${message.media_pk ? '<span class="badge bg-success"><i class="fas fa-image"></i> Media</span>' : '<span class="badge bg-dark">No media</span>'}
-                    </div>
-                    <div class="card-actions">
-                        <button class="btn btn-success btn-sm w-100" onclick="handleMessageAction(${message.id}, 'approve')"><i class="fas fa-check"></i> Approve</button>
-                        <button class="btn btn-danger btn-sm w-100" onclick="handleMessageAction(${message.id}, 'reject')"><i class="fas fa-times"></i> Reject</button>
-                        <button class="btn btn-warning btn-sm w-100" onclick="editMessage(${message.id})"><i class="fas fa-edit"></i> Edit</button>
-                    </div>
-                `;
-                cardsContainer.appendChild(card);
-            });
-        }
-
-        // Update pagination
-        function updatePagination() {
-            const pagination = document.getElementById('pagination');
-            const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
-            
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
-            
-            let paginationHTML = '';
-            
-            // Previous button
-            paginationHTML += `
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
-                </li>
-            `;
-            
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    paginationHTML += `
-                        <li class="page-item ${i === currentPage ? 'active' : ''}">
-                            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
-                        </li>
-                    `;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    paginationHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                }
-            }
-            
-            // Next button
-            paginationHTML += `
-                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
-                </li>
-            `;
-            
-            pagination.innerHTML = paginationHTML;
-        }
-
-        // Change page
-        function changePage(page) {
-            const totalPages = Math.ceil(filteredMessages.length / itemsPerPage);
-            if (page >= 1 && page <= totalPages) {
-                currentPage = page;
-                renderPostsTable();
-            }
-        }
-
-        // Search messages
-        function searchMessages() {
-            searchTerm = document.getElementById('searchInput').value;
-            currentPage = 1;
-            renderPostsTable();
-        }
-
-        // Filter by date
-        function filterByDate() {
-            dateFilter = document.getElementById('dateFilter').value;
-            currentPage = 1;
-            renderPostsTable();
-        }
-
-        // Sort messages (called from applyFilters, but also standalone)
-        function sortMessages() {
-            const sortValue = document.getElementById('sortBy')?.value || sortBy;
-            switch (sortValue) {
-                case 'newest':
-                    filteredMessages.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                    break;
-                case 'oldest':
-                    filteredMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                    break;
-                case 'status':
-                    filteredMessages.sort((a, b) => a.status.localeCompare(b.status));
-                    break;
-            }
-        }
-
-        // Update mini stats
-        function updateMiniStats() {
-            const totalFilteredEl = document.getElementById('totalFiltered');
-            const pendingCountEl = document.getElementById('pendingCount');
-            const approvedCountEl = document.getElementById('approvedCount');
-            const aiAnalyzedCountEl = document.getElementById('aiAnalyzedCount');
-            
-            if (totalFilteredEl) totalFilteredEl.textContent = filteredMessages.length;
-            
-            const pending = filteredMessages.filter(m => m.status === 'PENDING' || m.status === 'pending').length;
-            const approved = filteredMessages.filter(m => m.status === 'APPROVED' || m.status === 'approved').length;
-            const aiAnalyzed = filteredMessages.filter(m => m.gemini_analysis).length;
-            
-            if (pendingCountEl) pendingCountEl.textContent = pending;
-            if (approvedCountEl) approvedCountEl.textContent = approved;
-            if (aiAnalyzedCountEl) aiAnalyzedCountEl.textContent = aiAnalyzed;
-        }
-
-        // View message details
-        function viewMessage(messageId) {
-            const message = allMessages.find(m => m.id === messageId);
-            if (!message) return;
-            
-            // Create modal for message details
-            const modal = document.createElement('div');
-            modal.className = 'modal fade';
-            modal.innerHTML = `
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Message #${message.id}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h6>Content:</h6>
-                                    <p class="border p-3 rounded">${message.text}</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <h6>Details:</h6>
-                                    <p><strong>Status:</strong> <span class="status-badge ${message.status.toLowerCase()}">${message.status}</span></p>
-                                    <p><strong>Created:</strong> ${formatDate(message.created_at)}</p>
-                                    <p><strong>ID:</strong> ${message.id}</p>
-                                </div>
-                            </div>
-                            ${message.gemini_analysis ? `
-                                <div class="mt-3">
-                                    <h6>AI Analysis:</h6>
-                                    <div class="ai-insight">${message.gemini_analysis}</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-success" onclick="handleMessageAction(${message.id}, 'approve')">
-                                <i class="fas fa-check"></i> Approve
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="handleMessageAction(${message.id}, 'reject')">
-                                <i class="fas fa-times"></i> Reject
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
-            
-            modal.addEventListener('hidden.bs.modal', () => {
-                modal.remove();
-            });
-        }
-
-        // Edit message
-        function editMessage(messageId) {
-            const message = allMessages.find(m => m.id === messageId);
-            if (!message) return;
-            
-            const newText = prompt('Edit message:', message.text);
-            if (newText && newText !== message.text) {
-                // Send edit request to backend
-                fetch(`/admin/messages/${messageId}/edit`, {
-                    method: 'POST',
-                    credentials: 'include', // Include cookies for authentication
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `text=${encodeURIComponent(newText)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        showNotification('Message updated successfully', 'success');
-                        loadDashboardData();
-                    } else {
-                        showNotification('Failed to update message', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating message:', error);
-                    showNotification('Error updating message', 'error');
-                });
-            }
-        }
-
-        // Export data
-        function exportData() {
-            const csvContent = generateCSV(filteredMessages);
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `insta_spotter_export_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-            showNotification('Data exported successfully', 'success');
-        }
-
-        // Generate CSV
-        function generateCSV(messages) {
-            const headers = ['ID', 'Content', 'Status', 'Created At', 'AI Analysis', 'Media PK'];
-            const rows = messages.map(msg => [
-                msg.id,
-                `"${msg.text.replace(/"/g, '""')}"`,
-                msg.status,
-                msg.created_at,
-                msg.gemini_analysis || '',
-                msg.media_pk || ''
-            ]);
-            
-            return [headers, ...rows].map(row => row.join(',')).join('\n');
-        }
-
-        // Schedule daily post
-        async function scheduleDailyPost() {
-            if (confirm('Schedule all approved messages for today to be posted at 8 PM?')) {
-                try {
-                    const response = await fetch('/admin/schedule-daily-post', {
-                        method: 'POST',
-                        credentials: 'include', // Include cookies for authentication
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        showNotification(`${data.message}`, 'success');
-                        loadDashboardData(); // Refresh the data
-                    } else {
-                        showNotification('Failed to schedule daily post', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error scheduling daily post:', error);
-                    showNotification('Error scheduling daily post', 'error');
-                }
-            }
-        }
-
-        // Initialize charts
-        function initializeCharts() {
-            // Activity Chart
-            const activityCtx = document.getElementById('activityChart');
-            if (activityCtx) {
-                charts.activity = new Chart(activityCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        datasets: [{
-                            label: 'Posts',
-                            data: [12, 19, 3, 5, 2, 3, 8],
-                            borderColor: '#6366f1',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#cbd5e1'
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#cbd5e1'
-                                },
-                                grid: {
-                                    color: '#334155'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#cbd5e1'
-                                },
-                                grid: {
-                                    color: '#334155'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Moderation Chart
-            const moderationCtx = document.getElementById('moderationChart');
-            if (moderationCtx) {
-                charts.moderation = new Chart(moderationCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Approved', 'Pending', 'Rejected'],
-                        datasets: [{
-                            data: [65, 20, 15],
-                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#cbd5e1'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Distribution Chart
-            const distributionCtx = document.getElementById('distributionChart');
-            if (distributionCtx) {
-                charts.distribution = new Chart(distributionCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Morning', 'Afternoon', 'Evening', 'Night'],
-                        datasets: [{
-                            label: 'Posts',
-                            data: [20, 35, 25, 10],
-                            backgroundColor: '#6366f1'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: '#cbd5e1'
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: '#cbd5e1'
-                                },
-                                grid: {
-                                    color: '#334155'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    color: '#cbd5e1'
-                                },
-                                grid: {
-                                    color: '#334155'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>
 </html>
+
