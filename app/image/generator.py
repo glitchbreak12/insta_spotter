@@ -96,36 +96,96 @@ class ImageGenerator:
             height = 1920
             padding = 80
             
-            # === SFONDO SCURO ORIGINALE ===
-            img = Image.new('RGB', (width, height), color='#0f172a')
+            # === SFONDO GRADIENTE LUXURY ===
+            img = Image.new('RGB', (width, height), color='#0a0f1c')
+            draw = ImageDraw.Draw(img)
+            for y in range(height):
+                t = y / height
+                r = int(10 + 20 * t)
+                g = int(16 + 60 * t)
+                b = int(28 + 120 * t)
+                draw.line([(0, y), (width, y)], fill=(r, g, b))
+            # Vignettatura morbida per dare profondità
+            vignette = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            vig_draw = ImageDraw.Draw(vignette)
+            cx, cy = width // 2, height // 2
+            max_r = int((width + height) * 0.6)
+            for i in range(max_r, 0, -8):
+                alpha = int(90 * (1 - i / max_r))
+                vig_draw.ellipse(
+                    [cx - i, cy - i, cx + i, cy + i],
+                    outline=(0, 0, 0, alpha),
+                    width=10
+                )
+            img = Image.alpha_composite(img.convert('RGBA'), vignette).convert('RGB')
             draw = ImageDraw.Draw(img)
             
-            # === CARD SEMPLICE ORIGINALE ===
+            # === COORDINATE CARD ===
             card_x = padding
             card_y = padding
             card_w = width - (padding * 2)
             card_h = height - (padding * 2)
             
-            # Card principale (stile originale)
-            draw.rectangle(
-                [card_x, card_y, card_x + card_w, card_y + card_h],
-                fill='#1e293b',
-                outline='#3b82f6',
-                width=2
-            )
+            # Glow ambientale dietro la card
+            glow_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_bg_draw = ImageDraw.Draw(glow_bg)
+            for r in range(900, 200, -120):
+                alpha = int(120 * (r / 900))
+                glow_bg_draw.ellipse(
+                    [card_x + card_w//2 - r, card_y + card_h//2 - r,
+                     card_x + card_w//2 + r, card_y + card_h//2 + r],
+                    fill=(60, 140, 255, alpha)
+                )
+            img = Image.alpha_composite(img.convert('RGBA'), glow_bg).convert('RGB')
+            draw = ImageDraw.Draw(img)
             
-            # Box shadow semplice
+            # Ombra 3D pronunciata
             shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             shadow_draw = ImageDraw.Draw(shadow_layer)
-            for i in range(10):
-                alpha = int(30 - (i * 3))
+            for i in range(18):
+                alpha = int(60 - i * 3)
                 shadow_draw.rectangle(
-                    [card_x + i + 5, card_y + i + 5,
-                     card_x + card_w + i + 5, card_y + card_h + i + 5],
+                    [card_x + i + 14, card_y + i + 14,
+                     card_x + card_w + i + 14, card_y + card_h + i + 14],
                     fill=(0, 0, 0, alpha)
                 )
-            
             img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # Card principale con leggero gradiente e bordo glow
+            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_layer)
+            # riempimento scuro
+            card_draw.rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                fill=(16, 24, 40, 245),
+                outline=(80, 160, 255, 220),
+                width=3
+            )
+            # highlight diagonale soft
+            for i in range(0, card_h, 6):
+                alpha = max(0, 80 - int(i * 0.06))
+                card_draw.line(
+                    [(card_x + 40, card_y + i), (card_x + card_w - 40, card_y + i + 80)],
+                    fill=(255, 255, 255, alpha),
+                    width=2
+                )
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            
+            # Glow esterno azzurro luxury
+            glow_card = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(glow_card)
+            for i in range(18):
+                off = i * 1.6
+                alpha = int(170 - i * 8)
+                glow_draw.rectangle(
+                    [card_x - off, card_y - off,
+                     card_x + card_w + off, card_y + card_h + off],
+                    outline=(90, 180, 255, alpha),
+                    width=3
+                )
+            img = Image.alpha_composite(img.convert('RGBA'), glow_card).convert('RGB')
             draw = ImageDraw.Draw(img)
             
             # === CARICA FONT KOMIKA AXIS ===
@@ -176,15 +236,35 @@ class ImageGenerator:
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_height = brand_bbox[3] - brand_bbox[1]
             brand_x = (width - brand_width) // 2
-            brand_y = card_y + 60
+            brand_y = card_y + 70
             
-            # Testo principale (stile originale)
-            draw.text((brand_x, brand_y), brand_text, fill='#3b82f6', font=brand_font)
+            # Glow morbido per il brand
+            for i in range(10):
+                alpha = int(120 - i * 10)
+                for dx, dy in [(0, 0), (2, 2), (-2, -2), (2, -2), (-2, 2)]:
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (brand_x + dx, brand_y + dy),
+                        brand_text,
+                        fill=(120, 200, 255, alpha),
+                        font=brand_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+            draw.text((brand_x, brand_y), brand_text, fill='#7dd3fc', font=brand_font)
+            
+            # ID post centrato
+            id_text = f"sp#{message_id}"
+            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            id_width = id_bbox[2] - id_bbox[0]
+            id_x = (width - id_width) // 2
+            id_y = brand_y + brand_height + 20
+            draw.text((id_x, id_y), id_text, fill='#60a5fa', font=id_font)
             
             # === MESSAGGIO CON WORD WRAP (centrato verticalmente) ===
-            # Calcola l'area disponibile per il messaggio
-            message_area_top = brand_y + brand_height + 60
-            message_area_bottom = card_y + card_h - 120  # Lascia spazio per footer
+            message_area_top = id_y + 70
+            message_area_bottom = card_y + card_h - 140
             message_area_height = message_area_bottom - message_area_top
             
             max_width = card_w - (padding * 2)
@@ -192,7 +272,7 @@ class ImageGenerator:
             lines = []
             current_line = []
             current_width = 0
-            line_height = 96  # 64px * 1.5 (line-height del template)
+            line_height = 96  # 64px * 1.5
             
             for word in words:
                 word_bbox = draw.textbbox((0, 0), word + " ", font=message_font)
@@ -209,13 +289,10 @@ class ImageGenerator:
             if current_line:
                 lines.append(" ".join(current_line))
             
-            # Calcola l'altezza totale del messaggio
             total_message_height = len(lines) * line_height
-            
-            # Centra verticalmente il messaggio nell'area disponibile
             message_start_y = message_area_top + (message_area_height - total_message_height) // 2
             
-            # Disegna messaggio semplice
+            # Messaggio con leggero glow
             for i, line in enumerate(lines):
                 if not line.strip():
                     continue
@@ -225,22 +302,44 @@ class ImageGenerator:
                 line_x = (width - line_width) // 2
                 y_pos = message_start_y + i * line_height
                 
-                # Testo principale (stile originale)
-                draw.text((line_x, y_pos), line, fill='#f8fafc', font=message_font)
+                for g in range(3):
+                    alpha = int(80 - g * 25)
+                    glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    glow_draw = ImageDraw.Draw(glow_layer)
+                    glow_draw.text(
+                        (line_x, y_pos),
+                        line,
+                        fill=(150, 210, 255, alpha),
+                        font=message_font
+                    )
+                    img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+                draw.text((line_x, y_pos), line, fill='#e2e8f0', font=message_font)
             
-            # === FOOTER "@spottedatbz" ORIGINALE ===
+            # === FOOTER "@spottedatbz" con glow leggero ===
             footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
-            footer_y = card_y + card_h - 80
+            footer_y = card_y + card_h - 90
             
-            # Footer semplice (stile originale)
-            draw.text((footer_x, footer_y), footer_text, fill='#cbd5e1', font=footer_font)
+            for g in range(3):
+                alpha = int(70 - g * 20)
+                glow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                glow_draw = ImageDraw.Draw(glow_layer)
+                glow_draw.text(
+                    (footer_x, footer_y),
+                    footer_text,
+                    fill=(120, 190, 255, alpha),
+                    font=footer_font
+                )
+                img = Image.alpha_composite(img.convert('RGBA'), glow_layer).convert('RGB')
+                draw = ImageDraw.Draw(img)
+            draw.text((footer_x, footer_y), footer_text, fill='#94a3b8', font=footer_font)
             
             # Salva con qualità massima
             img.save(output_path, 'PNG', quality=100, optimize=False)
-            print(f"✅ Immagine generata (stile originale semplice): {output_path}")
+            print(f"✅ Immagine generata (stile 3D glow luxury): {output_path}")
             return True
             
         except Exception as e:
