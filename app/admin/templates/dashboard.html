@@ -432,10 +432,21 @@
         .chart-container {
             position: relative;
             height: 250px;
+            min-height: 200px;
+            width: 100%;
         }
 
         .chart-container canvas {
-            max-height: 100%;
+            max-width: 100% !important;
+            height: 100% !important;
+            width: 100% !important;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 200px;
+                min-height: 180px;
+            }
         }
 
         /* Loading States */
