@@ -1401,10 +1401,22 @@
 
             try {
                 // 2. Fetch data from the new, reliable endpoint
-                const response = await fetch('/admin/api/dashboard-data');
+                // IMPORTANT: Include credentials to send cookies for authentication
+                const response = await fetch('/admin/api/dashboard-data', {
+                    method: 'GET',
+                    credentials: 'include', // Include cookies for authentication
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
 
-                // 3. Check for HTTP errors (like 500, 404)
+                // 3. Check for HTTP errors (like 500, 404, 401)
                 if (!response.ok) {
+                    if (response.status === 401) {
+                        // Not authenticated - redirect to login
+                        window.location.href = '/admin/login';
+                        return;
+                    }
                     const errorText = await response.text();
                     throw new Error(`Network response was not ok: ${response.status} ${response.statusText}. Server says: ${errorText}`);
                 }
@@ -1413,6 +1425,8 @@
                 const data = await response.json();
                 const messages = data.messages || [];
                 allMessages = messages; // Store globally
+
+                console.log(`Loaded ${messages.length} messages from API`);
 
                 // 5. Render everything
                 renderPostsTable();
@@ -1674,6 +1688,7 @@
             try {
                 const response = await fetch(`/admin/messages/${messageId}/${action}`, {
                     method: 'POST',
+                    credentials: 'include', // Include cookies for authentication
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -1747,6 +1762,7 @@
             try {
                 const response = await fetch('/admin/messages/bulk-update', {
                     method: 'POST',
+                    credentials: 'include', // Include cookies for authentication
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -1788,6 +1804,7 @@
             try {
                 const response = await fetch('/admin/settings/autonomous-mode', {
                     method: 'POST',
+                    credentials: 'include', // Include cookies for authentication
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -2197,6 +2214,7 @@
                 // Send edit request to backend
                 fetch(`/admin/messages/${messageId}/edit`, {
                     method: 'POST',
+                    credentials: 'include', // Include cookies for authentication
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
@@ -2252,6 +2270,7 @@
                 try {
                     const response = await fetch('/admin/schedule-daily-post', {
                         method: 'POST',
+                        credentials: 'include', // Include cookies for authentication
                         headers: {
                             'Content-Type': 'application/json',
                         },

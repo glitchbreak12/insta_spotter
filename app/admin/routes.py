@@ -52,7 +52,9 @@ async def get_authenticated_user(request: Request):
     """Controlla se l'utente è loggato. Se no, reindirizza a /login."""
     user = get_current_user(request=request)
     if not user:
-        return RedirectResponse(url="/admin/login", status_code=302)
+        # For API endpoints, return None instead of RedirectResponse
+        # The endpoint will check and raise HTTPException
+        return None
     return user
 
 import math
@@ -66,7 +68,7 @@ def get_dashboard_data(db: Session = Depends(get_db), user: str = Depends(get_au
     A single, robust endpoint to fetch all data needed for the dashboard.
     This function ONLY reads data and builds a simple JSON response to avoid all previous errors.
     """
-    if isinstance(user, RedirectResponse):
+    if not user or isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
