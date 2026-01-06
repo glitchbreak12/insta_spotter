@@ -38,7 +38,16 @@ ADMIN_PASSWORD=LaTuaPassword123!
 ### **4. Test finale:**
 ```bash
 python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
-# MOSTRERÀ: TEMPLATE: card_v5.html ✅
+```
+
+**Risultato atteso:**
+```
+TEMPLATE: card_v5.html ✅
+```
+
+**❌ Se vedi errori di sintassi, usa questo comando semplificato:**
+```bash
+python3 -c "from config import settings; print(settings.image.template_path)"
 ```
 
 ### **5. IMPORTANTE: Su Replit usa SEMPRE python3:**
