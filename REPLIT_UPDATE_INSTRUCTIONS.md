@@ -129,8 +129,13 @@ PYTHON_CMD=$(find /usr /bin /home/runner/.pythonlibs /nix/store -name "python3" 
 
 3. **Se trovi Python, usa quel comando:**
 ```bash
-# Se funziona 'python', usa:
-/home/runner/workspace$ python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+# Su Replit, usa il percorso completo trovato:
+/home/runner/workspace/.pythonlibs/bin/python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+```
+
+**✅ Perfetto! Su Replit usa sempre:**
+```bash
+/home/runner/workspace/.pythonlibs/bin/python
 ```
 
 ---
