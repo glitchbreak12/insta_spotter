@@ -128,4 +128,17 @@ Finalmente funzionerà tutto! 🎨✨
 
 **Soluzione:** Inizializzata `card_layer = None` all'inizio del metodo PIL per garantire scope corretto.
 
-**Ora PIL dovrebbe generare immagini correttamente!** ✅
+---
+
+## 🔧 **ULTIMO FIX (Font Loading):**
+
+**Risolto errore:** `'NoneType' object has no attribute 'load'`
+
+**Causa:** `ImageFont.load_default()` deprecato in versioni recenti di Pillow.
+
+**Soluzione:** Implementato fallback gerarchico per font:
+1. Prima prova DejaVu Sans (Linux/Replit)
+2. Poi Arial (Windows)
+3. Infine fallback sicuro con `load_default()`
+
+**Ora PIL dovrebbe funzionare perfettamente!** ✅
