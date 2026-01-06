@@ -1,101 +1,87 @@
-# 🚨 SETUP COMPLETO REPLIT - TUTTE LE VARIABILI
+# 🚨 CARICAMENTO/DEPLOY SU REPLIT - Guida Definitiva
 
-## 🔥 PROBLEMA RISOLTO:
-Template dorato → card_v5.html ✅
-Ora configura le Secrets per far funzionare tutto!
+## 🔥 SITUAZIONE:
+Hai aggiornato il codice e vuoi vedere le **card_v5.html blu spettacolari** su Replit.
 
-## ✅ CONFIGURA QUESTE SECRETS IN REPLIT:
+## ✅ METODO 1 - AGGIORNAMENTO SEMPLICE (Raccomandato):
 
-### **1. 📸 INSTAGRAM (OBBLIGATORIO)**
-```
-INSTAGRAM_USERNAME=il_tuo_username_instagram
-INSTAGRAM_PASSWORD=la_tua_password_instagram
-TWO_FACTOR_SEED=il_tuo_2fa_seed (se hai 2FA abilitato)
-```
+### **PASSO 1: Apri Shell Replit**
+- Vai su https://replit.com/@GoogleMapes/instaspotter
+- Clicca il pulsante **"Shell"** (o usa Ctrl+Shift+S)
 
-### **2. 🤖 AI MODERATION (OBBLIGATORIO)**
-```
-GEMINI_API_KEY=la_tua_chiave_gemini_api
-```
-*(Prendila da: https://makersuite.google.com/app/apikey)*
-
-### **3. 🔐 ADMIN DASHBOARD (OBBLIGATORIO)**
-```
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=LaTuaPasswordSicura123!
-```
-*(O usa hash sicuro - vedi VERIFICA_CREDENZIALI_ADMIN.md)*
-
-### **4. 🔑 SICUREZZA (RACCOMANDATO)**
-```
-SECRET_KEY=una_stringa_casuale_di_32_caratteri
-```
-*(Generala con: `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`)*
-
-### **5. 🗄️ DATABASE (OPZIONALE - default SQLite)**
-```
-DATABASE_URL=sqlite:///data/messages.db
-```
-
-### **6. 🌐 REPLIT URL (OPZIONALE)**
-```
-REPLIT_URL=https://instaspotter.GoogleMapes.replit.app
-```
-
----
-
-## 🎯 **COME AGGIUNGERE LE SECRETS:**
-
-1. Vai su: https://replit.com/@GoogleMapes/instaspotter
-2. Clicca **🔒 Secrets** (lucchetto) nel pannello laterale
-3. Clicca **"Add new secret"** per ogni variabile
-4. **Riavvia l'app** dopo aver aggiunto tutto
-
----
-
-## ✅ **VERIFICA CHE FUNZIONI:**
-
-### **Test Template:**
+### **PASSO 2: Aggiorna il Codice**
 ```bash
-# Su Replit potrebbe essere 'python' o 'python3':
-python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)" 2>/dev/null || python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+# Scarica le ultime modifiche
+cd /home/runner/workspace
+git pull origin main
+echo "✅ Codice aggiornato!"
+```
+
+### **PASSO 3: Verifica Template**
+```bash
+# Controlla che sia attivo card_v5.html
+python3 -c "from config import settings; print('TEMPLATE ATTUALE:', settings.image.template_path)" 2>/dev/null || python -c "from config import settings; print('TEMPLATE ATTUALE:', settings.image.template_path)"
 # Dovrebbe mostrare: card_v5.html
 ```
 
-### **Test Rendering Card V5:**
-```bash
-# Testa la generazione di una card blu ottimizzata
-python3 -c "
-from app.image.generator import ImageGenerator
-gen = ImageGenerator()
-result = gen.from_text('Test card V5 blu professionale!', 'test_blu.png', 999)
-print('Generata card blu:', result)
-" 2>/dev/null || python -c "
-from app.image.generator import ImageGenerator
-gen = ImageGenerator()
-result = gen.from_text('Test card V5 blu professionale!', 'test_blu.png', 999)
-print('Generata card blu:', result)
-"
-```
-
-### **Test Admin Login:**
-- Vai su: `https://instaspotter.GoogleMapes.replit.app/admin/login`
-- Username: `admin`
-- Password: La tua password configurata
-
-### **Test Instagram Bot:**
-- Invia uno spot dal bot Telegram
-- Dovrebbe postare su Instagram con card_v5.html **blu professionale** ✨
+### **PASSO 4: Riavvia l'App**
+- Premi il pulsante **"Stop"** (se è in esecuzione)
+- Premi il pulsante **"Run"** per riavviare
+- Aspetta che dica "Application startup complete"
 
 ---
 
-## 🎉 **RISULTATO FINALE:**
-✅ Template: card_v5.html (non più dorato)
-✅ Admin: Accessibile con le tue credenziali
-✅ Instagram: Bot funzionante
-✅ AI: Moderazione attiva
-✅ Sicurezza: JWT tokens protetti
+## ✅ METODO 2 - FORZA RESET COMPLETO:
 
-**AGGIUNGI LE SECRETS E RIAVVIA!** 🚀✨
+Se il metodo 1 non funziona:
 
-Ora tutto funziona perfettamente! 🎨
+```bash
+cd /home/runner/workspace && echo "=== BACKUP FILE ===" && mkdir -p /tmp/backup && cp .env.example /tmp/backup/ 2>/dev/null || true && cp .gitignore /tmp/backup/ 2>/dev/null || true && cp .replit /tmp/backup/ 2>/dev/null || true && echo "=== PULIZIA ===" && rm -f .env.example .gitignore .replit && echo "=== RESET REPO ===" && git fetch origin && git reset --hard origin/main && echo "=== RIPRISTINA ===" && cp /tmp/backup/* . 2>/dev/null || true && echo "✅ RESET COMPLETATO!"
+```
+
+---
+
+## ✅ METODO 3 - RICREA TUTTO DA ZERO:
+
+Se nulla funziona:
+
+```bash
+cd /home/runner/workspace && rm -rf * .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main && echo "REPOSITORY RICREATO DA ZERO!"
+```
+
+---
+
+## 🎯 TEST FINALE:
+
+### **Test Template:**
+```bash
+python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+# Deve dire: card_v5.html
+```
+
+### **Test Card Generation:**
+```bash
+python3 -c "
+from app.image.generator import ImageGenerator
+gen = ImageGenerator()
+result = gen.from_text('Test card V5 blu spettacolare!', 'test_deploy.png', 123)
+print('Card generata:', result)
+"
+```
+
+### **Test Web App:**
+- Vai su: https://instaspotter.GoogleMapes.replit.app
+- Dovrebbe funzionare con il nuovo codice
+
+---
+
+## 🎉 RISULTATO:
+✅ **Template:** card_v5.html attivo
+✅ **Rendering:** Blu spettacolare con glow professionale
+✅ **Bot:** Pronto per Instagram
+✅ **Admin:** Accessibile
+
+**SCEGLI UN METODO E CARICA SUBITO!** 🚀
+
+Dopo il caricamento, le tue card saranno **blu spettacolari** invece che dorate! ✨</contents>
+</xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
