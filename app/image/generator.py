@@ -2,6 +2,7 @@ import imgkit
 import jinja2
 import os
 from pathlib import Path
+from typing import Optional
 from config import settings
 
 # Import PIL come fallback di emergenza per problemi di compatibilità wkhtmltoimage
@@ -77,14 +78,14 @@ class ImageGenerator:
     def _render_html(self, message_text: str, message_id: int) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
         template = self.template_env.get_template(os.path.basename(settings.image.template_path))
-
+        
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
 
         return template.render(message=message_text, id=message_id, font_url=font_url)
 
-    def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> str | None:
+    def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> Optional[str]:
         """Fallback PIL che replica esattamente lo stile card_v5.html con glow 3D."""
         if not PIL_AVAILABLE:
             raise RuntimeError("PIL non disponibile")
@@ -462,7 +463,7 @@ class ImageGenerator:
             print(f"❌ Errore PIL fallback: {e}")
             raise
 
-    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> str | None:
+    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> Optional[str]:
         """Screenshot diretto dell'HTML renderizzato in browser reale."""
         if not self.playwright_available:
             raise RuntimeError("Playwright non disponibile")
@@ -603,7 +604,7 @@ class ImageGenerator:
             print(f"⚠️ Instagram optimization failed: {e}")
             return image_path
 
-    def from_text(self, message_text: str, output_filename: str, message_id: int) -> str | None:
+    def from_text(self, message_text: str, output_filename: str, message_id: int) -> Optional[str]:
         """
         Genera un'immagine PNG da un testo con gerarchia di metodi:
 
@@ -682,16 +683,16 @@ class ImageGenerator:
                         print(f"❌ Playwright fallito: {pw_error}")
                         print("Cado su PIL come ultimo fallback...")
 
-                # Terza opzione: PIL come fallback finale
-                if PIL_AVAILABLE:
-                    try:
-                        print("🔄 Uso PIL come fallback finale...")
-                        return self._generate_with_pil(message_text, output_path, message_id)
-                    except Exception as pil_error:
-                        print(f"❌ Anche PIL ha fallito: {pil_error}")
-                        raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
-                else:
-                    raise RuntimeError(f"wkhtmltoimage fallito e nessun fallback disponibile: {e}") from e
+                    # Terza opzione: PIL come fallback finale
+                    if PIL_AVAILABLE:
+                        try:
+                            print("🔄 Uso PIL come fallback finale...")
+                            return self._generate_with_pil(message_text, output_path, message_id)
+                        except Exception as pil_error:
+                            print(f"❌ Anche PIL ha fallito: {pil_error}")
+                            raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
+                    else:
+                        raise RuntimeError(f"wkhtmltoimage fallito e nessun fallback disponibile: {e}") from e
         else:
             # wkhtmltoimage non disponibile, prova prima Playwright poi PIL
             if self.playwright_available:
@@ -715,7 +716,7 @@ class ImageGenerator:
 if __name__ == '__main__':
     generator = ImageGenerator()
     test_message = "Ho spottato una ragazza con un libro di poesie alla fermata del 17. Mi ha sorriso e ha reso la mia giornata migliore. Chissà se leggerà mai questo messaggio."
-
+    
     # Genera l'immagine
     image_path = generator.from_text(test_message, "test_card.png", 1)
 
