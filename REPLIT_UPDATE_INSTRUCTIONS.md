@@ -41,6 +41,12 @@ python3 -c "from config import settings; print('TEMPLATE:', settings.image.templ
 # MOSTRERÀ: TEMPLATE: card_v5.html ✅
 ```
 
+### **5. Se hai errori "python: command not found":**
+```bash
+# Su Replit usa SEMPRE python3, mai python
+python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+```
+
 ---
 
 ## 🔥 PERCHÉ QUESTO FUNZIONA:

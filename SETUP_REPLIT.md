@@ -25,7 +25,7 @@ GEMINI_API_KEY=tua_gemini_api_key
 
 Assicurati che il file `.replit` contenga:
 ```toml
-run = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+run = "python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 
 [env]
 PYTHONUNBUFFERED = "1"

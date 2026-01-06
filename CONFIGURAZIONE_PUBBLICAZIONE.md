@@ -22,7 +22,7 @@ pip install -r requirements.txt
 **Usa questo comando:**
 
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 **Oppure** (più semplice):
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 **Run Command:**
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 ### Opzione 2: Solo Run (Più Semplice)
@@ -59,7 +59,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
 **Run Command:**
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 **Nota:** Se le dipendenze sono già installate, puoi lasciare il Build Command vuoto.
