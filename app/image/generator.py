@@ -97,7 +97,7 @@ class ImageGenerator:
             # Inizializza variabili per scope exception handler
             card_layer = None
 
-            # === SFONDO STILE card_v5.html ===
+            # === SFONDO STILE GENERICO (lavora con card_v5 e card_v11_celestial) ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
 
@@ -132,7 +132,7 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), ambient).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === TEMPLATE card_v5.html - CARD GLASS EFFECT ===
+            # === TEMPLATE GENERICO - CARD EFFECT (funziona con v5 e celestial) ===
             # Card rettangolare con backdrop-filter simulato (rgba(20, 20, 20, 0.8))
             card_x = 90  # padding: 90px come nel template
             card_y = 100  # padding-top: 100px
