@@ -152,7 +152,18 @@ cd /home/runner/workspace && rm -rf .git && git init && git remote add origin ht
 - Aspetta 10 secondi
 - Premi **"Run"** (tasto verde) - Questo avvierà automaticamente l'app
 
-**Ricorda: Su Replit è sempre `python3`, mai `python`!**
+---
+
+## 🔧 **ULTIMA CORREZIONE (.replit file):**
+
+**Ho corretto anche il file `.replit` per usare il percorso Python corretto:**
+```bash
+run = "/home/runner/workspace/.pythonlibs/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+```
+
+**Ora Replit avvierà l'app automaticamente con Python corretto!** ✅
+
+**Ricorda: Su Replit è sempre `/home/runner/workspace/.pythonlibs/bin/python`, mai `python3`!**
 
 ---
 
