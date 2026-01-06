@@ -163,7 +163,11 @@ run = "/home/runner/workspace/.pythonlibs/bin/python -m uvicorn app.main:app --h
 
 **Ora Replit avvierà l'app automaticamente con Python corretto!** ✅
 
-**Ricorda: Su Replit è sempre `/home/runner/workspace/.pythonlibs/bin/python`, mai `python3`!**
+**🎯 SOLUZIONE: LASCIA GESTIRE REPLIT!**
+
+**Replit ha ambienti Python multipli. Il pulsante "Run" usa automaticamente quello giusto con i pacchetti installati!**
+
+**NON cercare di specificare percorsi Python manualmente - lascia che Replit faccia tutto!**
 
 ---
 
