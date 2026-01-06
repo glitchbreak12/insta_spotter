@@ -117,3 +117,15 @@ cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
 **COPIA IL COMANDO E INCOLLALO!** 🚀
 
 Finalmente funzionerà tutto! 🎨✨
+
+---
+
+## 🔧 **ULTIMO FIX APPLICATO:**
+
+**Risolto errore:** `cannot access local variable 'card_layer' where it is not associated with a value`
+
+**Causa:** Variabile `card_layer` non accessibile nell'exception handler del metodo PIL.
+
+**Soluzione:** Inizializzata `card_layer = None` all'inizio del metodo PIL per garantire scope corretto.
+
+**Ora PIL dovrebbe generare immagini correttamente!** ✅
