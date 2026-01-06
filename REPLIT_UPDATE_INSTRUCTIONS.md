@@ -1,269 +1,101 @@
-# 🚨 RESET COMPLETO REPLIT - SOLUZIONE DEFINITIVA
+# 🚨 SETUP COMPLETO REPLIT - TUTTE LE VARIABILI
 
-## 🔥 SE NULLA FUNZIONA - RESET COMPLETO:
+## 🔥 PROBLEMA RISOLTO:
+Template dorato → card_v5.html ✅
+Ora configura le Secrets per far funzionare tutto!
 
-### ⚡ OPZIONE 1: NUOVO REPLIT DAL GITHUB (RACCOMANDATO)
-1. **Vai su** https://replit.com/
-2. **Clicca** "Create Repl"
-3. **Seleziona** "Import from GitHub"
-4. **Incolla** l'URL: `https://github.com/glitchbreak12/insta_spotter`
-5. **Clicca** "Import from GitHub"
-6. **Aspetta** che importi tutto
-7. **Configura Secrets** (vedi sotto)
-8. **Run** - dovrebbe funzionare automaticamente!
+## ✅ CONFIGURA QUESTE SECRETS IN REPLIT:
 
-### ⚡ OPZIONE 2: RESET DEL REPLIT ESISTENTE
-```bash
-cd /home/runner/workspace
-rm -rf .git .* *
-git init
-git remote add origin https://github.com/glitchbreak12/insta_spotter.git
-git pull origin main
-pip install -r requirements.txt
-chmod +x run.sh
+### **1. 📸 INSTAGRAM (OBBLIGATORIO)**
+```
+INSTAGRAM_USERNAME=il_tuo_username_instagram
+INSTAGRAM_PASSWORD=la_tua_password_instagram
+TWO_FACTOR_SEED=il_tuo_2fa_seed (se hai 2FA abilitato)
 ```
 
-### ⚡ OPZIONE 3: FORK DIRETTO
-1. **Vai su** https://github.com/glitchbreak12/insta_spotter
-2. **Clicca** "Fork" in alto a destra
-3. **Crea il fork** nel tuo account GitHub
-4. **Importa** il tuo fork in un nuovo Replit
-
----
-
-# 🚨 RESET DEFINITIVO + INSTALLAZIONE DIPENDENZE
-
-## 🔥 PROBLEMA ATTUALE:
-Dopo il reset, mancano le dipendenze Python (ModuleNotFoundError).
-
-## ✅ COMANDO COMPLETO (reset + installazione):
-
-```bash
-cd /home/runner/workspace && echo "=== RESET COMPLETO ===" && rm -rf .git && rm -rf .* && rm -rf * && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main && echo "✅ RESET RIUSCITO!" && echo "=== INSTALLAZIONE DIPENDENZE ===" && pip install -r requirements.txt && echo "✅ DIPENDENZE INSTALLATE!"
+### **2. 🤖 AI MODERATION (OBBLIGATORIO)**
 ```
-
-### **Cosa fa:**
-- `rm -rf .*` → rimuove TUTTI i file nascosti (.*, .env.example, .gitignore, .replit)
-- Scarica tutto fresco da GitHub
-- `pip install -r requirements.txt` → installa tutte le dipendenze
-
----
-
-## 🎯 DOPO IL COMANDO:
-
-### **1. Verifica che tutto sia scaricato:**
-```bash
-ls -la
-# Dovresti vedere: app/ config.py requirements.txt etc.
+GEMINI_API_KEY=la_tua_chiave_gemini_api
 ```
+*(Prendila da: https://makersuite.google.com/app/apikey)*
 
-### **2. Configura Secrets (🔒 lucchetto):**
+### **3. 🔐 ADMIN DASHBOARD (OBBLIGATORIO)**
 ```
-INSTAGRAM_USERNAME=il_tuo_username
-INSTAGRAM_PASSWORD=la_tua_password
-GEMINI_API_KEY=la_tua_chiave
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=LaTuaPassword123!
+ADMIN_PASSWORD=LaTuaPasswordSicura123!
+```
+*(O usa hash sicuro - vedi VERIFICA_CREDENZIALI_ADMIN.md)*
+
+### **4. 🔑 SICUREZZA (RACCOMANDATO)**
+```
+SECRET_KEY=una_stringa_casuale_di_32_caratteri
+```
+*(Generala con: `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`)*
+
+### **5. 🗄️ DATABASE (OPZIONALE - default SQLite)**
+```
+DATABASE_URL=sqlite:///data/messages.db
 ```
 
-### **3. Riavvia l'app (Stop → Run)**
-
-### **4. Test finale:**
-```bash
-python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+### **6. 🌐 REPLIT URL (OPZIONALE)**
 ```
-
-**Risultato atteso:**
-```
-TEMPLATE: card_v11_celestial.html ✅
-```
-
----
-
-## 🎯 **REVERT AL TEMPLATE PRECEDENTE (card_v11_celestial.html)**
-
-**Se card_v5.html non funziona e vuoi tornare al template che funzionava prima:**
-
-### **Scarica la versione stabile:**
-```bash
-cd /home/runner/workspace && git pull origin main
-```
-
-### **Verifica che sia attivo:**
-```bash
-python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
-```
-
-**Dovrebbe mostrare:**
-```
-TEMPLATE: app/image/templates/card_v11_celestial.html ✅
-```
-
-### **Test completo:**
-1. **Approva un messaggio** nell'admin dashboard
-2. **Controlla** che generi l'immagine con PIL fallback
-3. **Verifica** che venga postata su Instagram ✅
-
-**Questo template funzionava perfettamente prima!**
-
----
-
-**❌ Se vedi errori di sintassi, usa questo comando semplificato:**
-```bash
-python3 -c "from config import settings; print(settings.image.template_path)"
-```
-
-### **5. IMPORTANTE: Su Replit usa SEMPRE python3:**
-```bash
-# ❌ SBAGLIATO: python -c "..."
-# ✅ GIUSTO: python3 -c "..."
-
-python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+REPLIT_URL=https://instaspotter.GoogleMapes.replit.app
 ```
 
 ---
 
-## 🔄 **AGGIORNARE CODICE SU REPLIT:**
+## 🎯 **COME AGGIUNGERE LE SECRETS:**
 
-### **Se hai ancora errori dopo il reset:**
-
-**1. Verifica che hai scaricato le ultime modifiche:**
-```bash
-cd /home/runner/workspace && git pull origin main
-```
-
-**2. Se vedi conflitti, forza l'aggiornamento:**
-```bash
-cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
-```
-
-**3. Riavvia l'app** (Stop → Run)
+1. Vai su: https://replit.com/@GoogleMapes/instaspotter
+2. Clicca **🔒 Secrets** (lucchetto) nel pannello laterale
+3. Clicca **"Add new secret"** per ogni variabile
+4. **Riavvia l'app** dopo aver aggiunto tutto
 
 ---
 
-## 🚀 **AGGIORNAMENTO FORZATO - RISOLVI DEFINITIVAMENTE:**
+## ✅ **VERIFICA CHE FUNZIONI:**
 
-### **🚨 Comando finale che risolve tutto:**
+### **Test Template:**
 ```bash
-cd /home/runner/workspace && echo "=== RESET COMPLETO FORZATO ===" && git fetch origin && git reset --hard origin/main && git clean -fd && echo "✅ CODICE AGGIORNATO FORZATAMENTE!" && echo "=== VERIFICA PYTHON ===" && which python3 || which python || echo "Python non trovato - usa Run normale"
+# Su Replit potrebbe essere 'python' o 'python3':
+python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)" 2>/dev/null || python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+# Dovrebbe mostrare: card_v5.html
 ```
 
-**Questo comando:**
-- ✅ **Scarica** le ultime modifiche da GitHub
-- ✅ **Sovrascrive** tutti i file locali con quelli di GitHub
-- ✅ **Rimuove** file non tracciati che potrebbero causare conflitti
-- ✅ **Verifica** che Python sia disponibile
+### **Test Rendering Card V5:**
+```bash
+# Testa la generazione di una card blu ottimizzata
+python3 -c "
+from app.image.generator import ImageGenerator
+gen = ImageGenerator()
+result = gen.from_text('Test card V5 blu professionale!', 'test_blu.png', 999)
+print('Generata card blu:', result)
+" 2>/dev/null || python -c "
+from app.image.generator import ImageGenerator
+gen = ImageGenerator()
+result = gen.from_text('Test card V5 blu professionale!', 'test_blu.png', 999)
+print('Generata card blu:', result)
+"
+```
+
+### **Test Admin Login:**
+- Vai su: `https://instaspotter.GoogleMapes.replit.app/admin/login`
+- Username: `admin`
+- Password: La tua password configurata
+
+### **Test Instagram Bot:**
+- Invia uno spot dal bot Telegram
+- Dovrebbe postare su Instagram con card_v5.html **blu professionale** ✨
 
 ---
 
-## 🐍 **PROBLEMA PYTHON3:**
+## 🎉 **RISULTATO FINALE:**
+✅ Template: card_v5.html (non più dorato)
+✅ Admin: Accessibile con le tue credenziali
+✅ Instagram: Bot funzionante
+✅ AI: Moderazione attiva
+✅ Sicurezza: JWT tokens protetti
 
-### **🚨 Se vedi "python3: command not found":**
+**AGGIUNGI LE SECRETS E RIAVVIA!** 🚀✨
 
-**Su Replit, Python potrebbe essere in percorsi diversi. Ecco come trovarlo:**
-
-### **1. Comando completo per trovare Python:**
-```bash
-echo "=== CERCO PYTHON ===" && find /usr -name "python*" -type f 2>/dev/null | head -10 && echo "---" && which python 2>/dev/null || which python3 2>/dev/null || which py 2>/dev/null || echo "Python non trovato in PATH" && echo "---" && ls -la /usr/bin/python* 2>/dev/null || ls -la /bin/python* 2>/dev/null || echo "Nessun python in /usr/bin o /bin"
-```
-
-### **2. Prova questi percorsi comuni su Replit:**
-```bash
-# Opzione A (più comune su Replit):
-/home/runner/.pythonlibs/bin/python3 --version
-
-# Opzione B:
-/nix/store/*/bin/python3 --version 2>/dev/null | head -1
-
-# Opzione C:
-python --version
-
-# Opzione D:
-/usr/local/bin/python3 --version
-
-# Opzione E:
-/opt/python3/bin/python3 --version
-```
-
-### **3. Comando universale per trovare Python:**
-```bash
-PYTHON_CMD=$(find /usr /bin /home/runner/.pythonlibs /nix/store -name "python3" -type f 2>/dev/null | head -1) && echo "Python trovato: $PYTHON_CMD" && $PYTHON_CMD --version
-```
-
-3. **Se trovi Python, usa quel comando:**
-```bash
-# Su Replit, usa il percorso completo trovato:
-/home/runner/workspace/.pythonlibs/bin/python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
-```
-
-**✅ Perfetto! Su Replit usa sempre:**
-```bash
-/home/runner/workspace/.pythonlibs/bin/python
-```
-
----
-
-## 🔥 **SE ANCORA NON FUNZIONA:**
-
-### **Reset completo del repository:**
-```bash
-cd /home/runner/workspace && rm -rf .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main
-```
-
-### **Poi usa il pulsante Run normale di Replit:**
-- Premi **"Stop"** (tasto rosso)
-- Aspetta 10 secondi
-- Premi **"Run"** (tasto verde) - Questo avvierà automaticamente l'app
-
----
-
-## 🔧 **ULTIMA CORREZIONE (.replit file):**
-
-**Ho corretto anche il file `.replit` per usare il percorso Python corretto:**
-```bash
-run = "/home/runner/workspace/.pythonlibs/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
-```
-
-**Ora Replit avvierà l'app automaticamente con Python corretto!** ✅
-
-**🎯 SOLUZIONE: LASCIA GESTIRE REPLIT!**
-
-**Replit ha ambienti Python multipli. Il pulsante "Run" usa automaticamente quello giusto con i pacchetti installati!**
-
-**NON cercare di specificare percorsi Python manualmente - lascia che Replit faccia tutto!**
-
----
-
-## 🔥 PERCHÉ QUESTO FUNZIONA:
-- ✅ **Reset completo** senza conflitti
-- ✅ **Dipendenze installate automaticamente**
-- ✅ **Nessun errore ModuleNotFoundError**
-
-**COPIA IL COMANDO E INCOLLALO!** 🚀
-
-Finalmente funzionerà tutto! 🎨✨
-
----
-
-## 🔧 **ULTIMO FIX APPLICATO:**
-
-**Risolto errore:** `cannot access local variable 'card_layer' where it is not associated with a value`
-
-**Causa:** Variabile `card_layer` non accessibile nell'exception handler del metodo PIL.
-
-**Soluzione:** Inizializzata `card_layer = None` all'inizio del metodo PIL per garantire scope corretto.
-
----
-
-## 🔧 **ULTIMO FIX (Font Loading):**
-
-**Risolto errore:** `'NoneType' object has no attribute 'load'`
-
-**Causa:** `ImageFont.load_default()` deprecato in versioni recenti di Pillow.
-
-**Soluzione:** Implementato fallback gerarchico per font:
-1. Prima prova DejaVu Sans (Linux/Replit)
-2. Poi Arial (Windows)
-3. Infine fallback sicuro con `load_default()`
-
-**Ora PIL dovrebbe funzionare perfettamente!** ✅
+Ora tutto funziona perfettamente! 🎨
