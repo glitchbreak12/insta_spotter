@@ -78,10 +78,32 @@ cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
 
 ---
 
-## 🚀 **COMANDO COMPLETO PER AGGIORNAMENTO:**
+## 🚀 **AGGIORNA IL CODICE SU REPLIT:**
+
+### **Comando per aggiornare:**
 ```bash
 cd /home/runner/workspace && echo "=== AGGIORNAMENTO CODICE ===" && git pull origin main && echo "✅ CODICE AGGIORNATO!" && echo "=== RIAVVIO APP ===" && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
 ```
+
+**Risultato atteso:**
+```
+✅ CODICE AGGIORNATO!
+TEMPLATE: card_v5.html ✅
+```
+
+---
+
+## ⚠️ **SE VEDI ANCORA ERRORI:**
+
+### **Forza l'aggiornamento:**
+```bash
+cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
+```
+
+### **Riavvia completamente:**
+- Stoppa l'app (tasto rosso)
+- Aspetta 5 secondi
+- Riavvia con "Run"
 
 **Ricorda: Su Replit è sempre `python3`, mai `python`!**
 
