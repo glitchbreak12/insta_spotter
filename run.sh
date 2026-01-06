@@ -1,11 +1,3 @@
-#!/usr/bin/env bash
-# Exit on error
-set -e
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run database migrations
 #!/bin/bash
 
 # Trova Python automaticamente
@@ -26,6 +18,3 @@ fi
 # Avvia l'app
 echo "Starting InstaSpotter..."
 $PYTHON_CMD app/main.py
-
-# Start the web server
-uvicorn app.main:app --host 0.0.0.0 --port $PORT
