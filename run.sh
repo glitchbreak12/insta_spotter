@@ -18,6 +18,10 @@ fi
 
 echo "🚀 Starting InstaSpotter with $PYTHON_CMD..."
 
+# Set PYTHONPATH to include user packages directory (needed for --user installs on Replit)
+export PYTHONPATH="$HOME/.local/lib/python3.9/site-packages:$HOME/.local/lib/python3.10/site-packages:$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH"
+echo "📍 PYTHONPATH set to include user packages"
+
 # Install dependencies with better error handling
 echo "📦 Installing dependencies..."
 # Skip pip upgrade on Replit (permission issues)
@@ -26,7 +30,8 @@ $PIP_CMD install --user -r requirements.txt 2>/dev/null || $PIP_CMD install -r r
 
 # Verify critical dependencies
 echo "🔍 Verifying critical dependencies..."
-$PYTHON_CMD -c "import fastapi; print('✅ FastAPI OK')" || (echo "❌ FastAPI missing"; exit 1)
+$PYTHON_CMD -c "import sys; print('🐍 Python path:', sys.path[:3])"
+$PYTHON_CMD -c "import fastapi; print('✅ FastAPI OK')" || (echo "❌ FastAPI missing - check PYTHONPATH"; exit 1)
 $PYTHON_CMD -c "import uvicorn; print('✅ Uvicorn OK')" || (echo "❌ Uvicorn missing"; exit 1)
 $PYTHON_CMD -c "import sqlalchemy; print('✅ SQLAlchemy OK')" || (echo "❌ SQLAlchemy missing"; exit 1)
 
