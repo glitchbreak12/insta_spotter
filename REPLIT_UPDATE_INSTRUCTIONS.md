@@ -135,5 +135,35 @@ echo "✅ Dipendenze critiche installate!"
 
 **SCEGLI UN METODO E CARICA SUBITO!** 🚀
 
-Dopo il caricamento, le tue card saranno **blu spettacolari** invece che dorate! ✨</contents>
+Dopo il caricamento, le tue card saranno **blu spettacolari** invece che dorate! ✨
+
+---
+
+## 📸 **AGGIUNGERE IL BOT INSTAGRAM:**
+
+Una volta che l'app funziona, installa il bot Instagram:
+
+### **Installazione Sicura:**
+```bash
+# Evita problemi moviepy installando manualmente
+pip3 install --user requests pysocks
+pip3 install --user instagrapi --no-deps
+
+# Verifica
+python3 -c "import instagrapi; print('✅ Bot Instagram pronto!')"
+```
+
+### **Test Bot:**
+```bash
+python3 -c "
+try:
+    from app.bot.poster import InstagramBot
+    bot = InstagramBot()
+    print('✅ Bot Instagram funzionante!')
+except Exception as e:
+    print(f'⚠️ Bot non configurato: {str(e)[:100]}...')
+"
+```
+
+**L'app web funziona anche senza bot Instagram!** 🎉</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
