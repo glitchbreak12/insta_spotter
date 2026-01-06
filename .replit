@@ -1,4 +1,4 @@
-run = "bash -c 'PYTHON_EXEC=$(which python3 || which python || find /usr /opt /home/runner -name python3 -type f 2>/dev/null | head -1); echo \"Using Python: $PYTHON_EXEC\"; $PYTHON_EXEC -m uvicorn app.main:app --host 0.0.0.0 --port $PORT'"
+run = "bash -c 'for py in /usr/bin/python3 /usr/local/bin/python3 /opt/python3/bin/python3 /home/runner/.python3/bin/python3; do if [ -x \"$py\" ]; then echo \"Using Python: $py\"; exec \"$py\" -m uvicorn app.main:app --host 0.0.0.0 --port $PORT; fi; done; echo \"Python not found in common locations\"'"
 
 [build]
 command = "pip install -r requirements.txt"
