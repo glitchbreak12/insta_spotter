@@ -95,23 +95,36 @@ cd /home/runner/workspace && echo "=== RESET COMPLETO FORZATO ===" && git fetch 
 
 ## 🐍 **PROBLEMA PYTHON3:**
 
-### **Se vedi "python3: command not found":**
+### **🚨 Se vedi "python3: command not found":**
 
-**Su Replit, Python potrebbe essere chiamato diversamente. Prova:**
+**Su Replit, Python potrebbe essere in percorsi diversi. Ecco come trovarlo:**
 
-1. **Controlla versioni disponibili:**
+### **1. Comando completo per trovare Python:**
 ```bash
-ls /usr/bin/python* || ls /bin/python* || echo "Python versions:"
-python --version 2>/dev/null || python3 --version 2>/dev/null || py --version 2>/dev/null || echo "Nessuna versione trovata"
+echo "=== CERCO PYTHON ===" && find /usr -name "python*" -type f 2>/dev/null | head -10 && echo "---" && which python 2>/dev/null || which python3 2>/dev/null || which py 2>/dev/null || echo "Python non trovato in PATH" && echo "---" && ls -la /usr/bin/python* 2>/dev/null || ls -la /bin/python* 2>/dev/null || echo "Nessun python in /usr/bin o /bin"
 ```
 
-2. **Usa il comando che funziona:**
+### **2. Prova questi percorsi comuni su Replit:**
 ```bash
-# Prova questi uno per uno:
-/usr/bin/python3 --version
-/bin/python3 --version
+# Opzione A (più comune su Replit):
+/home/runner/.pythonlibs/bin/python3 --version
+
+# Opzione B:
+/nix/store/*/bin/python3 --version 2>/dev/null | head -1
+
+# Opzione C:
 python --version
-py --version
+
+# Opzione D:
+/usr/local/bin/python3 --version
+
+# Opzione E:
+/opt/python3/bin/python3 --version
+```
+
+### **3. Comando universale per trovare Python:**
+```bash
+PYTHON_CMD=$(find /usr /bin /home/runner/.pythonlibs /nix/store -name "python3" -type f 2>/dev/null | head -1) && echo "Python trovato: $PYTHON_CMD" && $PYTHON_CMD --version
 ```
 
 3. **Se trovi Python, usa quel comando:**
