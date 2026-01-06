@@ -3,7 +3,14 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from app.database import SessionLocal, SpottedMessage, MessageStatus
 from app.image.generator import ImageGenerator
-from app.bot.poster import InstagramBot
+
+# Import InstagramBot come condizionale
+try:
+    from app.bot.poster import InstagramBot
+    INSTAGRAM_BOT_AVAILABLE = True
+except ImportError:
+    INSTAGRAM_BOT_AVAILABLE = False
+    InstagramBot = None
 
 # --- Tasks di Moderazione ---
 
@@ -160,10 +167,22 @@ def post_daily_compilation(db: Session):
             return {"status": "fail", "message": "Nessuna immagine generata."}
 
         print(f"--- DEBUG [TASK]: Inizio pubblicazione album con {len(image_paths)} immagini. ---")
+
+        # Controlla se Instagram bot è disponibile
+        if not INSTAGRAM_BOT_AVAILABLE:
+            print("--- DEBUG [TASK]: ⚠️ Instagram bot non disponibile (instagrapi non installato). Pubblicazione saltata. ---")
+            # Aggiorna comunque lo stato dei messaggi come pubblicati (per non bloccarli)
+            for msg in messages_to_post:
+                msg.status = MessageStatus.POSTED
+                msg.media_pk = "instagram_bot_unavailable"
+            db.commit()
+            print(f"--- DEBUG [TASK]: Messaggi marcati come pubblicati (bot non disponibile). ---")
+            return {"status": "success", "message": f"Album simulato pubblicato (bot non disponibile). {len(messages_to_post)} messaggi."}
+
         insta_bot = InstagramBot()
         caption = f"Spotted del giorno {datetime.now().strftime('%d/%m/%Y')}! ✨\n\n#spotted #instaspotter #confessioni"
         media_pk = insta_bot.post_album(image_paths, caption)
-        
+
         if not media_pk:
             raise Exception("InstagramBot.post_album ha restituito False o None.")
 

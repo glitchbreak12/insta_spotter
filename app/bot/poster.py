@@ -1,5 +1,16 @@
-from instagrapi import Client
-from instagrapi.exceptions import LoginRequired, TwoFactorRequired, ChallengeRequired
+# Import instagrapi come fallback per bot Instagram
+try:
+    from instagrapi import Client
+    from instagrapi.exceptions import LoginRequired, TwoFactorRequired, ChallengeRequired
+    INSTAGRAPi_AVAILABLE = True
+except ImportError:
+    INSTAGRAPi_AVAILABLE = False
+    # Dummy exceptions for compatibility
+    LoginRequired = Exception
+    TwoFactorRequired = Exception
+    ChallengeRequired = Exception
+    Client = None
+
 import os
 import time
 
@@ -9,6 +20,9 @@ class InstagramBot:
     """Gestisce le interazioni con l'API di Instagram."""
 
     def __init__(self):
+        if not INSTAGRAPi_AVAILABLE:
+            raise RuntimeError("Instagram bot non disponibile - instagrapi non installato")
+
         self.client = Client()
         self.client.set_settings({
             "user_agent": "Instagram 27.0.0.7.97 Android (24/7.0; 380dpi; 1080x1920; OnePlus; ONEPLUS A3010; OnePlus3T; qcom; en_US)",
