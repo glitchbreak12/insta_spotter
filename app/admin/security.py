@@ -1,6 +1,7 @@
 import os
 import secrets
 import logging
+from typing import Optional
 from fastapi import Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -76,7 +77,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
 
 # --- Logica di Autenticazione ---
 
-def authenticate_user(username: str, password: str) -> str | None:
+def authenticate_user(username: str, password: str) -> Optional[str]:
     """Verifica le credenziali. Ritorna username se valide, None altrimenti."""
     # Confronto username in modo timing-safe
     username_valid = secrets.compare_digest(username, ADMIN_USERNAME)
@@ -92,7 +93,7 @@ def authenticate_user(username: str, password: str) -> str | None:
     logger.warning(f"✗ Tentativo di accesso fallito: {username}")
     return None
 
-def get_current_user(request: Request) -> str | None:
+def get_current_user(request: Request) -> Optional[str]:
     """Ottiene l'utente corrente dal JWT token nel cookie."""
     token = request.cookies.get("access_token")
     if not token:

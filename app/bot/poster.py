@@ -13,6 +13,7 @@ except ImportError:
 
 import os
 import time
+from typing import Optional, List, Dict, Any
 
 from config import settings
 
@@ -256,7 +257,7 @@ class InstagramBot:
                 if os.path.exists(self.session_file): os.remove(self.session_file)
             return None
 
-    def get_media_comments(self, media_pk: str) -> list[dict] | None:
+    def get_media_comments(self, media_pk: str) -> Optional[List[Dict[str, Any]]]:
         """
         Recupera i commenti per un dato media_pk di Instagram.
 
