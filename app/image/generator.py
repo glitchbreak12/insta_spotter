@@ -329,10 +329,34 @@ class ImageGenerator:
                     print(f"⚠️ Errore caricamento font: {e}")
 
             if not brand_font:
-                brand_font = ImageFont.load_default()
-                message_font = ImageFont.load_default()
-                id_font = ImageFont.load_default()
-                footer_font = ImageFont.load_default()
+                # Fallback fonts per sistemi diversi
+                try:
+                    # Prova con DejaVu Sans (comune su Linux/Replit)
+                    brand_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 95)
+                    message_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 62)
+                    id_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 26)
+                    footer_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+                except:
+                    try:
+                        # Fallback per Windows
+                        brand_font = ImageFont.truetype("arial.ttf", 95)
+                        message_font = ImageFont.truetype("arial.ttf", 62)
+                        id_font = ImageFont.truetype("arial.ttf", 26)
+                        footer_font = ImageFont.truetype("arial.ttf", 30)
+                    except:
+                        # Ultimo fallback - usa default disponibile
+                        try:
+                            brand_font = ImageFont.load_default(95)
+                            message_font = ImageFont.load_default(62)
+                            id_font = ImageFont.load_default(26)
+                            footer_font = ImageFont.load_default(30)
+                        except:
+                            # Emergency fallback
+                            default_font = ImageFont.load_default()
+                            brand_font = default_font
+                            message_font = default_font
+                            id_font = default_font
+                            footer_font = default_font
 
             # === HEADER con BRAND ===
             header_y = 100
