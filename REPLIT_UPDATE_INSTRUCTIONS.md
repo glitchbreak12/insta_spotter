@@ -1,3 +1,36 @@
+# 🚨 RESET COMPLETO REPLIT - SOLUZIONE DEFINITIVA
+
+## 🔥 SE NULLA FUNZIONA - RESET COMPLETO:
+
+### ⚡ OPZIONE 1: NUOVO REPLIT DAL GITHUB (RACCOMANDATO)
+1. **Vai su** https://replit.com/
+2. **Clicca** "Create Repl"
+3. **Seleziona** "Import from GitHub"
+4. **Incolla** l'URL: `https://github.com/glitchbreak12/insta_spotter`
+5. **Clicca** "Import from GitHub"
+6. **Aspetta** che importi tutto
+7. **Configura Secrets** (vedi sotto)
+8. **Run** - dovrebbe funzionare automaticamente!
+
+### ⚡ OPZIONE 2: RESET DEL REPLIT ESISTENTE
+```bash
+cd /home/runner/workspace
+rm -rf .git .* *
+git init
+git remote add origin https://github.com/glitchbreak12/insta_spotter.git
+git pull origin main
+pip install -r requirements.txt
+chmod +x run.sh
+```
+
+### ⚡ OPZIONE 3: FORK DIRETTO
+1. **Vai su** https://github.com/glitchbreak12/insta_spotter
+2. **Clicca** "Fork" in alto a destra
+3. **Crea il fork** nel tuo account GitHub
+4. **Importa** il tuo fork in un nuovo Replit
+
+---
+
 # 🚨 RESET DEFINITIVO + INSTALLAZIONE DIPENDENZE
 
 ## 🔥 PROBLEMA ATTUALE:
