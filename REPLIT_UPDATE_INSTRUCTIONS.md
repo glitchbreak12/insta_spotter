@@ -75,8 +75,38 @@ python3 -c "from config import settings; print('TEMPLATE:', settings.image.templ
 
 **Risultato atteso:**
 ```
-TEMPLATE: card_v5.html ✅
+TEMPLATE: card_v11_celestial.html ✅
 ```
+
+---
+
+## 🎯 **REVERT AL TEMPLATE PRECEDENTE (card_v11_celestial.html)**
+
+**Se card_v5.html non funziona e vuoi tornare al template che funzionava prima:**
+
+### **Scarica la versione stabile:**
+```bash
+cd /home/runner/workspace && git pull origin main
+```
+
+### **Verifica che sia attivo:**
+```bash
+python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+```
+
+**Dovrebbe mostrare:**
+```
+TEMPLATE: app/image/templates/card_v11_celestial.html ✅
+```
+
+### **Test completo:**
+1. **Approva un messaggio** nell'admin dashboard
+2. **Controlla** che generi l'immagine con PIL fallback
+3. **Verifica** che venga postata su Instagram ✅
+
+**Questo template funzionava perfettamente prima!**
+
+---
 
 **❌ Se vedi errori di sintassi, usa questo comando semplificato:**
 ```bash
