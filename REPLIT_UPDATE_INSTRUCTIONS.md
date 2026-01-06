@@ -190,5 +190,7 @@ Così Python trova i pacchetti installati con `--user`! ✅
 
 **FIX PYTHON 3.9:** Il codice ora usa `Optional[Type]` invece di `Type | None` per compatibilità con Python 3.9 su Replit.
 
+**INSTAGRAM BOT:** L'app funziona anche senza `instagrapi` - il bot Instagram può essere installato manualmente dopo.
+
 Ora tutto funziona! 🚀✨</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
