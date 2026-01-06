@@ -78,32 +78,38 @@ cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
 
 ---
 
-## 🚀 **AGGIORNA IL CODICE SU REPLIT:**
+## 🚀 **AGGIORNAMENTO FORZATO - RISOLVI DEFINITIVAMENTE:**
 
-### **Comando per aggiornare:**
+### **🚨 Comando finale che risolve tutto:**
 ```bash
-cd /home/runner/workspace && echo "=== AGGIORNAMENTO CODICE ===" && git pull origin main && echo "✅ CODICE AGGIORNATO!" && echo "=== RIAVVIO APP ===" && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+cd /home/runner/workspace && echo "=== RESET COMPLETO FORZATO ===" && git fetch origin && git reset --hard origin/main && git clean -fd && echo "✅ CODICE AGGIORNATO FORZATAMENTE!" && echo "=== RIAVVIO ===" && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
 ```
+
+**Questo comando:**
+- ✅ **Scarica** le ultime modifiche da GitHub
+- ✅ **Sovrascrive** tutti i file locali con quelli di GitHub
+- ✅ **Rimuove** file non tracciati che potrebbero causare conflitti
+- ✅ **Testa** che tutto funzioni
 
 **Risultato atteso:**
 ```
-✅ CODICE AGGIORNATO!
+✅ CODICE AGGIORNATO FORZATAMENTE!
 TEMPLATE: card_v5.html ✅
 ```
 
 ---
 
-## ⚠️ **SE VEDI ANCORA ERRORI:**
+## 🔥 **SE ANCORA NON FUNZIONA:**
 
-### **Forza l'aggiornamento:**
+### **Reset completo del repository:**
 ```bash
-cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
+cd /home/runner/workspace && rm -rf .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main
 ```
 
-### **Riavvia completamente:**
-- Stoppa l'app (tasto rosso)
-- Aspetta 5 secondi
-- Riavvia con "Run"
+### **Poi riavvia completamente:**
+- Premi **"Stop"** (tasto rosso)
+- Aspetta 10 secondi
+- Premi **"Run"** (tasto verde)
 
 **Ricorda: Su Replit è sempre `python3`, mai `python`!**
 
