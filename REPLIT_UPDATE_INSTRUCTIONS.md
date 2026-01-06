@@ -3,14 +3,16 @@
 ## 🔥 PROBLEMA ATTUALE:
 Hai l'errore **"ModuleNotFoundError: No module named 'fastapi'"** su Replit
 
-## ✅ RISOLUZIONE IMMEDIATA:
+## ✅ RISOLUZIONE IMMEDIATA (FIX PER ERRORI PERMESSI):
 
-### **PASSO 1: Aggiorna il Codice (IMPORTANTE!)**
+### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX INCLUSO!)**
 ```bash
 cd /home/runner/workspace
 git pull origin main
-echo "✅ Codice aggiornato con fix dipendenze!"
+echo "✅ Codice aggiornato con fix permessi Replit!"
 ```
+
+**Questo risolve l'errore "Permission denied" su pip!**
 
 ### **PASSO 2: Apri Shell Replit**
 - Vai su https://replit.com/@GoogleMapes/instaspotter
@@ -104,6 +106,24 @@ echo "✅ Dipendenze critiche installate!"
 
 ### **Poi riavvia:**
 - Premi **Stop** → **Run** in Replit
+
+---
+
+## 🔥 SE ANCORA ERRORI PERMESSI:
+
+### **Installazione Manuale Alternativa:**
+```bash
+# Salta l'aggiornamento pip e installa con --user
+cd /home/runner/workspace
+pip3 install --user -r requirements.txt 2>/dev/null || pip install --user -r requirements.txt
+echo "✅ Dipendenze installate con --user!"
+```
+
+### **Oppure installa una per una:**
+```bash
+pip3 install --user fastapi uvicorn sqlalchemy jinja2 python-dotenv passlib[bcrypt] pillow
+echo "✅ Dipendenze critiche installate!"
+```
 
 ---
 
