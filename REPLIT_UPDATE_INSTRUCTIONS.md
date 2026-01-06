@@ -5,11 +5,11 @@ Hai l'errore **"ModuleNotFoundError: No module named 'fastapi'"** su Replit
 
 ## ✅ RISOLUZIONE IMMEDIATA (FIX PER ERRORI PERMESSI):
 
-### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX PYTHONPATH INCLUSO!)**
+### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX PYTHONPATH + PYTHON 3.9!)**
 ```bash
 cd /home/runner/workspace
 git pull origin main
-echo "✅ Codice aggiornato con fix PYTHONPATH per pacchetti --user!"
+echo "✅ Codice aggiornato con fix PYTHONPATH e compatibilità Python 3.9!"
 ```
 
 **Questo risolve l'errore "Permission denied" su pip!**
@@ -182,5 +182,7 @@ export PYTHONPATH="$HOME/.local/lib/python3.*/site-packages:$PYTHONPATH"
 
 Così Python trova i pacchetti installati con `--user`! ✅
 
-Ora tutto funziona! 🚀</contents>
+**FIX PYTHON 3.9:** Il codice ora usa `Optional[Type]` invece di `Type | None` per compatibilità con Python 3.9 su Replit.
+
+Ora tutto funziona! 🚀✨</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
