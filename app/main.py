@@ -240,3 +240,9 @@ def read_root():
 def health_check():
     """Health check endpoint per mantenere l'app attiva su Replit."""
     return {"status": "alive", "service": "InstaSpotter"}
+
+# --- Avvio dell'Applicazione ---
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,4 +1,14 @@
-run = "bash -c 'for py in /usr/bin/python3 /usr/local/bin/python3 /opt/python3/bin/python3 /home/runner/.python3/bin/python3; do if [ -x \"$py\" ]; then echo \"Using Python: $py\"; exec \"$py\" -m uvicorn app.main:app --host 0.0.0.0 --port $PORT; fi; done; echo \"Python not found in common locations\"'"
+run = "python app/main.py"
+
+[build]
+command = "pip install -r requirements.txt"
+
+[env]
+PYTHONUNBUFFERED = "1"
+PORT = "8000"
+
+[interpreter]
+command = "python"
 
 [build]
 command = "pip install -r requirements.txt"
