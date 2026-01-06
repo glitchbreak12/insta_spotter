@@ -307,6 +307,159 @@ class ImageGenerator:
 
             draw.text((footer_x, footer_y), footer_text, font=footer_font, fill=(255, 255, 255, 180))
 
+            # === RENDERING CARD come card_v5.html ===
+
+            # Carica font
+            font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
+            brand_font = None
+            message_font = None
+            id_font = None
+            footer_font = None
+
+            if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
+                try:
+                    brand_font = ImageFont.truetype(font_path, 95)
+                    message_font = ImageFont.truetype(font_path, 62)
+                    id_font = ImageFont.truetype(font_path, 26)
+                    footer_font = ImageFont.truetype(font_path, 30)
+                except Exception as e:
+                    print(f"⚠️ Errore caricamento font: {e}")
+
+            if not brand_font:
+                brand_font = ImageFont.load_default()
+                message_font = ImageFont.load_default()
+                id_font = ImageFont.load_default()
+                footer_font = ImageFont.load_default()
+
+            # === HEADER con BRAND ===
+            header_y = 100
+            brand_text = "SPOTTED"
+            brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
+            brand_width = brand_bbox[2] - brand_bbox[0]
+            brand_x = (width - brand_width) // 2
+            brand_y = header_y
+
+            # Text shadow per brand
+            for dx, dy, color, alpha in [
+                (0, 2, (0, 0, 0), 204),
+                (0, 0, (0, 122, 255), 128),
+                (0, 0, (0, 122, 255), 77),
+                (0, 0, (0, 122, 255), 25)
+            ]:
+                shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                shadow_draw = ImageDraw.Draw(shadow_layer)
+                shadow_draw.text((brand_x + dx, brand_y + dy), brand_text, fill=color + (alpha,), font=brand_font)
+                img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+                draw = ImageDraw.Draw(img)
+
+            draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
+
+            # === BADGE ID ===
+            id_text = f"sp#{message_id}"
+            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            id_width = id_bbox[2] - id_bbox[0]
+            id_x = (width - id_width) // 2
+            id_y = brand_y + 130
+
+            # Badge con glow
+            badge_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            badge_draw = ImageDraw.Draw(badge_bg)
+
+            pad_x, pad_y = 30, 12
+            badge_width = id_width + (pad_x * 2)
+            badge_height = 32 + (pad_y * 2)
+
+            # Glow badge
+            for offset, alpha in [(4, 38), (2, 76), (1, 115)]:
+                badge_draw.rounded_rectangle(
+                    [id_x - pad_x - offset, id_y - pad_y - offset,
+                     id_x + id_width + pad_x + offset, id_y + 32 + pad_y + offset],
+                    radius=25, fill=(0, 122, 255, alpha)
+                )
+
+            # Badge principale
+            badge_draw.rounded_rectangle(
+                [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + 32 + pad_y],
+                radius=25, fill=(0, 122, 255, 30), outline=(0, 122, 255, 64)
+            )
+
+            img = Image.alpha_composite(img.convert('RGBA'), badge_bg).convert('RGB')
+            draw = ImageDraw.Draw(img)
+            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)
+
+            # === CARD GLASS ===
+            card_x = 90
+            card_y = id_y + 100
+            card_w = width - 180
+            card_h = height - card_y - 150
+
+            card_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+            card_draw = ImageDraw.Draw(card_layer)
+
+            # Background card
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45, fill=(20, 20, 20, 204)
+            )
+
+            # Bordo card
+            card_draw.rounded_rectangle(
+                [card_x, card_y, card_x + card_w, card_y + card_h],
+                radius=45, outline=(255, 255, 255, 20), width=1
+            )
+
+            img = Image.alpha_composite(img.convert('RGBA'), card_layer).convert('RGB')
+            draw = ImageDraw.Draw(img)
+
+            # === MESSAGGIO ===
+            words = message_text.split()
+            lines = []
+            current_line = ""
+            for word in words:
+                test_line = current_line + " " + word if current_line else word
+                bbox = draw.textbbox((0, 0), test_line, font=message_font)
+                if bbox[2] - bbox[0] <= card_w - 100:
+                    current_line = test_line
+                else:
+                    if current_line:
+                        lines.append(current_line)
+                    current_line = word
+            if current_line:
+                lines.append(current_line)
+
+            line_height = 80
+            total_height = len(lines) * line_height
+            start_y = card_y + (card_h - total_height) // 2
+
+            for i, line in enumerate(lines):
+                bbox = draw.textbbox((0, 0), line, font=message_font)
+                text_width = bbox[2] - bbox[0]
+                text_x = (width - text_width) // 2
+                y_pos = start_y + i * line_height
+
+                # Text shadows
+                for dx, dy, color, alpha in [
+                    (0, 0, (255, 255, 255), 77),
+                    (0, 0, (0, 0, 0), 153),
+                    (0, 5, (0, 0, 0), 204)
+                ]:
+                    shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                    shadow_draw = ImageDraw.Draw(shadow_layer)
+                    shadow_draw.text((text_x + dx, y_pos + dy), line, fill=color + (alpha,), font=message_font)
+                    img = Image.alpha_composite(img.convert('RGBA'), shadow_layer).convert('RGB')
+                    draw = ImageDraw.Draw(img)
+
+                draw.text((text_x, y_pos), line, fill='#ffffff', font=message_font)
+
+            # === FOOTER ===
+            footer_text = "@spottedatbz"
+            footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
+            footer_width = footer_bbox[2] - footer_bbox[0]
+            footer_x = (width - footer_width) // 2
+            footer_y = card_y + card_h - 80
+
+            draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)
+
             # Salva e ottimizza per Instagram
             img.save(output_path, 'PNG', quality=100, optimize=False)
             print(f"✅ Immagine generata con successo (PIL fallback): {output_path}")
