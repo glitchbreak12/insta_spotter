@@ -94,6 +94,9 @@ class ImageGenerator:
             width = self.image_width
             height = 1920
 
+            # Inizializza variabili per scope exception handler
+            card_layer = None
+
             # === SFONDO STILE card_v5.html ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
