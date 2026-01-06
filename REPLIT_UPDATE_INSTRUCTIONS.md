@@ -82,19 +82,42 @@ cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
 
 ### **🚨 Comando finale che risolve tutto:**
 ```bash
-cd /home/runner/workspace && echo "=== RESET COMPLETO FORZATO ===" && git fetch origin && git reset --hard origin/main && git clean -fd && echo "✅ CODICE AGGIORNATO FORZATAMENTE!" && echo "=== RIAVVIO ===" && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+cd /home/runner/workspace && echo "=== RESET COMPLETO FORZATO ===" && git fetch origin && git reset --hard origin/main && git clean -fd && echo "✅ CODICE AGGIORNATO FORZATAMENTE!" && echo "=== VERIFICA PYTHON ===" && which python3 || which python || echo "Python non trovato - usa Run normale"
 ```
 
 **Questo comando:**
 - ✅ **Scarica** le ultime modifiche da GitHub
 - ✅ **Sovrascrive** tutti i file locali con quelli di GitHub
 - ✅ **Rimuove** file non tracciati che potrebbero causare conflitti
-- ✅ **Testa** che tutto funzioni
+- ✅ **Verifica** che Python sia disponibile
 
-**Risultato atteso:**
+---
+
+## 🐍 **PROBLEMA PYTHON3:**
+
+### **Se vedi "python3: command not found":**
+
+**Su Replit, Python potrebbe essere chiamato diversamente. Prova:**
+
+1. **Controlla versioni disponibili:**
+```bash
+ls /usr/bin/python* || ls /bin/python* || echo "Python versions:"
+python --version 2>/dev/null || python3 --version 2>/dev/null || py --version 2>/dev/null || echo "Nessuna versione trovata"
 ```
-✅ CODICE AGGIORNATO FORZATAMENTE!
-TEMPLATE: card_v5.html ✅
+
+2. **Usa il comando che funziona:**
+```bash
+# Prova questi uno per uno:
+/usr/bin/python3 --version
+/bin/python3 --version
+python --version
+py --version
+```
+
+3. **Se trovi Python, usa quel comando:**
+```bash
+# Se funziona 'python', usa:
+/home/runner/workspace$ python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
 ```
 
 ---
@@ -106,10 +129,10 @@ TEMPLATE: card_v5.html ✅
 cd /home/runner/workspace && rm -rf .git && git init && git remote add origin https://github.com/glitchbreak12/insta_spotter.git && git pull origin main
 ```
 
-### **Poi riavvia completamente:**
+### **Poi usa il pulsante Run normale di Replit:**
 - Premi **"Stop"** (tasto rosso)
 - Aspetta 10 secondi
-- Premi **"Run"** (tasto verde)
+- Premi **"Run"** (tasto verde) - Questo avvierà automaticamente l'app
 
 **Ricorda: Su Replit è sempre `python3`, mai `python`!**
 
