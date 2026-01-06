@@ -5,11 +5,11 @@ Hai l'errore **"ModuleNotFoundError: No module named 'fastapi'"** su Replit
 
 ## ✅ RISOLUZIONE IMMEDIATA (FIX PER ERRORI PERMESSI):
 
-### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX INCLUSO!)**
+### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX PYTHONPATH INCLUSO!)**
 ```bash
 cd /home/runner/workspace
 git pull origin main
-echo "✅ Codice aggiornato con fix permessi Replit!"
+echo "✅ Codice aggiornato con fix PYTHONPATH per pacchetti --user!"
 ```
 
 **Questo risolve l'errore "Permission denied" su pip!**
@@ -165,5 +165,22 @@ except Exception as e:
 "
 ```
 
-**L'app web funziona anche senza bot Instagram!** 🎉</contents>
+**L'app web funziona anche senza bot Instagram!** 🎉
+
+---
+
+## 🐍 **SPIEGAZIONE FIX PYTHONPATH:**
+
+**Perché "ModuleNotFoundError" anche se installato?**
+
+Su Replit, `pip install --user` salva i pacchetti in `~/.local/lib/python*/site-packages`, ma questa cartella **NON è nel PYTHONPATH** di default!
+
+**IL FIX:** Il nuovo `run.sh` imposta automaticamente:
+```bash
+export PYTHONPATH="$HOME/.local/lib/python3.*/site-packages:$PYTHONPATH"
+```
+
+Così Python trova i pacchetti installati con `--user`! ✅
+
+Ora tutto funziona! 🚀</contents>
 </xai:function_call">Write file REPLIT_UPDATE_INSTRUCTIONS.md
