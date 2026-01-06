@@ -5,12 +5,18 @@ Hai l'errore **"ModuleNotFoundError: No module named 'fastapi'"** su Replit
 
 ## ✅ RISOLUZIONE IMMEDIATA (FIX PER ERRORI PERMESSI):
 
-### **PASSO 1: Aggiorna il Codice (IMPORTANTE - FIX PYTHONPATH + PYTHON 3.9!)**
+### **PASSO 1: AGGIORNA IL CODICE (IMPORTANTE - TUTTI I FIX PYTHON 3.9!)**
 ```bash
 cd /home/runner/workspace
 git pull origin main
-echo "✅ Codice aggiornato con fix PYTHONPATH e compatibilità Python 3.9!"
+echo "✅ Codice aggiornato con tutti i fix per Python 3.9!"
 ```
+
+**FIX INCLUSI:**
+- ✅ Type hints `Optional[str]` invece di `str | None`
+- ✅ `importlib-metadata` backport per dipendenze
+- ✅ Versioni uvicorn compatibili
+- ✅ Indentazione corretta in tutto il codice
 
 **Questo risolve l'errore "Permission denied" su pip!**
 
