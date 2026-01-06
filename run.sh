@@ -20,8 +20,9 @@ echo "🚀 Starting InstaSpotter with $PYTHON_CMD..."
 
 # Install dependencies with better error handling
 echo "📦 Installing dependencies..."
-$PIP_CMD install --upgrade pip
-$PIP_CMD install -r requirements.txt
+# Skip pip upgrade on Replit (permission issues)
+# $PIP_CMD install --upgrade pip 2>/dev/null || echo "⚠️ Could not upgrade pip (normal on Replit)"
+$PIP_CMD install --user -r requirements.txt 2>/dev/null || $PIP_CMD install -r requirements.txt
 
 # Verify critical dependencies
 echo "🔍 Verifying critical dependencies..."
