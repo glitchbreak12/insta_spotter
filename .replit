@@ -6,3 +6,23 @@ command = "pip install -r requirements.txt && chmod +x run.sh"
 [env]
 PYTHONUNBUFFERED = "1"
 PORT = "8000"
+
+[workflows.build]
+name = "Build InstaSpotter"
+description = "Install dependencies and prepare the application"
+
+[workflows.build.steps.install-deps]
+name = "Install Python dependencies"
+command = "pip install -r requirements.txt"
+
+[workflows.build.steps.make-executable]
+name = "Make run script executable"
+command = "chmod +x run.sh"
+
+[workflows.run]
+name = "Run InstaSpotter"
+description = "Start the FastAPI application"
+
+[workflows.run.steps.start-app]
+name = "Execute run script"
+command = "bash run.sh"
