@@ -1,11 +1,18 @@
 # 🚨 CARICAMENTO/DEPLOY SU REPLIT - Guida Definitiva
 
-## 🔥 SITUAZIONE:
-Hai aggiornato il codice e vuoi vedere le **card_v5.html blu spettacolari** su Replit.
+## 🔥 PROBLEMA ATTUALE:
+Hai l'errore **"ModuleNotFoundError: No module named 'fastapi'"** su Replit
 
-## ✅ METODO 1 - AGGIORNAMENTO SEMPLICE (Raccomandato):
+## ✅ RISOLUZIONE IMMEDIATA:
 
-### **PASSO 1: Apri Shell Replit**
+### **PASSO 1: Aggiorna il Codice (IMPORTANTE!)**
+```bash
+cd /home/runner/workspace
+git pull origin main
+echo "✅ Codice aggiornato con fix dipendenze!"
+```
+
+### **PASSO 2: Apri Shell Replit**
 - Vai su https://replit.com/@GoogleMapes/instaspotter
 - Clicca il pulsante **"Shell"** (o usa Ctrl+Shift+S)
 
@@ -53,9 +60,15 @@ cd /home/runner/workspace && rm -rf * .git && git init && git remote add origin 
 
 ## 🎯 TEST FINALE:
 
+### **Test Dipendenze:**
+```bash
+# Verifica che tutto sia installato
+python3 -c "import fastapi, uvicorn, sqlalchemy; print('✅ TUTTE LE DIPENDENZE OK!')" 2>/dev/null || python -c "import fastapi, uvicorn, sqlalchemy; print('✅ TUTTE LE DIPENDENZE OK!')" || echo "❌ DIPENDENZE MANCANTI"
+```
+
 ### **Test Template:**
 ```bash
-python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)" 2>/dev/null || python -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
 # Deve dire: card_v5.html
 ```
 
@@ -66,12 +79,31 @@ from app.image.generator import ImageGenerator
 gen = ImageGenerator()
 result = gen.from_text('Test card V5 blu spettacolare!', 'test_deploy.png', 123)
 print('Card generata:', result)
+" 2>/dev/null || python -c "
+from app.image.generator import ImageGenerator
+gen = ImageGenerator()
+result = gen.from_text('Test card V5 blu spettacolare!', 'test_deploy.png', 123)
+print('Card generata:', result)
 "
 ```
 
 ### **Test Web App:**
 - Vai su: https://instaspotter.GoogleMapes.replit.app
 - Dovrebbe funzionare con il nuovo codice
+
+---
+
+## 🔥 SE LE DIPENDENZE NON SI INSTALLANO:
+
+### **Installazione Manuale:**
+```bash
+# Installa dipendenze critiche manualmente
+pip3 install fastapi uvicorn sqlalchemy jinja2 python-dotenv passlib[bcrypt] pillow
+echo "✅ Dipendenze critiche installate!"
+```
+
+### **Poi riavvia:**
+- Premi **Stop** → **Run** in Replit
 
 ---
 
