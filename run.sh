@@ -30,6 +30,10 @@ $PYTHON_CMD -c "import fastapi; print('✅ FastAPI OK')" || (echo "❌ FastAPI m
 $PYTHON_CMD -c "import uvicorn; print('✅ Uvicorn OK')" || (echo "❌ Uvicorn missing"; exit 1)
 $PYTHON_CMD -c "import sqlalchemy; print('✅ SQLAlchemy OK')" || (echo "❌ SQLAlchemy missing"; exit 1)
 
+# Check optional dependencies (don't fail if missing)
+$PYTHON_CMD -c "import instagrapi; print('✅ InstaGrapi OK')" 2>/dev/null || echo "⚠️ InstaGrapi missing (Instagram bot disabled)"
+$PYTHON_CMD -c "import playwright; print('✅ Playwright OK')" 2>/dev/null || echo "⚠️ Playwright missing (HTML rendering limited)"
+
 # Run database migrations
 echo "🗄️ Running database migrations..."
 $PYTHON_CMD migrate.py
