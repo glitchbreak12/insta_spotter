@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 from datetime import datetime
 import enum
 import uuid
+from typing import Optional, Tuple
 
 from config import settings
 
@@ -82,7 +83,7 @@ def create_db_and_tables():
 
 # --- NUOVE FUNZIONI CRUD PER TECHNICAL USER ---
 
-def get_technical_user(db: Session, technical_user_id: str) -> TechnicalUser | None:
+def get_technical_user(db: Session, technical_user_id: str) -> Optional[TechnicalUser]:
     """Recupera un utente tecnico dal suo ID."""
     return db.query(TechnicalUser).filter(TechnicalUser.id == technical_user_id).first()
 
@@ -94,7 +95,7 @@ def create_technical_user(db: Session) -> TechnicalUser:
     db.refresh(new_user)
     return new_user
 
-def get_or_create_technical_user(db: Session, technical_user_id: str | None) -> tuple[TechnicalUser, bool]:
+def get_or_create_technical_user(db: Session, technical_user_id: Optional[str]) -> Tuple[TechnicalUser, bool]:
     """
     Recupera un utente tecnico se l'ID è valido, altrimenti ne crea uno nuovo.
     Restituisce l'utente e un booleano che indica se è stato creato.
