@@ -1,0 +1,6 @@
+{
+  "include": ["app"],
+  "exclude": ["__pycache__", "data", "test_output"],
+  "pythonVersion": "3.8",
+  "typeCheckingMode": "basic"
+}
