@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "workflows": {
+    "build": {
+      "name": "Build InstaSpotter",
+      "description": "Install Python dependencies and prepare the application",
+      "steps": [
+        {
+          "name": "Install Python dependencies",
+          "command": "pip install -r requirements.txt"
+        },
+        {
+          "name": "Make run script executable",
+          "command": "chmod +x run.sh"
+        }
+      ]
+    },
+    "run": {
+      "name": "Run InstaSpotter",
+      "description": "Start the FastAPI application",
+      "steps": [
+        {
+          "name": "Execute run script",
+          "command": "bash run.sh"
+        }
+      ]
+    }
+  }
+}
