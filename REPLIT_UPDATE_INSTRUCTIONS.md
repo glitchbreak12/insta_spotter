@@ -58,6 +58,31 @@ python3 -c "from config import settings; print(settings.image.template_path)"
 python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
 ```
 
+---
+
+## 🔄 **AGGIORNARE CODICE SU REPLIT:**
+
+### **Se hai ancora errori dopo il reset:**
+
+**1. Verifica che hai scaricato le ultime modifiche:**
+```bash
+cd /home/runner/workspace && git pull origin main
+```
+
+**2. Se vedi conflitti, forza l'aggiornamento:**
+```bash
+cd /home/runner/workspace && git fetch origin && git reset --hard origin/main
+```
+
+**3. Riavvia l'app** (Stop → Run)
+
+---
+
+## 🚀 **COMANDO COMPLETO PER AGGIORNAMENTO:**
+```bash
+cd /home/runner/workspace && echo "=== AGGIORNAMENTO CODICE ===" && git pull origin main && echo "✅ CODICE AGGIORNATO!" && echo "=== RIAVVIO APP ===" && python3 -c "from config import settings; print('TEMPLATE:', settings.image.template_path)"
+```
+
 **Ricorda: Su Replit è sempre `python3`, mai `python`!**
 
 ---
