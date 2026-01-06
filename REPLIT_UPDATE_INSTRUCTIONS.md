@@ -171,6 +171,40 @@ except Exception as e:
 "
 ```
 
+---
+
+## 📱 **AGGIUNGI BOT INSTAGRAM SUBITO:**
+
+### **Installazione Rapida (senza moviepy):**
+```bash
+# Nel terminal Replit:
+pip3 install --user requests pysocks
+pip3 install --user instagrapi --no-deps
+
+echo "✅ Bot Instagram installato!"
+```
+
+### **Riavvia App:**
+- Premi **Stop** → **Run** in Replit
+- Ora il bot sarà attivo!
+
+### **Test Pubblicazione:**
+- Approva un messaggio dall'admin
+- Dovrebbe pubblicare automaticamente su Instagram!
+
+---
+
+## 🔑 **CONFIGURA CREDENZIALI INSTAGRAM:**
+
+Aggiungi nelle **Secrets di Replit:**
+```
+INSTAGRAM_USERNAME=il_tuo_username_ig
+INSTAGRAM_PASSWORD=la_tua_password_ig
+TWO_FACTOR_SEED=il_codice_2fa_se_abilitato
+```
+
+**Riavvia dopo aver aggiunto le secrets!**
+
 **L'app web funziona anche senza bot Instagram!** 🎉
 
 ---
