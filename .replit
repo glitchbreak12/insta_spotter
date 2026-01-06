@@ -1,12 +1,5 @@
 run = "python app/main.py"
 
-[build]
-command = "pip install -r requirements.txt"
-
-[env]
-PYTHONUNBUFFERED = "1"
-PORT = "8000"
-
 [interpreter]
 command = "python"
 
