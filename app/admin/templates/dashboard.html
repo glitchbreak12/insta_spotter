@@ -467,11 +467,11 @@
                     <div>
                         <div class="form-group">
                             <label class="form-label">Title</label>
-                            <input type="text" id="cardTitle" class="form-input" placeholder="Card title" oninput="updatePreview()">
+                            <input type="text" id="cardTitle" class="form-input" placeholder="Card title" oninput="updateCardPreview()">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Content</label>
-                            <textarea id="cardContent" class="form-input" rows="6" placeholder="Card content..." oninput="updatePreview()"></textarea>
+                            <textarea id="cardContent" class="form-input" rows="6" placeholder="Card content..." oninput="updateCardPreview()"></textarea>
                         </div>
                         <div style="margin-top: 15px;">
                             <button class="btn btn-success" onclick="createInfoCard()">Create Card</button>
@@ -765,10 +765,10 @@
             document.getElementById('createCardForm').classList.add('hidden');
             document.getElementById('cardTitle').value = '';
             document.getElementById('cardContent').value = '';
-            updatePreview();
+            updateCardPreview();
         }
 
-        function updatePreview() {
+        function updateCardPreview() {
             const title = document.getElementById('cardTitle').value || 'Card Title';
             const content = document.getElementById('cardContent').value || 'Card content will appear here...';
 
@@ -874,10 +874,10 @@
             document.getElementById('createCardForm').classList.add('hidden');
             document.getElementById('cardTitle').value = '';
             document.getElementById('cardContent').value = '';
-            updatePreview();
+            updateCardPreview();
         }
 
-        function updatePreview() {
+        function updateCardPreview() {
             const title = document.getElementById('cardTitle').value || 'Card Title';
             const content = document.getElementById('cardContent').value || 'Card content will appear here...';
 
