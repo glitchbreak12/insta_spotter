@@ -560,3 +560,124 @@ def get_daily_post_stats(user: str = Depends(get_current_user), db: Session = De
         }
     except Exception as e:
         return {"error": str(e)}
+
+# --- Info Cards Management ---
+
+@router.get("/info-cards", response_class=HTMLResponse, name="info_cards_page")
+def info_cards_page(request: Request, user: str = Depends(get_current_user)):
+    """Mostra la pagina di gestione delle info cards."""
+    return templates.TemplateResponse("info_cards.html", {"request": request})
+
+@router.get("/api/info-cards")
+def get_info_cards(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per ottenere tutte le info cards."""
+    from app.database import MessageType
+    info_cards = db.query(SpottedMessage).filter(
+        SpottedMessage.message_type == MessageType.INFO
+    ).order_by(SpottedMessage.created_at.desc()).all()
+
+    return [{
+        "id": card.id,
+        "title": card.title,
+        "text": card.text,
+        "status": card.status,
+        "created_at": card.created_at.isoformat() if card.created_at else None,
+        "posted_at": card.posted_at.isoformat() if card.posted_at else None,
+        "media_pk": card.media_pk
+    } for card in info_cards]
+
+@router.post("/api/info-cards")
+def create_info_card(
+    title: str = Form(...),
+    content: str = Form(...),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per creare una nuova info card."""
+    from app.database import MessageType, MessageStatus
+    from app.tasks import generate_technical_user
+
+    try:
+        # Crea utente tecnico admin
+        admin_user = generate_technical_user(db)
+
+        # Crea la info card
+        info_card = SpottedMessage(
+            text=content,
+            message_type=MessageType.INFO,
+            title=title,
+            status=MessageStatus.APPROVED,  # Le info cards sono automaticamente approvate
+            technical_user_id=admin_user.id
+        )
+
+        db.add(info_card)
+        db.commit()
+        db.refresh(info_card)
+
+        return {"status": "success", "message": "Info card creata con successo", "id": info_card.id}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/info-cards/{card_id}/publish")
+def publish_info_card(card_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per pubblicare una info card come storia."""
+    from app.database import MessageType, MessageStatus
+    from app.tasks import publish_info_card_task
+
+    try:
+        # Trova la info card
+        info_card = db.query(SpottedMessage).filter(
+            SpottedMessage.id == card_id,
+            SpottedMessage.message_type == MessageType.INFO
+        ).first()
+
+        if not info_card:
+            return {"status": "error", "message": "Info card non trovata"}
+
+        # Pubblica come storia
+        result = publish_info_card_task(info_card.id)
+
+        if result["status"] == "success":
+            # Aggiorna stato
+            info_card.status = MessageStatus.POSTED
+            info_card.posted_at = datetime.utcnow()
+            info_card.media_pk = result.get("media_pk")
+            db.commit()
+            return {"status": "success", "message": "Info card pubblicata con successo"}
+        else:
+            # Aggiorna con errore
+            info_card.status = MessageStatus.FAILED
+            info_card.error_message = result.get("message", "Errore sconosciuto")
+            db.commit()
+            return {"status": "error", "message": result.get("message", "Errore pubblicazione")}
+
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.delete("/api/info-cards/{card_id}")
+def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per eliminare una info card."""
+    from app.database import MessageType
+
+    try:
+        info_card = db.query(SpottedMessage).filter(
+            SpottedMessage.id == card_id,
+            SpottedMessage.message_type == MessageType.INFO
+        ).first()
+
+        if not info_card:
+            return {"status": "error", "message": "Info card non trovata"}
+
+        # Non permettere eliminazione di card già pubblicate
+        if info_card.status == MessageStatus.POSTED:
+            return {"status": "error", "message": "Non puoi eliminare una card già pubblicata"}
+
+        db.delete(info_card)
+        db.commit()
+
+        return {"status": "success", "message": "Info card eliminata con successo"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}

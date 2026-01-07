@@ -65,6 +65,21 @@ def run_migration():
                 print(f"Errore durante l'aggiunta della colonna 'technical_user_id': {e}")
             connection.rollback()
 
+        # Add message_type and title columns
+        try:
+            print("Aggiungo le colonne 'message_type' e 'title' alla tabella 'spotted_messages'...")
+            connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN message_type VARCHAR DEFAULT "spotted"'))
+            connection.commit()
+            connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN title VARCHAR'))
+            connection.commit()
+            print("Colonne 'message_type' e 'title' aggiunte con successo.")
+        except Exception as e:
+            if "duplicate column name" in str(e):
+                print("Le colonne 'message_type' e 'title' esistono già. Nessuna azione necessaria.")
+            else:
+                print(f"Errore durante l'aggiunta delle colonne: {e}")
+            connection.rollback()
+
         # Create daily_post_settings table
         try:
             print("Creo la tabella 'daily_post_settings'...")

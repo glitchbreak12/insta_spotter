@@ -20,6 +20,11 @@ class MessageStatus(str, enum.Enum):
     REVIEW = "review"
     FAILED = "failed"
 
+class MessageType(str, enum.Enum):
+    """Tipo di messaggio."""
+    SPOTTED = "spotted"  # Messaggio normale inviato dagli utenti
+    INFO = "info"       # Card informativa creata dall'admin
+
 class UserStatus(str, enum.Enum):
     """Stato di un utente tecnico."""
     ACTIVE = "active"
@@ -51,6 +56,8 @@ class SpottedMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
+    message_type = Column(Enum(MessageType), default=MessageType.SPOTTED, nullable=False)
+    title = Column(String, nullable=True)  # Titolo personalizzato per info cards
     status = Column(Enum(MessageStatus), default=MessageStatus.PENDING, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     posted_at = Column(DateTime, nullable=True)

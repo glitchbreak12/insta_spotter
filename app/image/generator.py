@@ -75,19 +75,26 @@ class ImageGenerator:
         # Verifica disponibilità Playwright
         self.playwright_available = PLAYWRIGHT_AVAILABLE
 
-    def _render_html(self, message_text: str, message_id: int) -> str:
+    def _render_html(self, message_text: str, message_id: int, message_type: str = "spotted", title: str = None) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
-        template_path = settings.image.template_path
-        print(f"🎨 [DEBUG] Usando template: {template_path}")
+
+        # Scegli il template basato sul tipo di messaggio
+        if message_type == "info":
+            template_path = "app/image/templates/card_info.html"
+            print(f"🎨 [DEBUG] Usando template INFO: {template_path}")
+        else:
+            template_path = settings.image.template_path
+            print(f"🎨 [DEBUG] Usando template SPOTTED: {template_path}")
+
         template = self.template_env.get_template(os.path.basename(template_path))
-        
+
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
 
-        return template.render(message=message_text, id=message_id, font_url=font_url)
+        return template.render(message=message_text, id=message_id, font_url=font_url, title=title)
 
-    def _generate_with_pil(self, message_text: str, output_path: str, message_id: int) -> Optional[str]:
+    def _generate_with_pil(self, message_text: str, output_path: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
         """Fallback PIL che replica esattamente lo stile card_v5.html con glow 3D."""
         if not PIL_AVAILABLE:
             raise RuntimeError("PIL non disponibile")
@@ -465,7 +472,7 @@ class ImageGenerator:
             print(f"❌ Errore PIL fallback: {e}")
             raise
 
-    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int) -> Optional[str]:
+    def _generate_with_playwright(self, message_text: str, output_path: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
         """Screenshot diretto dell'HTML renderizzato in browser reale."""
         if not self.playwright_available:
             raise RuntimeError("Playwright non disponibile")
@@ -475,7 +482,7 @@ class ImageGenerator:
 
         try:
             # Renderizza l'HTML
-            html_content = self._render_html(message_text, message_id)
+            html_content = self._render_html(message_text, message_id, message_type, title)
 
             # Crea file HTML temporaneo
             with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as f:
@@ -606,7 +613,7 @@ class ImageGenerator:
             print(f"⚠️ Instagram optimization failed: {e}")
             return image_path
 
-    def from_text(self, message_text: str, output_filename: str, message_id: int) -> Optional[str]:
+    def from_text(self, message_text: str, output_filename: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
         """
         Genera un'immagine PNG da un testo con gerarchia di metodi:
 
@@ -634,7 +641,7 @@ class ImageGenerator:
             if self.playwright_available:
                 print(f"🎨 Template complesso rilevato ({template_name}), uso Playwright per rendering perfetto...")
                 try:
-                    return self._generate_with_playwright(message_text, output_path, message_id)
+                    return self._generate_with_playwright(message_text, output_path, message_id, message_type, title)
                 except Exception as pw_error:
                     print(f"❌ Playwright fallito per template complesso: {pw_error}")
                     print("🔄 Fallback a wkhtmltoimage...")
@@ -645,7 +652,7 @@ class ImageGenerator:
         if self.wkhtmltoimage_available:
         try:
             # Renderizza l'HTML con il messaggio e il percorso base
-            html_content = self._render_html(message_text, message_id)
+            html_content = self._render_html(message_text, message_id, message_type, title)
 
             # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
             options = {
@@ -680,7 +687,7 @@ class ImageGenerator:
                 if self.playwright_available:
                     try:
                         print("🎭 Provo Playwright per rendering HTML accurato...")
-                        return self._generate_with_playwright(message_text, output_path, message_id)
+                        return self._generate_with_playwright(message_text, output_path, message_id, message_type, title)
                     except Exception as pw_error:
                         print(f"❌ Playwright fallito: {pw_error}")
                         print("Cado su PIL come ultimo fallback...")
@@ -689,7 +696,7 @@ class ImageGenerator:
                     if PIL_AVAILABLE:
                         try:
                             print("🔄 Uso PIL come fallback finale...")
-                            return self._generate_with_pil(message_text, output_path, message_id)
+                            return self._generate_with_pil(message_text, output_path, message_id, message_type, title)
                         except Exception as pil_error:
                             print(f"❌ Anche PIL ha fallito: {pil_error}")
                             raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
@@ -700,7 +707,7 @@ class ImageGenerator:
             if self.playwright_available:
                 try:
                     print("🎭 wkhtmltoimage non disponibile, provo Playwright...")
-                    return self._generate_with_playwright(message_text, output_path, message_id)
+                    return self._generate_with_playwright(message_text, output_path, message_id, message_type, title)
                 except Exception as pw_error:
                     print(f"❌ Playwright fallito: {pw_error}")
 

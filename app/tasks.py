@@ -297,3 +297,70 @@ def test_daily_post():
     result = daily_post_task()
     print(f"--- DEBUG [DAILY POST TEST]: Risultato: {result} ---")
     return result
+
+# --- Info Card Tasks ---
+
+def publish_info_card_task(card_id: int):
+    """
+    Pubblica una info card come storia su Instagram.
+    """
+    try:
+        print(f"--- DEBUG [INFO CARD]: Pubblicazione info card ID {card_id} ---")
+
+        db = SessionLocal()
+        try:
+            # Trova la info card
+            from app.database import MessageType
+            info_card = db.query(SpottedMessage).filter(
+                SpottedMessage.id == card_id,
+                SpottedMessage.message_type == MessageType.INFO
+            ).first()
+
+            if not info_card:
+                print(f"--- DEBUG [INFO CARD]: Info card {card_id} non trovata ---")
+                return {"status": "error", "message": "Info card non trovata"}
+
+            print(f"--- DEBUG [INFO CARD]: Pubblicando '{info_card.title}' ---")
+
+            # Genera immagine con template info
+            generator = ImageGenerator()
+            image_path = generator.from_text(
+                info_card.text,
+                f"info_card_{card_id}_{int(time.time())}.png",
+                card_id,
+                message_type="info",
+                title=info_card.title
+            )
+
+            if not image_path:
+                print("--- DEBUG [INFO CARD]: ERRORE generazione immagine ---")
+                return {"status": "error", "message": "Errore generazione immagine"}
+
+            print(f"--- DEBUG [INFO CARD]: Immagine generata: {image_path} ---")
+
+            # Pubblica come storia
+            if not INSTAGRAM_BOT_AVAILABLE:
+                print("--- DEBUG [INFO CARD]: ⚠️ Instagram bot non disponibile (simulazione) ---")
+                return {"status": "simulated", "message": f"Info card '{info_card.title}' simulata come pubblicata"}
+
+            try:
+                bot = InstagramBot()
+                media_pk = bot.post_story(image_path, f"📢 {info_card.title}")
+
+                if media_pk:
+                    print(f"--- DEBUG [INFO CARD]: Info card pubblicata con successo! Media PK: {media_pk} ---")
+                    return {"status": "success", "message": f"Info card '{info_card.title}' pubblicata", "media_pk": media_pk}
+                else:
+                    print("--- DEBUG [INFO CARD]: ERRORE pubblicazione ---")
+                    return {"status": "error", "message": "Errore pubblicazione Instagram"}
+
+            except Exception as e:
+                print(f"--- DEBUG [INFO CARD]: ERRORE Instagram: {e} ---")
+                return {"status": "error", "message": f"Errore Instagram: {str(e)}"}
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"--- DEBUG [INFO CARD]: ERRORE CRITICO: {e} ---")
+        return {"status": "error", "message": str(e)}

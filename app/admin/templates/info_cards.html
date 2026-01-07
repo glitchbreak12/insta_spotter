@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Info Cards - InstaSpotter Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #06b6d4;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .back-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--info);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .cards-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .cards-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cards-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .card-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-approved { background: var(--success); color: white; }
+        .status-posted { background: var(--primary); color: white; }
+        .status-pending { background: var(--warning); color: black; }
+        .status-failed { background: var(--error); color: white; }
+
+        .card-content {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            max-height: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .create-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .create-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-control[rows] {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #0891b2;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .card-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--info);
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-content {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            .card-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+
+            .card-actions {
+                justify-content: flex-start;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="/admin/dashboard" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Dashboard
+        </a>
+        <h1>📢 Info Cards</h1>
+        <div></div>
+    </div>
+
+    <div class="container">
+        <div id="alert" class="alert"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-cards">0</div>
+                <div class="stat-label">Info Cards Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="posted-cards">0</div>
+                <div class="stat-label">Pubblicate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pending-cards">0</div>
+                <div class="stat-label">In Attesa</div>
+            </div>
+        </div>
+
+        <!-- Create New Card -->
+        <div class="create-section">
+            <h2><i class="fas fa-plus-circle"></i> Crea Nuova Info Card</h2>
+
+            <form id="create-form">
+                <div class="form-group">
+                    <label for="card-title">Titolo della Card *</label>
+                    <input type="text" id="card-title" name="title" class="form-control"
+                           placeholder="es. Nuovo Aggiornamento" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="card-content">Contenuto *</label>
+                    <textarea id="card-content" name="content" class="form-control" rows="6"
+                              placeholder="Scrivi qui il contenuto della info card. Puoi usare **grassetto** e *corsivo* per formattare." required></textarea>
+                </div>
+
+                <div class="card-preview">
+                    <div class="preview-title">👀 Anteprima</div>
+                    <div id="preview-content">Scrivi un titolo e contenuto per vedere l'anteprima...</div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Crea Info Card
+                    </button>
+                    <button type="button" id="preview-btn" class="btn btn-info">
+                        <i class="fas fa-eye"></i>
+                        Aggiorna Anteprima
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Cards List -->
+        <div class="cards-section">
+            <h2><i class="fas fa-list"></i> Info Cards Create</h2>
+
+            <div id="cards-list" class="cards-list">
+                <div class="empty-state">
+                    <i class="fas fa-info-circle"></i>
+                    <div>Nessuna info card creata ancora</div>
+                    <div>Crea la tua prima info card usando il form sopra!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCards();
+            loadStats();
+            updatePreview();
+        });
+
+        // Live preview updates
+        document.getElementById('card-title').addEventListener('input', updatePreview);
+        document.getElementById('card-content').addEventListener('input', updatePreview);
+        document.getElementById('preview-btn').addEventListener('click', updatePreview);
+
+        // Create card form
+        document.getElementById('create-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(data)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Info card creata con successo!', 'success');
+                    this.reset();
+                    updatePreview();
+                    loadCards();
+                    loadStats();
+                } else {
+                    showAlert('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore di connessione: ' + error.message, 'error');
+            }
+        });
+
+        async function loadCards() {
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                const cards = await response.json();
+
+                const container = document.getElementById('cards-list');
+
+                if (!cards || cards.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-info-circle"></i>
+                            <div>Nessuna info card creata ancora</div>
+                            <div>Crea la tua prima info card usando il form sopra!</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = cards.map(card => `
+                    <div class="card-item">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">${escapeHtml(card.title || 'Senza titolo')}</div>
+                                <div class="card-status status-${card.status}">${card.status}</div>
+                            </div>
+                            <div class="card-actions">
+                                ${card.status === 'approved' ? `
+                                    <button class="btn btn-success btn-sm" onclick="publishCard(${card.id})">
+                                        <i class="fas fa-paper-plane"></i> Pubblica
+                                    </button>
+                                ` : card.status === 'posted' ? `
+                                    <span class="btn btn-info btn-sm" style="cursor: default;">
+                                        <i class="fas fa-check"></i> Pubblicata
+                                    </span>
+                                ` : ''}
+                                ${card.status !== 'posted' ? `
+                                    <button class="btn btn-danger btn-sm" onclick="deleteCard(${card.id})">
+                                        <i class="fas fa-trash"></i> Elimina
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="card-content">${escapeHtml(card.text.substring(0, 200))}${card.text.length > 200 ? '...' : ''}</div>
+                        ${card.created_at ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Creato: ${new Date(card.created_at).toLocaleString('it-IT')}</div>` : ''}
+                        ${card.posted_at ? `<div style="font-size: 0.8rem; color: var(--success); margin-top: 0.5rem;">Pubblicato: ${new Date(card.posted_at).toLocaleString('it-IT')}</div>` : ''}
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Errore caricamento cards:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                const cards = await response.json();
+
+                if (cards) {
+                    const total = cards.length;
+                    const posted = cards.filter(c => c.status === 'posted').length;
+                    const pending = cards.filter(c => c.status === 'approved').length;
+
+                    document.getElementById('total-cards').textContent = total;
+                    document.getElementById('posted-cards').textContent = posted;
+                    document.getElementById('pending-cards').textContent = pending;
+                }
+            } catch (error) {
+                console.error('Errore caricamento statistiche:', error);
+            }
+        }
+
+        async function publishCard(cardId) {
+            if (!confirm('Sei sicuro di voler pubblicare questa info card come storia su Instagram?')) {
+                return;
+            }
+
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pubblicazione...';
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${cardId}/publish`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Info card pubblicata con successo!', 'success');
+                    loadCards();
+                    loadStats();
+                } else {
+                    showAlert('Errore pubblicazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore di connessione: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function deleteCard(cardId) {
+            if (!confirm('Sei sicuro di voler eliminare questa info card? L\'azione non può essere annullata.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${cardId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Info card eliminata con successo!', 'success');
+                    loadCards();
+                    loadStats();
+                } else {
+                    showAlert('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore di connessione: ' + error.message, 'error');
+            }
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('card-title').value;
+            const content = document.getElementById('card-content').value;
+
+            const preview = document.getElementById('preview-content');
+
+            if (title && content) {
+                preview.innerHTML = `
+                    <strong>${escapeHtml(title)}</strong><br><br>
+                    ${escapeHtml(content).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/\n/g, '<br>')}
+                `;
+            } else {
+                preview.textContent = 'Scrivi un titolo e contenuto per vedere l\'anteprima...';
+            }
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadCards();
+            loadStats();
+        }, 30000);
+    </script>
+</body>
+</html>
