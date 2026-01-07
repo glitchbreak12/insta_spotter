@@ -726,21 +726,26 @@ def preview_info_card(
     text: str = Form(""),
     user: str = Depends(get_current_user)
 ):
-    """API per ottenere una preview dell'info card."""
+    """API per ottenere una preview dell'info card come immagine."""
     try:
         if not title or not text:
             title = "Titolo Card"
             text = "Il contenuto apparirà qui..."
 
-        # Genera HTML preview
-        preview_html = f"""
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto;">
-            <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem; text-align: center;">{title}</h2>
-            <p style="margin: 0; line-height: 1.6; text-align: center;">{text}</p>
-        </div>
-        """
+        # Usa il generatore di immagini per creare una preview
+        from app.image.generator import ImageGenerator
+        generator = ImageGenerator()
 
-        return {"status": "success", "preview_html": preview_html}
+        # Genera l'immagine con message_type="INFO"
+        image_path = generator.from_text(text, f"preview_{hash(title+text)}", message_type="INFO", title=title)
+
+        if image_path:
+            # Restituisci l'URL relativa dell'immagine
+            image_url = f"/generated_images/{image_path.split('/')[-1]}"
+            return {"status": "success", "image_url": image_url}
+        else:
+            return {"status": "error", "message": "Failed to generate preview image"}
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

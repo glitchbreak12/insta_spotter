@@ -627,7 +627,7 @@
         // Daily Post functions
         async function loadDailyPostSettings() {
             try {
-                const response = await fetch('/admin/api/daily-post/settings');
+                const response = await apiCall('/admin/api/daily-post/settings');
                 const settings = await response.json();
 
                 document.getElementById('dpEnabled').checked = settings.enabled;
@@ -693,7 +693,7 @@
         // Daily Post functions
         async function loadDailyPostSettings() {
             try {
-                const response = await fetch('/admin/api/daily-post/settings');
+                const response = await apiCall('/admin/api/daily-post/settings');
                 const settings = await response.json();
 
                 document.getElementById('dpEnabled').checked = settings.enabled;
