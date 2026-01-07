@@ -471,3 +471,92 @@ def post_single_message(message_id: int):
             db.commit()
     finally:
         db.close()
+
+# --- Daily Post Management ---
+
+@router.get("/daily-post", response_class=HTMLResponse, name="daily_post_page")
+def daily_post_page(request: Request, user: str = Depends(get_current_user)):
+    """Mostra la pagina di gestione del post giornaliero."""
+    return templates.TemplateResponse("daily_post.html", {"request": request})
+
+@router.get("/api/daily-post/settings")
+def get_daily_post_settings_api(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per recuperare le impostazioni del post giornaliero."""
+    from app.database import get_daily_post_settings
+    settings = get_daily_post_settings(db)
+    if not settings:
+        return {"error": "Impostazioni non trovate"}
+
+    return {
+        "enabled": bool(settings.enabled),
+        "post_time": settings.post_time,
+        "style": settings.style,
+        "max_messages": settings.max_messages,
+        "title_template": settings.title_template,
+        "hashtag_template": settings.hashtag_template,
+        "last_run": settings.last_run.isoformat() if settings.last_run else None
+    }
+
+@router.post("/api/daily-post/settings")
+def update_daily_post_settings(
+    enabled: bool = Form(False),
+    post_time: str = Form("20:00"),
+    style: str = Form("carousel"),
+    max_messages: int = Form(20),
+    title_template: str = Form("🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫"),
+    hashtag_template: str = Form("#spotted #instaspotter #dailyrecap"),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per aggiornare le impostazioni del post giornaliero."""
+    from app.database import update_daily_post_settings
+
+    try:
+        settings = update_daily_post_settings(
+            db=db,
+            enabled=enabled,
+            post_time=post_time,
+            style=style,
+            max_messages=max_messages,
+            title_template=title_template,
+            hashtag_template=hashtag_template
+        )
+        return {"status": "success", "message": "Impostazioni aggiornate"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-post/test")
+def test_daily_post(user: str = Depends(get_current_user)):
+    """API per testare il post giornaliero."""
+    from app.tasks import test_daily_post
+    import asyncio
+
+    try:
+        # Esegui il test in un thread separato per non bloccare
+        result = test_daily_post()
+        return result
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.get("/api/daily-post/stats")
+def get_daily_post_stats(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per ottenere statistiche del post giornaliero."""
+    from app.database import get_todays_messages
+    from datetime import datetime
+
+    try:
+        # Messaggi di oggi
+        todays_messages = get_todays_messages(db)
+
+        # Statistiche
+        approved_today = [m for m in todays_messages if m.status == MessageStatus.APPROVED]
+        posted_today = [m for m in todays_messages if m.posted_at and m.posted_at.date() == datetime.utcnow().date()]
+
+        return {
+            "total_today": len(todays_messages),
+            "approved_today": len(approved_today),
+            "posted_today": len(posted_today),
+            "available_for_daily": len(approved_today)
+        }
+    except Exception as e:
+        return {"error": str(e)}

@@ -64,7 +64,7 @@ Dopo la pubblicazione, Replit ti fornirà un URL pubblico. Potrebbe essere:
    - Attendi che si avvii completamente
 
 3. **Verifica la configurazione:**
-   - Il file `.replit` deve contenere: `run = "python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"`
+   - Il file `.replit` deve contenere: `run = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"`
    - La porta deve essere configurata (8000)
 
 4. **Pubblica esplicitamente:**

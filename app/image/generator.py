@@ -53,7 +53,7 @@ class ImageGenerator:
 
                 if not found:
                     # Configurazione vuota - imgkit userà il PATH
-                    self.config = {}
+            self.config = {}
                     print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 
@@ -643,20 +643,20 @@ class ImageGenerator:
 
         # Prima prova con wkhtmltoimage (per template semplici)
         if self.wkhtmltoimage_available:
-            try:
-                # Renderizza l'HTML con il messaggio e il percorso base
-                html_content = self._render_html(message_text, message_id)
+        try:
+            # Renderizza l'HTML con il messaggio e il percorso base
+            html_content = self._render_html(message_text, message_id)
 
-                # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
-                options = {
-                    'width': self.image_width,
-                    'encoding': "UTF-8",
-                    'enable-local-file-access': None, # Necessario per caricare font locali
-                    'quiet': '' # Sopprime l'output di wkhtmltoimage
-                }
+            # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
+            options = {
+                'width': self.image_width,
+                'encoding': "UTF-8",
+                'enable-local-file-access': None, # Necessario per caricare font locali
+                'quiet': '' # Sopprime l'output di wkhtmltoimage
+            }
 
                 # Genera l'immagine dall'HTML usando wkhtmltoimage
-                imgkit.from_string(html_content, output_path, options=options, config=self.config)
+            imgkit.from_string(html_content, output_path, options=options, config=self.config)
 
                 print(f"Immagine generata con successo (wkhtmltoimage): {output_path}")
 
@@ -664,7 +664,7 @@ class ImageGenerator:
                 optimized_path = self._optimize_for_instagram(output_path)
                 return optimized_path
 
-            except Exception as e:
+        except Exception as e:
                 # Controlla se è un errore di compatibilità GLIBC o librerie
                 error_str = str(e).lower()
                 is_glibc_error = ('glibc' in error_str and ('version' in error_str or 'not found' in error_str)) or \
@@ -713,6 +713,186 @@ class ImageGenerator:
                     raise RuntimeError(f"Tutti i fallback hanno fallito: {pil_error}") from pil_error
             else:
                 raise RuntimeError("ERRORE CRITICO: wkhtmltoimage, Playwright e PIL non disponibili.")
+
+    def create_daily_collage(self, messages: list, output_filename: str, title: str = None) -> Optional[list]:
+        """
+        Crea un collage giornaliero con più messaggi.
+        Ritorna una lista di percorsi di immagini per carousel Instagram.
+        """
+        if not messages:
+            return None
+
+        try:
+            print(f"🎨 Creando collage giornaliero con {len(messages)} messaggi...")
+
+            # Dimensioni per Instagram Stories/Carousel
+            width, height = 1080, 1920
+
+            # Diversi layout basati sul numero di messaggi
+            if len(messages) == 1:
+                # Singolo messaggio - usa template normale
+                return [self.from_text(messages[0].text, output_filename, messages[0].id)]
+
+            elif len(messages) <= 4:
+                # 2x2 grid layout
+                return self._create_grid_layout(messages, output_filename, 2, 2, title)
+
+            elif len(messages) <= 6:
+                # 2x3 grid layout
+                return self._create_grid_layout(messages, output_filename, 2, 3, title)
+
+            elif len(messages) <= 9:
+                # 3x3 grid layout
+                return self._create_grid_layout(messages, output_filename, 3, 3, title)
+
+            else:
+                # Più di 9 messaggi - crea multiple immagini
+                return self._create_multi_page_layout(messages, output_filename, title)
+
+        except Exception as e:
+            print(f"❌ Errore nella creazione del collage giornaliero: {e}")
+            return None
+
+    def _create_grid_layout(self, messages: list, base_filename: str, rows: int, cols: int, title: str = None) -> list:
+        """Crea un layout a griglia per il collage giornaliero."""
+        if not PIL_AVAILABLE:
+            raise RuntimeError("PIL non disponibile per collage")
+
+        try:
+            # Dimensioni per ogni cella
+            cell_width = 1080 // cols
+            cell_height = 1920 // rows
+
+            # Crea immagine principale
+            img = Image.new('RGB', (1080, 1920), color='#000000')
+            draw = ImageDraw.Draw(img)
+
+            # Font per il testo
+            try:
+                font = ImageFont.truetype("app/image/templates/fonts/Komika_Axis.ttf", 32)
+                title_font = ImageFont.truetype("app/image/templates/fonts/Komika_Axis.ttf", 48)
+            except:
+                font = ImageFont.load_default()
+                title_font = ImageFont.load_default()
+
+            # Sfondo con pattern blu professionale
+            self._add_professional_background(img, draw)
+
+            # Aggiungi titolo se fornito
+            if title:
+                # Calcola dimensioni del testo del titolo
+                bbox = draw.textbbox((0, 0), title, font=title_font)
+                title_width = bbox[2] - bbox[0]
+                title_x = (1080 - title_width) // 2
+                title_y = 50
+
+                # Aggiungi outline al titolo
+                for offset_x, offset_y in [(-2,-2), (-2,2), (2,-2), (2,2)]:
+                    draw.text((title_x + offset_x, title_y + offset_y), title, font=title_font, fill='#001122')
+                draw.text((title_x, title_y), title, font=title_font, fill='#00A0FF')
+
+            # Calcola posizioni per la griglia
+            start_y = 200 if title else 100
+            cell_padding = 20
+
+            for i, message in enumerate(messages):
+                if i >= rows * cols:
+                    break
+
+                row = i // cols
+                col = i % cols
+
+                x = col * cell_width + cell_padding
+                y = start_y + row * cell_height + cell_padding
+                w = cell_width - 2 * cell_padding
+                h = cell_height - 2 * cell_padding
+
+                # Crea rettangolo semi-trasparente per il messaggio
+                overlay = Image.new('RGBA', (w, h), (0, 122, 255, 30))
+                img.paste(overlay, (x, y), overlay)
+
+                # Scrivi il testo del messaggio
+                self._draw_message_text(draw, message.text, x, y, w, h, font)
+
+            # Salva l'immagine
+            output_path = os.path.join(self.output_folder, base_filename)
+            img.save(output_path, 'PNG', optimize=True)
+            print(f"✅ Collage giornaliero creato: {output_path}")
+
+            return [output_path]
+
+        except Exception as e:
+            print(f"❌ Errore nel layout griglia: {e}")
+            return None
+
+    def _create_multi_page_layout(self, messages: list, base_filename: str, title: str = None) -> list:
+        """Crea multiple immagini per molti messaggi."""
+        images = []
+        messages_per_page = 6  # 2x3 layout per pagina
+
+        for i in range(0, len(messages), messages_per_page):
+            page_messages = messages[i:i + messages_per_page]
+            page_title = f"{title} (Parte {i//messages_per_page + 1})" if title else f"Parte {i//messages_per_page + 1}"
+
+            page_filename = f"{base_filename.replace('.png', '')}_part{i//messages_per_page + 1}.png"
+            page_images = self._create_grid_layout(page_messages, page_filename, 2, 3, page_title)
+
+            if page_images:
+                images.extend(page_images)
+
+        return images if images else None
+
+    def _add_professional_background(self, img: Image, draw: ImageDraw):
+        """Aggiunge uno sfondo professionale blu al collage."""
+        width, height = img.size
+
+        # Sfondo base blu scuro
+        bg = Image.new('RGBA', (width, height), (0, 20, 40, 255))
+        img.paste(bg, (0, 0), bg)
+
+        # Pattern di cerchi blu
+        import random
+        random.seed(42)  # Seed fisso per consistenza
+
+        for i in range(15):
+            center_x = random.randint(width//8, 7*width//8)
+            center_y = random.randint(height//8, 7*height//8)
+            radius = random.randint(100, 200)
+            alpha = random.randint(20, 50)
+
+            # Cerchi concentrici
+            for r in range(radius, 50, -30):
+                draw.ellipse(
+                    [center_x - r, center_y - r, center_x + r, center_y + r],
+                    outline=(0, 122, 255, alpha),
+                    width=1
+                )
+
+    def _draw_message_text(self, draw: ImageDraw, text: str, x: int, y: int, w: int, h: int, font):
+        """Disegna il testo del messaggio in una cella del collage."""
+        # Tronca il testo se troppo lungo
+        if len(text) > 150:
+            text = text[:147] + "..."
+
+        # Calcola dimensioni del testo
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+
+        # Ridimensiona font se necessario
+        if text_width > w - 20:
+            font = ImageFont.truetype("app/image/templates/fonts/Komika_Axis.ttf", 24) if font.size > 24 else font
+
+        # Posiziona il testo
+        text_x = x + 10
+        text_y = y + 10
+
+        # Aggiungi outline bianco per leggibilità
+        for offset_x, offset_y in [(-1,-1), (-1,1), (1,-1), (1,1)]:
+            draw.text((text_x + offset_x, text_y + offset_y), text, font=font, fill='#FFFFFF')
+
+        # Testo principale blu
+        draw.text((text_x, text_y), text, font=font, fill='#00A0FF')
 
 # Esempio di utilizzo (per testare questo file singolarmente)
 if __name__ == '__main__':

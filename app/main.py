@@ -160,6 +160,48 @@ async def keep_alive_task():
         # Attendi 5 minuti (300 secondi) prima del prossimo ping
         await asyncio.sleep(300)
 
+async def daily_post_scheduler():
+    """Task in background che controlla ogni minuto se è ora di pubblicare il post giornaliero."""
+    await asyncio.sleep(120)  # Attendi 2 minuti dopo l'avvio per dare tempo al sistema
+
+    logger.info("📅 Daily post scheduler avviato - controlla ogni minuto")
+
+    while True:
+        try:
+            from app.tasks import daily_post_task
+            from app.database import get_daily_post_settings, SessionLocal
+            from datetime import datetime
+
+            # Controlla impostazioni daily post
+            db = SessionLocal()
+            try:
+                settings = get_daily_post_settings(db)
+                if settings and settings.enabled:
+                    # Verifica se è ora di pubblicare
+                    now = datetime.utcnow()
+                    current_time = now.strftime("%H:%M")
+
+                    if current_time == settings.post_time:
+                        logger.info(f"🕐 Ora del daily post! Eseguo pubblicazione...")
+                        result = await asyncio.get_event_loop().run_in_executor(None, daily_post_task)
+
+                        if result["status"] == "success":
+                            logger.info("✅ Daily post pubblicato con successo!")
+                        elif result["status"] == "simulated":
+                            logger.info("🎭 Daily post simulato (bot non disponibile)")
+                        elif result["status"] == "already_run":
+                            logger.info("📋 Daily post già pubblicato oggi")
+                        else:
+                            logger.warning(f"❌ Daily post fallito: {result.get('message', 'Errore sconosciuto')}")
+            finally:
+                db.close()
+
+        except Exception as e:
+            logger.error(f"❌ Errore nel daily post scheduler: {e}")
+
+        # Controlla ogni minuto
+        await asyncio.sleep(60)
+
 # --- Eventi di Avvio e Spegnimento ---
 
 def check_and_install_wkhtmltopdf():
@@ -220,9 +262,12 @@ async def on_startup():
     # Verifica e installa wkhtmltopdf se necessario
     check_and_install_wkhtmltopdf()
     
-    # Avvia il task di keep-alive in background per Replit
+    # Avvia i task in background
     asyncio.create_task(keep_alive_task())
     logger.info("✓ Keep-alive task avviato per hosting 24/7")
+
+    asyncio.create_task(daily_post_scheduler())
+    logger.info("📅 Daily post scheduler avviato - controlla ogni minuto")
 
 # --- Inclusione delle Rotte ---
 
@@ -240,9 +285,3 @@ def read_root():
 def health_check():
     """Health check endpoint per mantenere l'app attiva su Replit."""
     return {"status": "alive", "service": "InstaSpotter"}
-
-# --- Avvio dell'Applicazione ---
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)

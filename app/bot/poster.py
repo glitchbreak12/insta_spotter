@@ -257,6 +257,25 @@ class InstagramBot:
                 if os.path.exists(self.session_file): os.remove(self.session_file)
             return None
 
+    def post_carousel(self, image_paths: list, caption: str) -> Optional[str]:
+        """
+        Pubblica un carousel (album) su Instagram.
+        """
+        if not INSTAGRAPi_AVAILABLE:
+            print("--- DEBUG [POSTER]: Instagram bot non disponibile ---")
+            return None
+
+        try:
+            print(f"--- DEBUG [POSTER]: Tento pubblicazione carousel con {len(image_paths)} immagini... ---")
+            self.client.album_upload(paths=image_paths, caption=caption)
+            print("--- DEBUG [POSTER]: Carousel pubblicato con successo! ---")
+            return self.client.last_json['media']['pk']
+        except Exception as e:
+            print(f"--- DEBUG [POSTER]: ERRORE pubblicazione carousel: {e} ---")
+            if isinstance(e, LoginRequired):
+                if os.path.exists(self.session_file): os.remove(self.session_file)
+            return None
+
     def get_media_comments(self, media_pk: str) -> Optional[List[Dict[str, Any]]]:
         """
         Recupera i commenti per un dato media_pk di Instagram.

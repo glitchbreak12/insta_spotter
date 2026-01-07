@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Post - InstaSpotter Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-hover) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .back-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .settings-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .settings-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        .preview-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .preview-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .preview-content {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="/admin/dashboard" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Dashboard
+        </a>
+        <h1>📅 Daily Post</h1>
+        <div></div>
+    </div>
+
+    <div class="container">
+        <div id="alert" class="alert"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-today">0</div>
+                <div class="stat-label">Messaggi Oggi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="approved-today">0</div>
+                <div class="stat-label">Approvati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="posted-today">0</div>
+                <div class="stat-label">Pubblicati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="available-daily">0</div>
+                <div class="stat-label">Per Daily Post</div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="settings-section">
+            <h2>⚙️ Impostazioni Daily Post</h2>
+
+            <form id="settings-form">
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="enabled" name="enabled">
+                        <label for="enabled">Abilita Daily Post Automatico</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="post_time">Orario Pubblicazione (HH:MM)</label>
+                    <input type="time" id="post_time" name="post_time" class="form-control" value="20:00">
+                </div>
+
+                <div class="form-group">
+                    <label for="style">Stile Post</label>
+                    <select id="style" name="style" class="form-control">
+                        <option value="carousel">Carousel Instagram</option>
+                        <option value="grid">Griglia</option>
+                        <option value="compact">Compatto</option>
+                        <option value="elegant">Elegante</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_messages">Max Messaggi (1-50)</label>
+                    <input type="number" id="max_messages" name="max_messages" class="form-control" min="1" max="50" value="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="title_template">Template Titolo</label>
+                    <textarea id="title_template" name="title_template" class="form-control" rows="3">🌟 Spotted del giorno {date} 🌟
+
+Ecco tutti gli spotted della giornata! 💫</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="hashtag_template">Template Hashtag</label>
+                    <input type="text" id="hashtag_template" name="hashtag_template" class="form-control" value="#spotted #instaspotter #dailyrecap">
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Salva Impostazioni
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-section">
+            <h3 class="preview-title">👀 Anteprima Post</h3>
+            <div class="preview-content" id="preview-content">
+🌟 Spotted del giorno DD/MM/YYYY 🌟
+
+Ecco tutti gli spotted della giornata! 💫
+
+[Messaggi verranno mostrati qui]
+
+#spotted #instaspotter #dailyrecap
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="settings-section">
+            <h2>🚀 Azioni</h2>
+
+            <div class="actions">
+                <button id="test-daily-post" class="btn btn-warning">
+                    <i class="fas fa-flask"></i>
+                    Test Daily Post
+                </button>
+
+                <button id="refresh-stats" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i>
+                    Aggiorna Statistiche
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadStats();
+            updatePreview();
+        });
+
+        // Form inputs change -> update preview
+        document.querySelectorAll('#settings-form input, #settings-form textarea, #settings-form select').forEach(el => {
+            el.addEventListener('input', updatePreview);
+            el.addEventListener('change', updatePreview);
+        });
+
+        // Save settings
+        document.getElementById('settings-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/admin/api/daily-post/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(data)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Impostazioni salvate con successo!', 'success');
+                } else {
+                    showAlert('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore di connessione: ' + error.message, 'error');
+            }
+        });
+
+        // Test daily post
+        document.getElementById('test-daily-post').addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Test in corso...';
+
+            try {
+                const response = await fetch('/admin/api/daily-post/test', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+                showAlert(`Test completato: ${result.message}`, result.status === 'success' ? 'success' : 'error');
+            } catch (error) {
+                showAlert('Errore test: ' + error.message, 'error');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-flask"></i> Test Daily Post';
+            }
+        });
+
+        // Refresh stats
+        document.getElementById('refresh-stats').addEventListener('click', loadStats);
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings');
+                const settings = await response.json();
+
+                if (!settings.error) {
+                    document.getElementById('enabled').checked = settings.enabled;
+                    document.getElementById('post_time').value = settings.post_time;
+                    document.getElementById('style').value = settings.style;
+                    document.getElementById('max_messages').value = settings.max_messages;
+                    document.getElementById('title_template').value = settings.title_template;
+                    document.getElementById('hashtag_template').value = settings.hashtag_template;
+                }
+            } catch (error) {
+                console.error('Errore caricamento impostazioni:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/api/daily-post/stats');
+                const stats = await response.json();
+
+                if (!stats.error) {
+                    document.getElementById('total-today').textContent = stats.total_today;
+                    document.getElementById('approved-today').textContent = stats.approved_today;
+                    document.getElementById('posted-today').textContent = stats.posted_today;
+                    document.getElementById('available-daily').textContent = stats.available_for_daily;
+                }
+            } catch (error) {
+                console.error('Errore caricamento statistiche:', error);
+            }
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('title_template').value;
+            const hashtags = document.getElementById('hashtag_template').value;
+            const today = new Date().toLocaleDateString('it-IT');
+
+            const preview = title.replace('{date}', today) + '\n\n[Messaggi verranno mostrati qui]\n\n' + hashtags;
+            document.getElementById('preview-content').textContent = preview;
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

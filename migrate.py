@@ -65,6 +65,40 @@ def run_migration():
                 print(f"Errore durante l'aggiunta della colonna 'technical_user_id': {e}")
             connection.rollback()
 
+        # Create daily_post_settings table
+        try:
+            print("Creo la tabella 'daily_post_settings'...")
+            connection.execute(text('''
+                CREATE TABLE daily_post_settings (
+                    id INTEGER PRIMARY KEY,
+                    enabled INTEGER DEFAULT 1,
+                    post_time VARCHAR DEFAULT '20:00',
+                    style VARCHAR DEFAULT 'carousel',
+                    max_messages INTEGER DEFAULT 20,
+                    title_template VARCHAR DEFAULT '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫',
+                    hashtag_template VARCHAR DEFAULT '#spotted #instaspotter #dailyrecap',
+                    last_run TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            '''))
+            connection.commit()
+            print("Tabella 'daily_post_settings' creata con successo.")
+
+            # Insert default settings
+            connection.execute(text('''
+                INSERT INTO daily_post_settings (enabled, post_time, style, max_messages, title_template, hashtag_template)
+                VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap')
+            '''))
+            connection.commit()
+            print("Impostazioni predefinite per il post giornaliero inserite.")
+        except Exception as e:
+            if "already exists" in str(e):
+                print("La tabella 'daily_post_settings' esiste già. Nessuna azione necessaria.")
+            else:
+                print(f"Errore durante la creazione della tabella 'daily_post_settings': {e}")
+            connection.rollback()
+
     print("Migrazione database completata.")
 
 if __name__ == "__main__":

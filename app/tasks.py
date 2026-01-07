@@ -1,7 +1,7 @@
 from app.ai.gemini_moderator import GeminiModerator, ModerationResult
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.database import SessionLocal, SpottedMessage, MessageStatus
+from app.database import SessionLocal, SpottedMessage, MessageStatus, get_daily_post_settings, get_todays_messages, mark_daily_post_run
 from app.image.generator import ImageGenerator
 
 # Import InstagramBot come condizionale
@@ -202,3 +202,98 @@ def post_daily_compilation(db: Session):
     except Exception as e:
         print(f"--- DEBUG [TASK]: ERRORE CRITICO nel task: {e} ---")
         return {"status": "error", "message": str(e)}
+
+# --- Daily Post Task ---
+
+def daily_post_task():
+    """
+    Task giornaliero che pubblica un riepilogo di tutti gli spotted della giornata.
+    """
+    try:
+        print("--- DEBUG [DAILY POST]: Avvio task giornaliero ---")
+
+        db = SessionLocal()
+        try:
+            # Recupera impostazioni del daily post
+            settings = get_daily_post_settings(db)
+            if not settings or not settings.enabled:
+                print("--- DEBUG [DAILY POST]: Daily post disabilitato ---")
+                return {"status": "disabled", "message": "Daily post disabilitato"}
+
+            # Verifica se abbiamo già pubblicato oggi
+            from datetime import datetime, time
+            today_start = datetime.combine(datetime.utcnow().date(), time.min)
+            if settings.last_run and settings.last_run >= today_start:
+                print("--- DEBUG [DAILY POST]: Post giornaliero già pubblicato oggi ---")
+                return {"status": "already_run", "message": "Già pubblicato oggi"}
+
+            # Recupera messaggi di oggi
+            messages = get_todays_messages(db, settings.max_messages)
+            if not messages:
+                print("--- DEBUG [DAILY POST]: Nessun messaggio da pubblicare oggi ---")
+                return {"status": "no_messages", "message": "Nessun messaggio oggi"}
+
+            print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi per il post giornaliero ---")
+
+            # Genera collage giornaliero
+            generator = ImageGenerator()
+            today = datetime.utcnow().strftime("%d/%m/%Y")
+
+            # Prepara titolo
+            title = settings.title_template.format(date=today)
+
+            # Genera collage
+            base_filename = f"daily_recap_{datetime.utcnow().strftime('%Y%m%d')}.png"
+            image_paths = generator.create_daily_collage(messages, base_filename, title)
+
+            if not image_paths:
+                print("--- DEBUG [DAILY POST]: ERRORE nella generazione del collage ---")
+                return {"status": "error", "message": "Errore generazione collage"}
+
+            print(f"--- DEBUG [DAILY POST]: Collage creato con {len(image_paths)} immagini ---")
+
+            # Pubblica su Instagram
+            if not INSTAGRAM_BOT_AVAILABLE:
+                print("--- DEBUG [DAILY POST]: ⚠️ Instagram bot non disponibile (simulazione) ---")
+                # Simula pubblicazione per test
+                mark_daily_post_run(db)
+                return {"status": "simulated", "message": f"Simulato post giornaliero con {len(messages)} messaggi"}
+
+            try:
+                bot = InstagramBot()
+                full_caption = f"{title}\n\n{settings.hashtag_template}"
+
+                if len(image_paths) == 1:
+                    # Singola immagine
+                    media_pk = bot.post_story(image_paths[0], full_caption)
+                else:
+                    # Carousel
+                    media_pk = bot.post_carousel(image_paths, full_caption)
+
+                if media_pk:
+                    print(f"--- DEBUG [DAILY POST]: Post giornaliero pubblicato con successo! Media PK: {media_pk} ---")
+                    mark_daily_post_run(db)
+                    return {"status": "success", "message": f"Pubblicato riepilogo giornaliero con {len(messages)} messaggi", "media_pk": media_pk}
+                else:
+                    print("--- DEBUG [DAILY POST]: ERRORE nella pubblicazione ---")
+                    return {"status": "error", "message": "Errore pubblicazione Instagram"}
+
+            except Exception as e:
+                print(f"--- DEBUG [DAILY POST]: ERRORE pubblicazione Instagram: {e} ---")
+                return {"status": "error", "message": f"Errore Instagram: {str(e)}"}
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"--- DEBUG [DAILY POST]: ERRORE CRITICO nel daily post task: {e} ---")
+        return {"status": "error", "message": str(e)}
+
+def test_daily_post():
+    """
+    Funzione di test per il daily post - può essere chiamata dall'admin.
+    """
+    print("--- DEBUG [DAILY POST TEST]: Avvio test daily post ---")
+    result = daily_post_task()
+    print(f"--- DEBUG [DAILY POST TEST]: Risultato: {result} ---")
+    return result

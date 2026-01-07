@@ -26,6 +26,13 @@ class UserStatus(str, enum.Enum):
     LIMITED = "limited"
     BLOCKED = "blocked"
 
+class DailyPostStyle(str, enum.Enum):
+    """Stili disponibili per il post giornaliero."""
+    GRID = "grid"  # Griglia di miniature
+    CAROUSEL = "carousel"  # Carousel Instagram
+    COMPACT = "compact"  # Layout compatto
+    ELEGANT = "elegant"  # Stile elegante
+
 class TechnicalUser(Base):
     """Modello per un utente tecnico anonimo."""
     __tablename__ = "technical_users"
@@ -54,6 +61,21 @@ class SpottedMessage(Base):
     
     technical_user_id = Column(String, ForeignKey("technical_users.id"))
     author = relationship("TechnicalUser", back_populates="messages")
+
+class DailyPostSettings(Base):
+    """Impostazioni per il post giornaliero di riepilogo."""
+    __tablename__ = "daily_post_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Integer, default=1)  # 1=abilitato, 0=disabilitato
+    post_time = Column(String, default="20:00")  # Orario del post (HH:MM)
+    style = Column(Enum(DailyPostStyle), default=DailyPostStyle.CAROUSEL, nullable=False)
+    max_messages = Column(Integer, default=20)  # Max messaggi nel post giornaliero
+    title_template = Column(String, default="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫")
+    hashtag_template = Column(String, default="#spotted #instaspotter #dailyrecap")
+    last_run = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 # --- Configurazione del Database ---
 
@@ -116,3 +138,45 @@ def get_or_create_technical_user(db: Session, technical_user_id: Optional[str]) 
         created = True
         
     return user, created
+
+# --- Funzioni per il Daily Post ---
+
+def get_daily_post_settings(db: Session) -> Optional[DailyPostSettings]:
+    """Recupera le impostazioni del post giornaliero."""
+    return db.query(DailyPostSettings).first()
+
+def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
+    """Aggiorna le impostazioni del post giornaliero."""
+    settings = get_daily_post_settings(db)
+    if not settings:
+        settings = DailyPostSettings()
+        db.add(settings)
+
+    for key, value in kwargs.items():
+        if hasattr(settings, key):
+            setattr(settings, key, value)
+
+    settings.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(settings)
+    return settings
+
+def get_todays_messages(db: Session, limit: int = 20) -> list:
+    """Recupera tutti i messaggi APPROVED di oggi."""
+    from datetime import datetime, time
+
+    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    today_end = datetime.combine(datetime.utcnow().date(), time.max)
+
+    return db.query(SpottedMessage).filter(
+        SpottedMessage.status == MessageStatus.APPROVED,
+        SpottedMessage.created_at >= today_start,
+        SpottedMessage.created_at <= today_end
+    ).order_by(SpottedMessage.created_at).limit(limit).all()
+
+def mark_daily_post_run(db: Session):
+    """Marca che il post giornaliero è stato eseguito oggi."""
+    settings = get_daily_post_settings(db)
+    if settings:
+        settings.last_run = datetime.utcnow()
+        db.commit()

@@ -45,7 +45,7 @@ pip install -r requirements.txt
 
 ## Passo 6: Avvia l'Applicazione
 1. Nel file `.replit`, assicurati che ci sia:
-   - **run**: `python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **run**: `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - **language**: `python3`
 
 2. Clicca su **"Run"** per avviare l'applicazione

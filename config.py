@@ -19,6 +19,15 @@ class AutomationSettings(BaseModel):
     posts_per_hour: int = 10
     autonomous_mode_enabled: bool = False # Nuova impostazione per la modalità autonoma
 
+class DailyPostSettings(BaseModel):
+    """Configurazioni per il post giornaliero di riepilogo."""
+    enabled: bool = True
+    post_time: str = "20:00"  # Orario del post giornaliero (HH:MM)
+    style: str = "carousel"  # Stile del post: grid, carousel, compact, elegant
+    max_messages: int = 20  # Numero massimo di messaggi nel post giornaliero
+    title_template: str = "🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫"
+    hashtag_template: str = "#spotted #instaspotter #dailyrecap"
+
 class ImageSettings(BaseModel):
     """Configurazioni per la generazione delle immagini."""
     template_path: str = "app/image/templates/card_v5.html"  # FORZATO: usa sempre card_v5.html
@@ -41,6 +50,7 @@ class Settings(BaseModel):
     base_dir: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     instagram: InstagramSettings = InstagramSettings()
     automation: AutomationSettings = AutomationSettings()
+    daily_post: DailyPostSettings = DailyPostSettings()
     image: ImageSettings = ImageSettings()
     web: WebSettings = WebSettings()
     database: DatabaseSettings = DatabaseSettings()

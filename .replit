@@ -1,7 +1,7 @@
-run = "bash run.sh"
+run = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 
 [build]
-command = "pip install -r requirements.txt && chmod +x run.sh"
+command = "pip install -r requirements.txt && apt-get update && apt-get install -y wkhtmltopdf"
 
 [env]
 PYTHONUNBUFFERED = "1"
