@@ -39,5 +39,13 @@ if ! "$PYTHON_CMD" -c "import uvicorn" &> /dev/null; then
     "$PYTHON_CMD" -m pip install --user -r requirements.txt
 fi
 
+# Run database migrations
+echo "🗄️ Running database migrations..."
+if [ -f "migrate.py" ]; then
+    "$PYTHON_CMD" migrate.py
+else
+    echo "⚠️ migrate.py not found, skipping migrations"
+fi
+
 echo "🌐 Starting InstaSpotter..."
 "$PYTHON_CMD" -m uvicorn app.main:app --host 0.0.0.0 --port $PORT

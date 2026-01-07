@@ -44,8 +44,17 @@ if not ADMIN_PASSWORD_HASH and not os.getenv("ADMIN_PASSWORD"):
     logger.warning("🔧 USING TEMPORARY ADMIN CREDENTIALS FOR TESTING!")
     logger.warning("🔧 Username: admin, Password: admin123")
     logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
-    ADMIN_USERNAME = "admin"
-    ADMIN_PASSWORD_HASH = pwd_context.hash("admin123")  # Password temporanea: admin123
+
+    # Usa hashing più semplice per evitare problemi bcrypt
+    try:
+        ADMIN_USERNAME = "admin"
+        ADMIN_PASSWORD_HASH = pwd_context.hash("admin123")  # Password temporanea: admin123
+    except Exception as hash_error:
+        logger.warning(f"⚠️ Bcrypt hashing failed ({hash_error}), using simple hash")
+        # Fallback a hashing semplice se bcrypt non funziona
+        import hashlib
+        ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
+        logger.warning("🔧 Using SHA256 hash instead of bcrypt")
 
 # Se non è disponibile hash, prova dalla password in plaintext (ONLY FOR SETUP)
 if not ADMIN_PASSWORD_HASH:
@@ -68,10 +77,18 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una password in modo sicuro (timing-safe)."""
     try:
+        # Prima prova con bcrypt
         return pwd_context.verify(plain_password, hashed_password)
-    except Exception as e:
-        logger.warning(f"Errore nella verifica password: {e}")
-        return False
+    except Exception as bcrypt_error:
+        logger.warning(f"Bcrypt verification failed ({bcrypt_error}), trying SHA256 fallback")
+        try:
+            # Fallback a SHA256 se bcrypt fallisce (per credenziali temporanee)
+            import hashlib
+            expected_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+            return expected_hash == hashed_password
+        except Exception as sha_error:
+            logger.error(f"Both bcrypt and SHA256 verification failed: bcrypt={bcrypt_error}, sha={sha_error}")
+            return False
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     """Crea un JWT access token."""
