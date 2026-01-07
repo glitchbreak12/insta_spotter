@@ -181,6 +181,8 @@ except Exception as e:
 pip3 install --user requests pysocks
 pip3 install --user instagrapi --no-deps
 
+# Verifica installazione:
+python3 -c "import instagrapi; print('✅ Instagrapi OK!')"
 echo "✅ Bot Instagram installato!"
 ```
 
@@ -204,6 +206,41 @@ TWO_FACTOR_SEED=il_codice_2fa_se_abilitato
 ```
 
 **Riavvia dopo aver aggiunto le secrets!**
+
+---
+
+## 🔧 **SE INSTAGRAPI NON VIENE RILEVATO:**
+
+### **Problema:**
+```
+⚠️ InstaGrapi missing (Instagram bot disabled)
+```
+
+### **Soluzione Forzata:**
+```bash
+# Nel terminal Replit:
+pip3 install --user --force-reinstall instagrapi --no-deps
+
+# Verifica:
+python3 -c "
+try:
+    from instagrapi import Client
+    print('✅ Instagrapi funziona!')
+except ImportError as e:
+    print(f'❌ Errore: {e}')
+"
+
+# Riavvia app
+```
+
+### **Se ancora non funziona:**
+```bash
+# Prova senza --no-deps:
+pip3 install --user instagrapi
+
+# Oppure installa versione specifica:
+pip3 install --user instagrapi==2.1.2
+```
 
 **L'app web funziona anche senza bot Instagram!** 🎉
 
