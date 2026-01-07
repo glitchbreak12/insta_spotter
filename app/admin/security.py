@@ -45,16 +45,11 @@ if not ADMIN_PASSWORD_HASH and not os.getenv("ADMIN_PASSWORD"):
     logger.warning("🔧 Username: admin, Password: admin123")
     logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
 
-    # Usa hashing più semplice per evitare problemi bcrypt
-    try:
-        ADMIN_USERNAME = "admin"
-        ADMIN_PASSWORD_HASH = pwd_context.hash("admin123")  # Password temporanea: admin123
-    except Exception as hash_error:
-        logger.warning(f"⚠️ Bcrypt hashing failed ({hash_error}), using simple hash")
-        # Fallback a hashing semplice se bcrypt non funziona
-        import hashlib
-        ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
-        logger.warning("🔧 Using SHA256 hash instead of bcrypt")
+    # Usa direttamente SHA256 per semplicità (bypassa bcrypt)
+    import hashlib
+    ADMIN_USERNAME = "admin"
+    ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
+    logger.warning("🔧 Using SHA256 hash for temporary credentials")
 
 # Se non è disponibile hash, prova dalla password in plaintext (ONLY FOR SETUP)
 if not ADMIN_PASSWORD_HASH:
