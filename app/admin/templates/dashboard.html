@@ -393,6 +393,176 @@
             border: 1px solid var(--warning);
         }
 
+        /* Navigation Container */
+        .nav-container {
+            margin: 1rem;
+            margin-top: 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 0.5rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 60px;
+            flex: 1;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-tab i {
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-tab span {
+            font-size: 0.7rem;
+            line-height: 1;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            margin: 1rem;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .content-section .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .content-section .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .content-section .section-title i {
+            color: var(--primary);
+        }
+
+        /* Settings Cards */
+        .settings-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .settings-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-card h3::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item label {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .setting-item span {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Notification animations */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .notification {
+            box-shadow: var(--shadow);
+        }
+
+        /* Info Card Items */
+        .info-card-item {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card-item h5 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+        }
+
+        .info-card-item p {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-muted);
+        }
+
+        /* Error states */
+        .error {
+            color: var(--error);
+            text-align: center;
+            padding: 2rem;
+        }
+
         /* Bottom Navigation - Mobile */
         .bottom-nav {
             position: fixed;
@@ -598,6 +768,34 @@
                 </div>
         </div>
 
+    <!-- Navigation -->
+    <div class="nav-container">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('dashboard')">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </button>
+            <button class="nav-tab" onclick="showSection('messages')">
+                <i class="fas fa-comments"></i>
+                <span>Messaggi</span>
+            </button>
+            <button class="nav-tab" onclick="showSection('daily-post')">
+                <i class="fas fa-calendar-day"></i>
+                <span>Daily Post</span>
+            </button>
+            <button class="nav-tab" onclick="showSection('info-cards')">
+                <i class="fas fa-info-circle"></i>
+                <span>Info Cards</span>
+            </button>
+            <button class="nav-tab" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i>
+                <span>Impostazioni</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Sections -->
+    <div id="dashboard-section" class="content-section active">
     <!-- Stats -->
     <div class="stats-container">
                     <div class="stat-card">
@@ -742,6 +940,100 @@
                                 </button>
                             </div>
                         </div>
+    </div> <!-- End Dashboard Section -->
+
+    <!-- Daily Post Section -->
+    <div id="daily-post-section" class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-calendar-day"></i>
+                Daily Post Settings
+            </h2>
+        </div>
+        <div class="settings-card">
+            <div id="daily-post-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading daily post settings...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Cards Section -->
+    <div id="info-cards-section" class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Info Cards Management
+            </h2>
+        </div>
+        <div class="settings-card">
+            <div id="info-cards-content">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading info cards...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages Section (separated) -->
+    <div id="messages-section" class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-comments"></i>
+                Message Management
+            </h2>
+        </div>
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <div class="chip active" data-status="ALL" onclick="setFilter('ALL')">All</div>
+                <div class="chip" data-status="PENDING" onclick="setFilter('PENDING')">Pending</div>
+                <div class="chip" data-status="APPROVED" onclick="setFilter('APPROVED')">Approved</div>
+                <div class="chip" data-status="POSTED" onclick="setFilter('POSTED')">Posted</div>
+                <div class="chip" data-status="REJECTED" onclick="setFilter('REJECTED')">Rejected</div>
+                <div class="chip" data-status="FAILED" onclick="setFilter('FAILED')">Failed</div>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="messages-list" id="messagesList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>Loading messages...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div id="settings-section" class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-cog"></i>
+                System Settings
+            </h2>
+        </div>
+        <div class="settings-card">
+            <h3>Instagram Settings</h3>
+            <div class="setting-item">
+                <label>Instagram Username:</label>
+                <span id="ig-username">Not configured</span>
+            </div>
+            <div class="setting-item">
+                <label>Auto-posting:</label>
+                <span id="auto-post">Enabled</span>
+            </div>
+        </div>
+        <div class="settings-card">
+            <h3>AI Moderation</h3>
+            <div class="setting-item">
+                <label>Gemini API:</label>
+                <span id="gemini-status">Checking...</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Bottom Navigation - Mobile -->
     <div class="bottom-nav">
@@ -1484,6 +1776,306 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Navigation functions
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + '-section');
+            const targetTab = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Load content for dynamic sections
+            if (sectionName === 'daily-post') {
+                loadDailyPostSettings();
+            } else if (sectionName === 'info-cards') {
+                loadInfoCards();
+            } else if (sectionName === 'settings') {
+                loadSystemSettings();
+            }
+        }
+
+        // Load Daily Post Settings
+        async function loadDailyPostSettings() {
+            const content = document.getElementById('daily-post-content');
+            try {
+                const response = await fetch('/admin/api/daily-post/settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    content.innerHTML = `
+                        <div class="setting-item">
+                            <label>Enabled:</label>
+                            <input type="checkbox" id="dp-enabled" ${settings.enabled ? 'checked' : ''} onchange="updateDailyPostSetting('enabled', this.checked)">
+                        </div>
+                        <div class="setting-item">
+                            <label>Post Time:</label>
+                            <input type="time" id="dp-time" value="${settings.post_time}" onchange="updateDailyPostSetting('post_time', this.value)">
+                        </div>
+                        <div class="setting-item">
+                            <label>Style:</label>
+                            <select id="dp-style" onchange="updateDailyPostSetting('post_style', this.value)">
+                                <option value="grid" ${settings.post_style === 'grid' ? 'selected' : ''}>Grid</option>
+                                <option value="carousel" ${settings.post_style === 'carousel' ? 'selected' : ''}>Carousel</option>
+                                <option value="compact" ${settings.post_style === 'compact' ? 'selected' : ''}>Compact</option>
+                                <option value="elegant" ${settings.post_style === 'elegant' ? 'selected' : ''}>Elegant</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label>Max Messages:</label>
+                            <input type="number" id="dp-max" value="${settings.max_messages}" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+                        </div>
+                        <div class="setting-item">
+                            <label>Title Template:</label>
+                            <input type="text" id="dp-title" value="${settings.title_template}" onchange="updateDailyPostSetting('title_template', this.value)">
+                        </div>
+                        <div class="setting-item">
+                            <label>Hashtags Template:</label>
+                            <input type="text" id="dp-hashtags" value="${settings.hashtags_template}" onchange="updateDailyPostSetting('hashtags_template', this.value)">
+                        </div>
+                        <button class="btn btn-primary" onclick="testDailyPost()" style="margin-top: 1rem;">
+                            <i class="fas fa-play"></i> Test Daily Post
+                        </button>
+                    `;
+                } else {
+                    content.innerHTML = '<div class="error">Failed to load daily post settings</div>';
+                }
+            } catch (error) {
+                content.innerHTML = '<div class="error">Error loading daily post settings</div>';
+            }
+        }
+
+        // Load Info Cards
+        async function loadInfoCards() {
+            const content = document.getElementById('info-cards-content');
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                if (response.ok) {
+                    const cards = await response.json();
+                    let html = `
+                        <button class="btn btn-primary" onclick="showNewInfoCardForm()" style="margin-bottom: 1rem;">
+                            <i class="fas fa-plus"></i> Create New Info Card
+                        </button>
+                        <div id="new-info-card-form" style="display: none; margin-bottom: 1rem;">
+                            <input type="text" id="new-card-title" placeholder="Card Title" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">
+                            <textarea id="new-card-content" placeholder="Card Content" rows="3" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;"></textarea>
+                            <button class="btn btn-success" onclick="createInfoCard()">Create</button>
+                            <button class="btn btn-secondary" onclick="hideNewInfoCardForm()">Cancel</button>
+                        </div>
+                    `;
+
+                    if (cards.length > 0) {
+                        html += '<h4>Existing Cards:</h4>';
+                        cards.forEach(card => {
+                            html += `
+                                <div class="info-card-item" style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+                                    <h5>${escapeHtml(card.title)}</h5>
+                                    <p>${escapeHtml(card.text)}</p>
+                                    <div style="margin-top: 0.5rem;">
+                                        <button class="btn btn-sm btn-primary" onclick="publishInfoCard(${card.id})">Publish</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteInfoCard(${card.id})">Delete</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p>No info cards yet.</p>';
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="error">Failed to load info cards</div>';
+                }
+            } catch (error) {
+                content.innerHTML = '<div class="error">Error loading info cards</div>';
+            }
+        }
+
+        // Load System Settings
+        function loadSystemSettings() {
+            document.getElementById('ig-username').textContent = 'Checking...';
+            document.getElementById('gemini-status').textContent = 'Checking...';
+
+            // Check Instagram settings
+            fetch('/admin/api/settings/instagram')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('ig-username').textContent = data.username || 'Not configured';
+                })
+                .catch(() => {
+                    document.getElementById('ig-username').textContent = 'Error loading';
+                });
+
+            // Check Gemini status
+            fetch('/admin/api/settings/gemini')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('gemini-status').textContent = data.status;
+                })
+                .catch(() => {
+                    document.getElementById('gemini-status').textContent = 'Error loading';
+                });
+        }
+
+        // Update Daily Post Setting
+        async function updateDailyPostSetting(key, value) {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ [key]: value })
+                });
+
+                if (response.ok) {
+                    showNotification('Setting updated successfully', 'success');
+                } else {
+                    showNotification('Failed to update setting', 'error');
+                }
+            } catch (error) {
+                showNotification('Error updating setting', 'error');
+            }
+        }
+
+        // Test Daily Post
+        async function testDailyPost() {
+            try {
+                const response = await fetch('/admin/api/daily-post/test', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('Daily post test completed!', 'success');
+                } else {
+                    showNotification('Daily post test failed', 'error');
+                }
+            } catch (error) {
+                showNotification('Error testing daily post', 'error');
+            }
+        }
+
+        // Info Card functions
+        function showNewInfoCardForm() {
+            document.getElementById('new-info-card-form').style.display = 'block';
+        }
+
+        function hideNewInfoCardForm() {
+            document.getElementById('new-info-card-form').style.display = 'none';
+            document.getElementById('new-card-title').value = '';
+            document.getElementById('new-card-content').value = '';
+        }
+
+        async function createInfoCard() {
+            const title = document.getElementById('new-card-title').value;
+            const content = document.getElementById('new-card-content').value;
+
+            if (!title || !content) {
+                showNotification('Title and content are required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, text: content })
+                });
+
+                if (response.ok) {
+                    showNotification('Info card created successfully', 'success');
+                    hideNewInfoCardForm();
+                    loadInfoCards();
+                } else {
+                    showNotification('Failed to create info card', 'error');
+                }
+            } catch (error) {
+                showNotification('Error creating info card', 'error');
+            }
+        }
+
+        async function publishInfoCard(id) {
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}/publish`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    showNotification('Info card published successfully', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Failed to publish info card', 'error');
+                }
+            } catch (error) {
+                showNotification('Error publishing info card', 'error');
+            }
+        }
+
+        async function deleteInfoCard(id) {
+            if (!confirm('Are you sure you want to delete this info card?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification('Info card deleted successfully', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Failed to delete info card', 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting info card', 'error');
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+
+            if (type === 'success') notification.style.background = 'var(--success)';
+            else if (type === 'error') notification.style.background = 'var(--error)';
+            else notification.style.background = 'var(--primary)';
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
     </script>
 </body>

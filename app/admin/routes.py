@@ -525,6 +525,32 @@ def update_daily_post_settings(
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@router.put("/api/daily-post/settings")
+def update_single_daily_post_setting(
+    setting: dict,
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Aggiorna una singola impostazione del post giornaliero."""
+    from app.database import update_daily_post_settings
+
+    try:
+        key = list(setting.keys())[0]
+        value = setting[key]
+
+        # Converti valori se necessario
+        if key == "max_messages":
+            value = int(value)
+        elif key == "enabled":
+            value = bool(value)
+
+        # Crea un oggetto settings parziale
+        settings_dict = {key: value}
+        result = update_daily_post_settings(db=db, **settings_dict)
+        return {"status": "success", "message": f"Impostazione {key} aggiornata", "data": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @router.post("/api/daily-post/test")
 def test_daily_post(user: str = Depends(get_current_user)):
     """API per testare il post giornaliero."""
@@ -576,6 +602,24 @@ def debug_admin_credentials():
     }
 
     return debug_info
+
+@router.get("/api/settings/instagram")
+def get_instagram_settings(user: str = Depends(get_current_user)):
+    """Ottieni impostazioni Instagram."""
+    import os
+    return {
+        "username": os.getenv("INSTAGRAM_USERNAME", "Not configured"),
+        "configured": bool(os.getenv("INSTAGRAM_USERNAME"))
+    }
+
+@router.get("/api/settings/gemini")
+def get_gemini_settings(user: str = Depends(get_current_user)):
+    """Ottieni stato Gemini API."""
+    import os
+    return {
+        "status": "Configured" if os.getenv("GEMINI_API_KEY") else "Not configured",
+        "configured": bool(os.getenv("GEMINI_API_KEY"))
+    }
 
 # --- Info Cards Management ---
 
