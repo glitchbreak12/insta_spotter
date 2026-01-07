@@ -1001,8 +1001,8 @@
             </div>
         </div>
 
-        <!-- Messages List -->
-        <div class="messages-list" id="messagesList">
+        <!-- Messages List (separate instance for messages section) -->
+        <div class="messages-list" id="messages-section-list">
             <div class="loading">
                 <div class="spinner"></div>
                 <div>Loading messages...</div>
@@ -1809,7 +1809,9 @@
             }
 
             // Load content for dynamic sections
-            if (sectionName === 'daily-post') {
+            if (sectionName === 'messages') {
+                loadMessagesSection();
+            } else if (sectionName === 'daily-post') {
                 loadDailyPostSettings();
             } else if (sectionName === 'info-cards') {
                 loadInfoCards();
@@ -1857,6 +1859,7 @@
                 const response = await fetch('/admin/api/daily-post/settings');
                 if (response.ok) {
                     const settings = await response.json();
+                    console.log('Daily post settings loaded:', settings); // Debug
                     content.innerHTML = `
                         <div class="setting-item">
                             <label>Enabled:</label>
@@ -1955,6 +1958,31 @@
                 }
             } catch (error) {
                 content.innerHTML = '<div class="error">Error loading info cards</div>';
+            }
+        }
+
+        // Load Messages Section
+        async function loadMessagesSection() {
+            const messagesList = document.getElementById('messages-section-list');
+            if (!messagesList) return;
+
+            messagesList.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading messages...</div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    renderMessages(data.messages || [], messagesList);
+                } else {
+                    messagesList.innerHTML = '<div class="error">Failed to load messages</div>';
+                }
+            } catch (error) {
+                messagesList.innerHTML = '<div class="error">Error loading messages</div>';
             }
         }
 
@@ -2162,19 +2190,11 @@
         }
 
         // Dashboard data management
-        async function loadDashboardData() {
-            await Promise.all([
-                loadStats(),
-                loadMessages()
-            ]);
-        }
-
         async function refreshDashboardData() {
             // Refresh only stats and messages, not settings
             const activeSection = document.querySelector('.content-section.active');
             if (activeSection && activeSection.id === 'dashboard-section') {
-                await loadStats();
-                await loadMessages();
+                await loadDashboardData(true); // silent refresh
             }
         }
 
@@ -2213,9 +2233,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Start auto-refresh
             startAutoRefresh();
-
-            // Load initial data
-            loadDashboardData();
 
             // Show dashboard section by default
             showSection('dashboard');
