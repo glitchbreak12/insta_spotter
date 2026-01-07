@@ -68,9 +68,12 @@ def run_migration():
         # Add message_type and title columns
         try:
             print("Aggiungo le colonne 'message_type' e 'title' alla tabella 'spotted_messages'...")
-            connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN message_type VARCHAR DEFAULT "spotted"'))
+            # Add columns one by one to avoid SQL syntax issues
+            connection.execute(text("ALTER TABLE spotted_messages ADD COLUMN message_type VARCHAR"))
             connection.commit()
-            connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN title VARCHAR'))
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'spotted' WHERE message_type IS NULL"))
+            connection.commit()
+            connection.execute(text("ALTER TABLE spotted_messages ADD COLUMN title VARCHAR"))
             connection.commit()
             print("Colonne 'message_type' e 'title' aggiunte con successo.")
         except Exception as e:
