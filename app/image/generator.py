@@ -53,7 +53,7 @@ class ImageGenerator:
 
                 if not found:
                     # Configurazione vuota - imgkit userà il PATH
-            self.config = {}
+                    self.config = {}
                     print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 

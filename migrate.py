@@ -7,33 +7,30 @@ def run_migration():
     with engine.connect() as connection:
         # Migrate media_pk column
         try:
-            print("Aggiungo la colonna 'media_pk' alla tabella 'spotted_messages'...")
             connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN media_pk VARCHAR'))
             connection.commit()
-            print("Colonna 'media_pk' aggiunta con successo.")
+            print("✅ Colonna 'media_pk' aggiunta con successo.")
         except Exception as e:
-            if "duplicate column name" in str(e):
-                print("La colonna 'media_pk' esiste già. Nessuna azione necessaria.")
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonna 'media_pk' già esistente.")
             else:
-                print(f"Errore durante l'aggiunta della colonna 'media_pk': {e}")
-            connection.rollback() # Rollback in case of other errors
+                print(f"❌ Errore colonna 'media_pk': {e}")
+            connection.rollback()
 
         # Migrate gemini_analysis column
         try:
-            print("Aggiungo la colonna 'gemini_analysis' alla tabella 'spotted_messages'...")
             connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN gemini_analysis VARCHAR'))
             connection.commit()
-            print("Colonna 'gemini_analysis' aggiunta con successo.")
+            print("✅ Colonna 'gemini_analysis' aggiunta con successo.")
         except Exception as e:
-            if "duplicate column name" in str(e):
-                print("La colonna 'gemini_analysis' esiste già. Nessuna azione necessaria.")
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonna 'gemini_analysis' già esistente.")
             else:
-                print(f"Errore durante l'aggiunta della colonna 'gemini_analysis': {e}")
-            connection.rollback() # Rollback in case of other errors
+                print(f"❌ Errore colonna 'gemini_analysis': {e}")
+            connection.rollback()
 
         # Create technical_users table
         try:
-            print("Creo la tabella 'technical_users'...")
             connection.execute(text('''
                 CREATE TABLE technical_users (
                     id VARCHAR PRIMARY KEY,
@@ -44,30 +41,28 @@ def run_migration():
                 )
             '''))
             connection.commit()
-            print("Tabella 'technical_users' creata con successo.")
+            print("✅ Tabella 'technical_users' creata con successo.")
         except Exception as e:
             if "already exists" in str(e):
-                print("La tabella 'technical_users' esiste già. Nessuna azione necessaria.")
+                print("ℹ️  Tabella 'technical_users' già esistente.")
             else:
-                print(f"Errore durante la creazione della tabella 'technical_users': {e}")
+                print(f"❌ Errore tabella 'technical_users': {e}")
             connection.rollback()
 
         # Add foreign key to spotted_messages
         try:
-            print("Aggiungo la colonna 'technical_user_id' alla tabella 'spotted_messages'...")
             connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN technical_user_id VARCHAR REFERENCES technical_users(id)'))
             connection.commit()
-            print("Colonna 'technical_user_id' aggiunta con successo.")
+            print("✅ Colonna 'technical_user_id' aggiunta con successo.")
         except Exception as e:
-            if "duplicate column name" in str(e):
-                print("La colonna 'technical_user_id' esiste già. Nessuna azione necessaria.")
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonna 'technical_user_id' già esistente.")
             else:
-                print(f"Errore durante l'aggiunta della colonna 'technical_user_id': {e}")
+                print(f"❌ Errore colonna 'technical_user_id': {e}")
             connection.rollback()
 
         # Add message_type and title columns
         try:
-            print("Aggiungo le colonne 'message_type' e 'title' alla tabella 'spotted_messages'...")
             # Add columns one by one to avoid SQL syntax issues
             connection.execute(text("ALTER TABLE spotted_messages ADD COLUMN message_type VARCHAR"))
             connection.commit()
@@ -75,17 +70,16 @@ def run_migration():
             connection.commit()
             connection.execute(text("ALTER TABLE spotted_messages ADD COLUMN title VARCHAR"))
             connection.commit()
-            print("Colonne 'message_type' e 'title' aggiunte con successo.")
+            print("✅ Colonne 'message_type' e 'title' aggiunte con successo.")
         except Exception as e:
-            if "duplicate column name" in str(e):
-                print("Le colonne 'message_type' e 'title' esistono già. Nessuna azione necessaria.")
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonne 'message_type' e 'title' già esistenti.")
             else:
-                print(f"Errore durante l'aggiunta delle colonne: {e}")
+                print(f"❌ Errore colonne message_type/title: {e}")
             connection.rollback()
 
         # Create daily_post_settings table
         try:
-            print("Creo la tabella 'daily_post_settings'...")
             connection.execute(text('''
                 CREATE TABLE daily_post_settings (
                     id INTEGER PRIMARY KEY,
@@ -101,7 +95,7 @@ def run_migration():
                 )
             '''))
             connection.commit()
-            print("Tabella 'daily_post_settings' creata con successo.")
+            print("✅ Tabella 'daily_post_settings' creata con successo.")
 
             # Insert default settings
             connection.execute(text('''
@@ -109,15 +103,15 @@ def run_migration():
                 VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap')
             '''))
             connection.commit()
-            print("Impostazioni predefinite per il post giornaliero inserite.")
+            print("✅ Impostazioni predefinite per il post giornaliero inserite.")
         except Exception as e:
             if "already exists" in str(e):
-                print("La tabella 'daily_post_settings' esiste già. Nessuna azione necessaria.")
+                print("ℹ️  Tabella 'daily_post_settings' già esistente.")
             else:
-                print(f"Errore durante la creazione della tabella 'daily_post_settings': {e}")
+                print(f"❌ Errore tabella 'daily_post_settings': {e}")
             connection.rollback()
 
-    print("Migrazione database completata.")
+    print("\n🎉 Migrazione database completata con successo!")
 
 if __name__ == "__main__":
     run_migration()
