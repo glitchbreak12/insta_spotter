@@ -39,6 +39,14 @@ except Exception as e:
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")  # Deve essere pre-hashato!
 
+# Fallback temporaneo per test (RIMUOVI IN PRODUZIONE!)
+if not ADMIN_PASSWORD_HASH and not os.getenv("ADMIN_PASSWORD"):
+    logger.warning("🔧 USING TEMPORARY ADMIN CREDENTIALS FOR TESTING!")
+    logger.warning("🔧 Username: admin, Password: admin123")
+    logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
+    ADMIN_USERNAME = "admin"
+    ADMIN_PASSWORD_HASH = pwd_context.hash("admin123")  # Password temporanea: admin123
+
 # Se non è disponibile hash, prova dalla password in plaintext (ONLY FOR SETUP)
 if not ADMIN_PASSWORD_HASH:
     admin_pwd = os.getenv("ADMIN_PASSWORD")
@@ -47,6 +55,9 @@ if not ADMIN_PASSWORD_HASH:
         logger.warning("⚠️ Password configurata da ADMIN_PASSWORD plaintext. Usa ADMIN_PASSWORD_HASH per produzione!")
     else:
         logger.error("❌ ADMIN_PASSWORD_HASH o ADMIN_PASSWORD non configurati!")
+        # Debug: mostra quali env vars sono disponibili
+        logger.error(f"🔍 Available env vars with ADMIN: {[k for k in os.environ.keys() if 'ADMIN' in k.upper()]}")
+        logger.error(f"🔍 Sample env vars: {list(os.environ.keys())[:5]}...")
 
 # --- Funzioni di Utility Sicure ---
 
