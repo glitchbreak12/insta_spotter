@@ -561,6 +561,22 @@ def get_daily_post_stats(user: str = Depends(get_current_user), db: Session = De
     except Exception as e:
         return {"error": str(e)}
 
+@router.get("/api/admin/debug")
+def debug_admin_credentials():
+    """Endpoint di debug per vedere le credenziali configurate (SENZA password)."""
+    import os
+    from app.admin.security import ADMIN_USERNAME
+
+    debug_info = {
+        "configured_username": ADMIN_USERNAME,
+        "has_password_hash": bool(os.getenv("ADMIN_PASSWORD_HASH") or os.getenv("REPLIT_ADMIN_PASSWORD_HASH")),
+        "has_password": bool(os.getenv("ADMIN_PASSWORD") or os.getenv("REPLIT_ADMIN_PASSWORD")),
+        "available_admin_vars": [k for k in os.environ.keys() if 'ADMIN' in k.upper()],
+        "sample_env_vars": list(os.environ.keys())[:10]
+    }
+
+    return debug_info
+
 # --- Info Cards Management ---
 
 @router.get("/info-cards", response_class=HTMLResponse, name="info_cards_page")

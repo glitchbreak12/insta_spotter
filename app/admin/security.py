@@ -36,7 +36,11 @@ except Exception as e:
         pwd_context = PlaintextContext()
 
 # --- Variabili di Ambiente ---
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_USERNAME = (
+    os.getenv("ADMIN_USERNAME") or
+    os.getenv("REPLIT_ADMIN_USERNAME") or
+    "admin"  # fallback
+)
 ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")  # Deve essere pre-hashato!
 
 # Debug: mostra TUTTE le variabili d'ambiente disponibili
@@ -45,8 +49,13 @@ for key, value in os.environ.items():
     if 'ADMIN' in key.upper() or 'SECRET' in key.upper():
         logger.info(f"🔍 ENV VAR: {key} = {'***HIDDEN***' if 'PASSWORD' in key.upper() else value}")
 
-# Prima priorità: ADMIN_PASSWORD (se fornita, hashala)
-admin_pwd = os.getenv("ADMIN_PASSWORD")
+# Prima priorità: ADMIN_PASSWORD (prova diversi prefissi per Replit)
+admin_pwd = (
+    os.getenv("ADMIN_PASSWORD") or
+    os.getenv("REPLIT_ADMIN_PASSWORD") or
+    os.getenv("REPLIT_DB_ADMIN_PASSWORD")
+)
+
 if admin_pwd and not ADMIN_PASSWORD_HASH:
     try:
         ADMIN_PASSWORD_HASH = pwd_context.hash(admin_pwd)
@@ -56,8 +65,14 @@ if admin_pwd and not ADMIN_PASSWORD_HASH:
         import hashlib
         ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
 
-# Seconda priorità: ADMIN_PASSWORD_HASH (se fornita direttamente)
-elif ADMIN_PASSWORD_HASH:
+# Seconda priorità: ADMIN_PASSWORD_HASH (prova diversi prefissi)
+elif not ADMIN_PASSWORD_HASH:
+    ADMIN_PASSWORD_HASH = (
+        os.getenv("ADMIN_PASSWORD_HASH") or
+        os.getenv("REPLIT_ADMIN_PASSWORD_HASH")
+    )
+
+if ADMIN_PASSWORD_HASH:
     logger.info(f"✅ Password hash configurata direttamente (len={len(ADMIN_PASSWORD_HASH)})")
 
 # Terza priorità: fallback temporaneo per test

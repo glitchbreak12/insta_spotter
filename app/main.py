@@ -285,3 +285,31 @@ def read_root():
 def health_check():
     """Health check endpoint per mantenere l'app attiva su Replit."""
     return {"status": "alive", "service": "InstaSpotter"}
+
+@app.get("/debug/admin", tags=["Debug"])
+def debug_admin_config():
+    """Endpoint pubblico di debug per vedere la configurazione admin."""
+    import os
+
+    # Non mostrare password reali per sicurezza
+    debug_info = {
+        "admin_username_configured": bool(
+            os.getenv("ADMIN_USERNAME") or
+            os.getenv("REPLIT_ADMIN_USERNAME")
+        ),
+        "admin_password_configured": bool(
+            os.getenv("ADMIN_PASSWORD") or
+            os.getenv("REPLIT_ADMIN_PASSWORD") or
+            os.getenv("ADMIN_PASSWORD_HASH") or
+            os.getenv("REPLIT_ADMIN_PASSWORD_HASH")
+        ),
+        "available_admin_env_vars": [k for k in os.environ.keys() if 'ADMIN' in k.upper()],
+        "using_temporary_credentials": not any([
+            os.getenv("ADMIN_PASSWORD"),
+            os.getenv("REPLIT_ADMIN_PASSWORD"),
+            os.getenv("ADMIN_PASSWORD_HASH"),
+            os.getenv("REPLIT_ADMIN_PASSWORD_HASH")
+        ])
+    }
+
+    return debug_info
