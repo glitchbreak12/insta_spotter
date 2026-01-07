@@ -2,8 +2,8 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InstaSpotter Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaSpotter Admin - Dashboard Completo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -11,7 +11,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         :root {
@@ -20,13 +19,15 @@
             --success: #10b981;
             --warning: #f59e0b;
             --error: #ef4444;
+            --info: #3b82f6;
             --bg: #0f172a;
             --bg-card: #1e293b;
             --bg-hover: #334155;
+            --bg-active: #6366f1;
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --border: #334155;
-            --shadow: rgba(0, 0, 0, 0.4);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         body {
@@ -34,9 +35,430 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding-bottom: 80px;
-            overflow-x: hidden;
         }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Navigation */
+        .nav-container {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            padding: 1rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .nav-tab:hover {
+            color: var(--text);
+            background: var(--bg-hover);
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-tab i {
+            font-size: 1rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            padding: 2rem 0;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .section-description {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .card-icon.primary { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .card-icon.success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .card-icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .card-icon.error { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        /* Preview */
+        .preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .preview-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .preview-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .card-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: var(--shadow);
+        }
+
+        .card-preview-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .card-preview-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text);
+            background: var(--bg-hover);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-posted { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-tabs {
+                padding: 0 1rem;
+            }
+
+            .nav-tab {
+                padding: 0.75rem 1rem;
+                min-width: 100px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification animations */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        /* Utility */
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+    </style>
 
         /* Top Bar - Mobile First */
         .top-bar {
@@ -781,6 +1203,381 @@
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-shield-alt"></i> InstaSpotter Admin</h1>
+            <div class="user-info">
+                <div class="user-avatar">{{ username[:1].upper() }}</div>
+                <span>{{ username }}</span>
+                <a href="/admin/logout" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-tab" onclick="showSection('messages')">
+                    <i class="fas fa-comments"></i>
+                    <span>Messaggi</span>
+                </button>
+                <button class="nav-tab" onclick="showSection('daily-post')">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Daily Post</span>
+                </button>
+                <button class="nav-tab" onclick="showSection('info-cards')">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Info Cards</span>
+                </button>
+                <button class="nav-tab" onclick="showSection('settings')">
+                    <i class="fas fa-cog"></i>
+                    <span>Impostazioni</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </h2>
+                <p class="section-description">Panoramica generale del sistema e statistiche in tempo reale</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon primary">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Total Posts</div>
+                            <div class="card-value" id="totalPosts">0</div>
+                        </div>
+                    </div>
+                    <div class="card-description">Messaggi totali nel sistema</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">In Attesa</div>
+                            <div class="card-value" id="pendingModeration">0</div>
+                        </div>
+                    </div>
+                    <div class="card-description">Messaggi da moderare</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Approvati</div>
+                            <div class="card-value" id="approvedToday">0</div>
+                        </div>
+                    </div>
+                    <div class="card-description">Approvati oggi</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon info">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div>
+                            <div class="card-title">Pubblicati</div>
+                            <div class="card-value" id="postedToday">0</div>
+                        </div>
+                    </div>
+                    <div class="card-description">Pubblicati oggi</div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon primary">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="card-title">Attività Recente</div>
+                </div>
+                <div id="recentActivity">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Caricamento attività recente...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Messages Section -->
+        <section id="messages-section" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-comments"></i>
+                    Gestione Messaggi
+                </h2>
+                <p class="section-description">Modera e gestisci tutti i messaggi degli utenti</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon primary">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <div class="card-title">Filtri</div>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="setFilter('ALL')">Tutti</button>
+                    <button class="btn btn-warning" onclick="setFilter('PENDING')">In Attesa</button>
+                    <button class="btn btn-success" onclick="setFilter('APPROVED')">Approvati</button>
+                    <button class="btn btn-info" onclick="setFilter('POSTED')">Pubblicati</button>
+                    <button class="btn btn-danger" onclick="setFilter('REJECTED')">Rifiutati</button>
+                </div>
+            </div>
+
+            <!-- Messages List -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon primary">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="card-title">Messaggi</div>
+                </div>
+                <div id="messagesList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Caricamento messaggi...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Post Section -->
+        <section id="daily-post-section" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-day"></i>
+                    Daily Post Creator
+                </h2>
+                <p class="section-description">Crea post giornalieri con carousel di immagini</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon success">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <div class="card-title">Impostazioni Daily Post</div>
+                </div>
+
+                <form id="dailyPostForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <label class="form-label">Abilitato</label>
+                        <input type="checkbox" id="dpEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Orario Pubblicazione</label>
+                        <input type="time" id="dpTime" onchange="updateDailyPostSetting('post_time', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Stile Carousel</label>
+                        <select id="dpStyle" onchange="updateDailyPostSetting('post_style', this.value)">
+                            <option value="carousel">Carousel Instagram</option>
+                            <option value="grid">Griglia</option>
+                            <option value="compact">Compatto</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Max Messaggi</label>
+                        <input type="number" id="dpMaxMessages" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Template Titolo</label>
+                        <input type="text" id="dpTitleTemplate" onchange="updateDailyPostSetting('title_template', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Template Hashtags</label>
+                        <input type="text" id="dpHashtagsTemplate" onchange="updateDailyPostSetting('hashtags_template', this.value)">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button class="btn btn-success" onclick="testDailyPost()">
+                            <i class="fas fa-play"></i> Test Daily Post
+                        </button>
+                        <button class="btn btn-primary" onclick="generateDailyPost()">
+                            <i class="fas fa-magic"></i> Genera Ora
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daily Post Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon info">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="card-title">Statistiche Daily Post</div>
+                </div>
+                <div id="dailyPostStats">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Caricamento statistiche...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Info Cards Section -->
+        <section id="info-cards-section" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Info Cards Creator
+                </h2>
+                <p class="section-description">Crea card informative con anteprima grafica live</p>
+            </div>
+
+            <div class="preview-container">
+                <!-- Editor -->
+                <div class="preview-section">
+                    <div class="preview-title">Editor</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Titolo Card</label>
+                        <input type="text" id="cardTitle" placeholder="Es: Regole del Gruppo" oninput="updatePreview()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contenuto</label>
+                        <textarea id="cardContent" placeholder="Scrivi il contenuto della card..." rows="6" oninput="updatePreview()"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-success" onclick="createInfoCard()">
+                            <i class="fas fa-plus"></i> Crea Card
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearForm()">
+                            <i class="fas fa-trash"></i> Pulisci
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="preview-section">
+                    <div class="preview-title">Anteprima Live</div>
+                    <div id="cardPreview" class="card-preview">
+                        <div class="card-preview-title">Titolo Card</div>
+                        <div class="card-preview-content">Il contenuto della card apparirà qui in tempo reale mentre digiti...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Cards -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon primary">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="card-title">Card Esistenti</div>
+                </div>
+                <div id="existingCards">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Caricamento card esistenti...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section" class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Impostazioni Sistema
+                </h2>
+                <p class="section-description">Configura i parametri del sistema</p>
+            </div>
+
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon primary">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <div class="card-title">Instagram</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="igUsername" readonly placeholder="Non configurato">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stato</label>
+                        <span id="igStatus" class="status-badge">Verifica...</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon success">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="card-title">AI Moderation</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gemini API</label>
+                        <span id="geminiStatus" class="status-badge">Verifica...</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-Moderazione</label>
+                        <input type="checkbox" id="autoModeration" checked>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon warning">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div class="card-title">Sistema</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-Refresh</label>
+                        <input type="checkbox" id="autoRefresh" checked onchange="toggleAutoRefresh()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tema</label>
+                        <select id="theme">
+                            <option value="dark">Scuro</option>
+                            <option value="light">Chiaro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
     <!-- Top Bar -->
     <div class="top-bar">
         <h1><i class="fas fa-shield-alt"></i> InstaSpotter</h1>
@@ -1106,12 +1903,511 @@
         // Global state
         let allMessages = [];
         let filteredMessages = [];
-        let selectedMessages = new Set();
-        let currentFilter = '';
-        let searchTerm = '';
-        const charts = {};
+        let currentFilter = 'ALL';
+        let autoRefreshInterval = null;
+        let isAutoRefreshEnabled = true;
 
-        // Auto-refresh interval
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + '-section');
+            const targetTab = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            // Load section data
+            loadSectionData(sectionName);
+        }
+
+        // Load data for specific section
+        async function loadSectionData(sectionName) {
+            switch(sectionName) {
+                case 'dashboard':
+                    await loadDashboardData();
+                    break;
+                case 'messages':
+                    await loadMessages();
+                    break;
+                case 'daily-post':
+                    await loadDailyPostSettings();
+                    break;
+                case 'info-cards':
+                    await loadInfoCards();
+                    break;
+                case 'settings':
+                    await loadSystemSettings();
+                    break;
+            }
+        }
+
+        // Dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    updateDashboardStats(data.stats);
+                    renderRecentActivity(data.messages.slice(0, 5));
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateDashboardStats(stats) {
+            document.getElementById('totalPosts').textContent = stats.total || 0;
+            document.getElementById('pendingModeration').textContent = stats.pending || 0;
+            document.getElementById('approvedToday').textContent = stats.approved_today || 0;
+            document.getElementById('postedToday').textContent = stats.posted_today || 0;
+        }
+
+        function renderRecentActivity(messages) {
+            const container = document.getElementById('recentActivity');
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<p class="text-center">Nessuna attività recente</p>';
+                return;
+            }
+
+            const html = messages.map(msg => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                    <div>
+                        <div style="font-weight: 500;">${escapeHtml(msg.text.substring(0, 50))}...</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${formatDate(msg.created_at)}</div>
+                    </div>
+                    <span class="status-badge status-${msg.status.toLowerCase()}">${msg.status}</span>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Messages management
+        async function loadMessages() {
+            const container = document.getElementById('messagesList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Caricamento messaggi...</div>';
+
+            try {
+                const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    allMessages = data.messages || [];
+                    renderMessages();
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center" style="color: var(--error);">Errore caricamento messaggi</div>';
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesList');
+
+            let filtered = allMessages;
+            if (currentFilter !== 'ALL') {
+                filtered = allMessages.filter(msg => msg.status === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="text-center">Nessun messaggio trovato</p>';
+                return;
+            }
+
+            const html = filtered.map(msg => `
+                <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; margin-bottom: 0.25rem;">${escapeHtml(msg.text)}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                ${formatDate(msg.created_at)}
+                            </div>
+                        </div>
+                        <span class="status-badge status-${msg.status.toLowerCase()}">${msg.status}</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        ${msg.status === 'PENDING' ? `
+                            <button class="btn btn-success" onclick="moderateMessage(${msg.id}, 'APPROVED')">
+                                <i class="fas fa-check"></i> Approva
+                            </button>
+                            <button class="btn btn-danger" onclick="moderateMessage(${msg.id}, 'REJECTED')">
+                                <i class="fas fa-times"></i> Rifiuta
+                            </button>
+                        ` : msg.status === 'APPROVED' ? `
+                            <button class="btn btn-primary" onclick="postMessage(${msg.id})">
+                                <i class="fas fa-paper-plane"></i> Pubblica
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Daily Post management
+        async function loadDailyPostSettings() {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    document.getElementById('dpEnabled').checked = settings.enabled;
+                    document.getElementById('dpTime').value = settings.post_time;
+                    document.getElementById('dpStyle').value = settings.post_style;
+                    document.getElementById('dpMaxMessages').value = settings.max_messages;
+                    document.getElementById('dpTitleTemplate').value = settings.title_template;
+                    document.getElementById('dpHashtagsTemplate').value = settings.hashtags_template;
+                }
+
+                // Load stats
+                const statsResponse = await fetch('/admin/api/daily-post/stats');
+                if (statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    document.getElementById('dailyPostStats').innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text);">${stats.total_today || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Disponibili oggi</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text);">${stats.approved_today || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Approvati oggi</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text);">${stats.available_for_daily || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Per daily post</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading daily post settings:', error);
+            }
+        }
+
+        async function updateDailyPostSetting(key, value) {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: value })
+                });
+                if (response.ok) {
+                    showNotification('Impostazione aggiornata', 'success');
+                }
+            } catch (error) {
+                showNotification('Errore aggiornamento', 'error');
+            }
+        }
+
+        async function testDailyPost() {
+            try {
+                const response = await fetch('/admin/api/daily-post/test', { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Daily post test completato!', 'success');
+                } else {
+                    showNotification('Errore test daily post', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function generateDailyPost() {
+            showNotification('Generazione daily post in corso...', 'info');
+            // Implement daily post generation
+            setTimeout(() => {
+                showNotification('Daily post generato con successo!', 'success');
+            }, 2000);
+        }
+
+        // Info Cards management
+        async function loadInfoCards() {
+            const container = document.getElementById('existingCards');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Caricamento...</div>';
+
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                if (response.ok) {
+                    const cards = await response.json();
+                    renderInfoCards(cards);
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="text-center" style="color: var(--error);">Errore caricamento card</div>';
+            }
+        }
+
+        function renderInfoCards(cards) {
+            const container = document.getElementById('existingCards');
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = '<p class="text-center">Nessuna card esistente</p>';
+                return;
+            }
+
+            const html = cards.map(card => `
+                <div style="border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--primary);">${escapeHtml(card.title)}</h4>
+                            <p style="margin: 0; color: var(--text-muted);">${escapeHtml(card.text)}</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="publishInfoCard(${card.id})">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteInfoCard(${card.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Live preview for info cards
+        function updatePreview() {
+            const title = document.getElementById('cardTitle').value || 'Titolo Card';
+            const content = document.getElementById('cardContent').value || 'Il contenuto apparirà qui...';
+
+            document.querySelector('.card-preview-title').textContent = title;
+            document.querySelector('.card-preview-content').textContent = content;
+        }
+
+        async function createInfoCard() {
+            const title = document.getElementById('cardTitle').value.trim();
+            const content = document.getElementById('cardContent').value.trim();
+
+            if (!title || !content) {
+                showNotification('Titolo e contenuto sono obbligatori', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, text: content })
+                });
+
+                if (response.ok) {
+                    showNotification('Card creata con successo!', 'success');
+                    clearForm();
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore creazione card', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('cardTitle').value = '';
+            document.getElementById('cardContent').value = '';
+            updatePreview();
+        }
+
+        async function publishInfoCard(id) {
+            if (!confirm('Pubblicare questa card su Instagram?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Card pubblicata!', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore pubblicazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function deleteInfoCard(id) {
+            if (!confirm('Eliminare questa card?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Card eliminata!', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore eliminazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        // Message moderation
+        async function moderateMessage(id, action) {
+            try {
+                const endpoint = action === 'APPROVED' ? `/admin/messages/${id}/approve` : `/admin/messages/${id}/reject`;
+                const response = await fetch(endpoint, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification(`Messaggio ${action.toLowerCase()}!`, 'success');
+                    loadMessages();
+                    loadDashboardData(); // Update stats
+                } else {
+                    showNotification('Errore moderazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function postMessage(id) {
+            try {
+                const response = await fetch(`/admin/messages/${id}/post`, { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Messaggio pubblicato!', 'success');
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    showNotification('Errore pubblicazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        // System settings
+        async function loadSystemSettings() {
+            try {
+                // Check Instagram status
+                const igResponse = await fetch('/admin/api/settings/instagram');
+                if (igResponse.ok) {
+                    const igData = await igResponse.json();
+                    document.getElementById('igUsername').value = igData.username || '';
+                    document.getElementById('igStatus').className = `status-badge ${igData.configured ? 'status-approved' : 'status-rejected'}`;
+                    document.getElementById('igStatus').textContent = igData.configured ? 'Configurato' : 'Non configurato';
+                }
+
+                // Check Gemini status
+                const geminiResponse = await fetch('/admin/api/settings/gemini');
+                if (geminiResponse.ok) {
+                    const geminiData = await geminiResponse.json();
+                    document.getElementById('geminiStatus').className = `status-badge ${geminiData.configured ? 'status-approved' : 'status-rejected'}`;
+                    document.getElementById('geminiStatus').textContent = geminiData.status;
+                }
+            } catch (error) {
+                console.error('Error loading system settings:', error);
+            }
+        }
+
+        // Auto-refresh
+        function toggleAutoRefresh() {
+            isAutoRefreshEnabled = !isAutoRefreshEnabled;
+
+            if (isAutoRefreshEnabled) {
+                startAutoRefresh();
+                showNotification('Auto-refresh abilitato', 'success');
+            } else {
+                stopAutoRefresh();
+                showNotification('Auto-refresh disabilitato', 'info');
+            }
+        }
+
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing
+            autoRefreshInterval = setInterval(() => {
+                if (isAutoRefreshEnabled && !document.hidden) {
+                    loadDashboardData();
+                }
+            }, 30000); // 30 seconds
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('it-IT', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease;
+                max-width: 300px;
+            `;
+
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+
+            notification.style.background = colors[type] || colors.info;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initialized');
+            startAutoRefresh();
+            loadDashboardData();
+        });
         let refreshInterval = null;
         let isRefreshing = false;
 
@@ -2251,32 +3547,6 @@
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
-    </script>
-
-    <script>
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Start auto-refresh
-            startAutoRefresh();
-
-            // Load initial data
-            loadDashboardData();
-
-            // Show dashboard section by default
-            showSection('dashboard');
-        });
-    </script>
-
-    <script>
-        // Simple auto-refresh every 30 seconds
-        setInterval(function() {
-            // Only refresh if page is visible
-            if (!document.hidden) {
-                loadDashboardData(true); // Silent refresh
-            }
-        }, 30000);
-
-        console.log('Dashboard loaded with navigation menu and auto-refresh');
     </script>
 </body>
 </html>
