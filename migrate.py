@@ -113,11 +113,12 @@ def run_migration():
 
         # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)
         try:
-            # Aggiorna tutti i valori minuscoli al formato corretto maiuscolo
-            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE LOWER(message_type) = 'spotted'"))
-            connection.execute(text("UPDATE spotted_messages SET message_type = 'INFO' WHERE LOWER(message_type) = 'info'"))
-            # Imposta default per valori nulli
-            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE message_type IS NULL OR message_type = ''"))
+            # Aggiorna tutti i valori al formato corretto maiuscolo
+            # Nota: su PostgreSQL non possiamo usare LOWER su enum, quindi usiamo valori diretti
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE message_type::text = 'spotted'"))
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'INFO' WHERE message_type::text = 'info'"))
+            # Imposta default per valori nulli o non validi
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE message_type IS NULL OR message_type::text = ''"))
             connection.commit()
             print("✅ Corretti valori message_type al formato enum corretto (maiuscolo)")
         except Exception as e:

@@ -648,8 +648,7 @@ def get_info_cards(user: str = Depends(get_current_user), db: Session = Depends(
 
 @router.post("/api/info-cards")
 def create_info_card(
-    title: str = Form(...),
-    content: str = Form(...),
+    card_data: dict,
     user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -658,6 +657,12 @@ def create_info_card(
     from app.tasks import generate_technical_user
 
     try:
+        title = card_data.get('title')
+        content = card_data.get('text')  # Nota: il JS invia 'text', non 'content'
+
+        if not title or not content:
+            return {"status": "error", "message": "Title and content are required"}
+
         # Crea utente tecnico admin
         admin_user = generate_technical_user(db)
 
@@ -714,6 +719,31 @@ def publish_info_card(card_id: int, user: str = Depends(get_current_user), db: S
 
     except Exception as e:
         db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/info-cards/preview")
+def preview_info_card(
+    card_data: dict,
+    user: str = Depends(get_current_user)
+):
+    """API per ottenere una preview dell'info card."""
+    try:
+        title = card_data.get('title', '')
+        content = card_data.get('text', '')
+
+        if not title or not content:
+            return {"status": "error", "message": "Title and content are required for preview"}
+
+        # Genera HTML preview
+        preview_html = f"""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto;">
+            <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem; text-align: center;">{title}</h2>
+            <p style="margin: 0; line-height: 1.6; text-align: center;">{content}</p>
+        </div>
+        """
+
+        return {"status": "success", "preview_html": preview_html}
+    except Exception as e:
         return {"status": "error", "message": str(e)}
 
 @router.delete("/api/info-cards/{card_id}")

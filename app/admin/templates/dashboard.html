@@ -758,6 +758,9 @@
     <div class="top-bar">
         <h1><i class="fas fa-shield-alt"></i> InstaSpotter</h1>
         <div class="user-menu">
+            <button id="auto-refresh-toggle" class="btn btn-warning" onclick="toggleAutoRefresh()" style="margin-right: 0.5rem;" title="Auto Refresh">
+                ⏸️ Pause
+            </button>
             <button class="logout-btn" onclick="refreshPosts()" style="margin-right: 0.5rem;" title="Refresh">
                 <i class="fas fa-sync-alt" id="refresh-icon"></i>
             </button>
@@ -1778,6 +1781,10 @@
             return div.innerHTML;
         }
 
+        // Auto-refresh variables
+        let autoRefreshEnabled = true;
+        let refreshInterval;
+
         // Navigation functions
         function showSection(sectionName) {
             // Hide all sections
@@ -1808,6 +1815,38 @@
                 loadInfoCards();
             } else if (sectionName === 'settings') {
                 loadSystemSettings();
+            }
+        }
+
+        // Auto-refresh functions
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                if (autoRefreshEnabled) {
+                    refreshDashboardData();
+                }
+            }, 5000); // Refresh ogni 5 secondi
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+
+        function toggleAutoRefresh() {
+            autoRefreshEnabled = !autoRefreshEnabled;
+            const btn = document.getElementById('auto-refresh-toggle');
+            if (btn) {
+                btn.textContent = autoRefreshEnabled ? '⏸️ Pause Auto-Refresh' : '▶️ Start Auto-Refresh';
+                btn.className = autoRefreshEnabled ? 'btn btn-warning' : 'btn btn-success';
+            }
+
+            if (autoRefreshEnabled) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
             }
         }
 
@@ -1872,10 +1911,23 @@
                             <i class="fas fa-plus"></i> Create New Info Card
                         </button>
                         <div id="new-info-card-form" style="display: none; margin-bottom: 1rem;">
-                            <input type="text" id="new-card-title" placeholder="Card Title" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;">
-                            <textarea id="new-card-content" placeholder="Card Content" rows="3" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem;"></textarea>
-                            <button class="btn btn-success" onclick="createInfoCard()">Create</button>
-                            <button class="btn btn-secondary" onclick="hideNewInfoCardForm()">Cancel</button>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <h5 style="margin-bottom: 0.5rem;">Editor</h5>
+                                    <input type="text" id="new-card-title" placeholder="Card Title" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px;">
+                                    <textarea id="new-card-content" placeholder="Card Content" rows="4" style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px;"></textarea>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="btn btn-success" onclick="createInfoCard()">Create Card</button>
+                                        <button class="btn btn-secondary" onclick="hideNewInfoCardForm()">Cancel</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 style="margin-bottom: 0.5rem;">Preview</h5>
+                                    <div id="card-preview" style="border: 2px dashed var(--border); border-radius: 12px; padding: 1rem; min-height: 150px; display: flex; align-items: center; justify-content: center; background: var(--bg-hover);">
+                                        <p style="text-align: center; color: var(--text-muted);">Inserisci titolo e contenuto per vedere l'anteprima</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     `;
 
@@ -1973,12 +2025,72 @@
         // Info Card functions
         function showNewInfoCardForm() {
             document.getElementById('new-info-card-form').style.display = 'block';
+            // Avvia live preview
+            startLivePreview();
         }
 
         function hideNewInfoCardForm() {
             document.getElementById('new-info-card-form').style.display = 'none';
             document.getElementById('new-card-title').value = '';
             document.getElementById('new-card-content').value = '';
+            stopLivePreview();
+        }
+
+        // Live preview functions
+        let previewTimeout;
+        function startLivePreview() {
+            const titleInput = document.getElementById('new-card-title');
+            const contentInput = document.getElementById('new-card-content');
+
+            function updatePreview() {
+                const title = titleInput.value;
+                const content = contentInput.value;
+
+                if (title && content) {
+                    updateCardPreview(title, content);
+                } else {
+                    document.getElementById('card-preview').innerHTML = '<p style="text-align: center; color: #666;">Inserisci titolo e contenuto per vedere l\'anteprima</p>';
+                }
+            }
+
+            // Event listeners per live preview
+            titleInput.addEventListener('input', function() {
+                clearTimeout(previewTimeout);
+                previewTimeout = setTimeout(updatePreview, 500);
+            });
+
+            contentInput.addEventListener('input', function() {
+                clearTimeout(previewTimeout);
+                previewTimeout = setTimeout(updatePreview, 500);
+            });
+
+            // Preview iniziale
+            updatePreview();
+        }
+
+        function stopLivePreview() {
+            clearTimeout(previewTimeout);
+        }
+
+        async function updateCardPreview(title, content) {
+            try {
+                const response = await fetch('/admin/api/info-cards/preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ title, text: content })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('card-preview').innerHTML = data.preview_html;
+                } else {
+                    document.getElementById('card-preview').innerHTML = '<p style="text-align: center; color: #ef4444;">Errore nel caricamento anteprima</p>';
+                }
+            } catch (error) {
+                document.getElementById('card-preview').innerHTML = '<p style="text-align: center; color: #ef4444;">Errore di connessione</p>';
+            }
         }
 
         async function createInfoCard() {
@@ -2049,6 +2161,23 @@
             }
         }
 
+        // Dashboard data management
+        async function loadDashboardData() {
+            await Promise.all([
+                loadStats(),
+                loadMessages()
+            ]);
+        }
+
+        async function refreshDashboardData() {
+            // Refresh only stats and messages, not settings
+            const activeSection = document.querySelector('.content-section.active');
+            if (activeSection && activeSection.id === 'dashboard-section') {
+                await loadStats();
+                await loadMessages();
+            }
+        }
+
         // Notification system
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
@@ -2077,6 +2206,20 @@
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }
+    </script>
+
+    <script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start auto-refresh
+            startAutoRefresh();
+
+            // Load initial data
+            loadDashboardData();
+
+            // Show dashboard section by default
+            showSection('dashboard');
+        });
     </script>
 </body>
 </html>
