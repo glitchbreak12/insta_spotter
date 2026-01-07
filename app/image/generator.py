@@ -53,7 +53,7 @@ class ImageGenerator:
 
                 if not found:
                     # Configurazione vuota - imgkit userà il PATH
-                    self.config = {}
+            self.config = {}
                     print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 
@@ -87,7 +87,7 @@ class ImageGenerator:
             print(f"🎨 [DEBUG] Usando template SPOTTED: {template_path}")
 
         template = self.template_env.get_template(os.path.basename(template_path))
-
+        
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
@@ -650,20 +650,20 @@ class ImageGenerator:
 
         # Prima prova con wkhtmltoimage (per template semplici)
         if self.wkhtmltoimage_available:
-        try:
-            # Renderizza l'HTML con il messaggio e il percorso base
-            html_content = self._render_html(message_text, message_id, message_type, title)
+            try:
+                # Renderizza l'HTML con il messaggio e il percorso base
+                html_content = self._render_html(message_text, message_id, message_type, title)
 
-            # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
-            options = {
-                'width': self.image_width,
-                'encoding': "UTF-8",
-                'enable-local-file-access': None, # Necessario per caricare font locali
-                'quiet': '' # Sopprime l'output di wkhtmltoimage
-            }
+                # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
+                options = {
+                    'width': self.image_width,
+                    'encoding': "UTF-8",
+                    'enable-local-file-access': None, # Necessario per caricare font locali
+                    'quiet': '' # Sopprime l'output di wkhtmltoimage
+                }
 
                 # Genera l'immagine dall'HTML usando wkhtmltoimage
-            imgkit.from_string(html_content, output_path, options=options, config=self.config)
+                imgkit.from_string(html_content, output_path, options=options, config=self.config)
 
                 print(f"Immagine generata con successo (wkhtmltoimage): {output_path}")
 
@@ -671,7 +671,7 @@ class ImageGenerator:
                 optimized_path = self._optimize_for_instagram(output_path)
                 return optimized_path
 
-        except Exception as e:
+            except Exception as e:
                 # Controlla se è un errore di compatibilità GLIBC o librerie
                 error_str = str(e).lower()
                 is_glibc_error = ('glibc' in error_str and ('version' in error_str or 'not found' in error_str)) or \
@@ -692,16 +692,16 @@ class ImageGenerator:
                         print(f"❌ Playwright fallito: {pw_error}")
                         print("Cado su PIL come ultimo fallback...")
 
-                    # Terza opzione: PIL come fallback finale
-                    if PIL_AVAILABLE:
-                        try:
-                            print("🔄 Uso PIL come fallback finale...")
-                            return self._generate_with_pil(message_text, output_path, message_id, message_type, title)
-                        except Exception as pil_error:
-                            print(f"❌ Anche PIL ha fallito: {pil_error}")
-                            raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
-                    else:
-                        raise RuntimeError(f"wkhtmltoimage fallito e nessun fallback disponibile: {e}") from e
+                        # Terza opzione: PIL come fallback finale
+                        if PIL_AVAILABLE:
+                            try:
+                                print("🔄 Uso PIL come fallback finale...")
+                                return self._generate_with_pil(message_text, output_path, message_id, message_type, title)
+                            except Exception as pil_error:
+                                print(f"❌ Anche PIL ha fallito: {pil_error}")
+                                raise RuntimeError(f"Tutti i metodi hanno fallito. wkhtmltoimage: {e}, Playwright: {pw_error if 'pw_error' in locals() else 'N/A'}, PIL: {pil_error}") from pil_error
+                        else:
+                            raise RuntimeError(f"wkhtmltoimage fallito e nessun fallback disponibile: {e}") from e
         else:
             # wkhtmltoimage non disponibile, prova prima Playwright poi PIL
             if self.playwright_available:
@@ -715,7 +715,7 @@ class ImageGenerator:
             print("🔄 wkhtmltoimage e Playwright non disponibili, uso PIL...")
             if PIL_AVAILABLE:
                 try:
-                    return self._generate_with_pil(message_text, output_path, message_id)
+                    return self._generate_with_pil(message_text, output_path, message_id, message_type, title)
                 except Exception as pil_error:
                     raise RuntimeError(f"Tutti i fallback hanno fallito: {pil_error}") from pil_error
             else:
