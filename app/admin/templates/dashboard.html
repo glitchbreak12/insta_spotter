@@ -636,7 +636,7 @@
                 document.getElementById('dpTitleTemplate').value = settings.title_template;
 
                 // Load stats
-                const statsResponse = await fetch('/admin/api/daily-post/stats');
+                const statsResponse = await apiCall('/admin/api/daily-post/stats');
                 const stats = await statsResponse.json();
 
                 document.getElementById('dailyPostStats').innerHTML = `
@@ -673,7 +673,7 @@
 
         async function testDailyPost() {
             try {
-                const response = await fetch('/admin/api/daily-post/test', { method: 'POST' });
+                const response = await apiCall('/admin/api/daily-post/test', { method: 'POST' });
                 alert(response.ok ? 'Daily post test completed!' : 'Test failed');
             } catch (error) {
                 alert('Connection error');
@@ -702,7 +702,7 @@
                 document.getElementById('dpTitleTemplate').value = settings.title_template;
 
                 // Load stats
-                const statsResponse = await fetch('/admin/api/daily-post/stats');
+                const statsResponse = await apiCall('/admin/api/daily-post/stats');
                 const stats = await statsResponse.json();
 
                 document.getElementById('dailyPostStats').innerHTML = `
@@ -739,7 +739,7 @@
 
         async function testDailyPost() {
             try {
-                const response = await fetch('/admin/api/daily-post/test', { method: 'POST' });
+                const response = await apiCall('/admin/api/daily-post/test', { method: 'POST' });
                 alert(response.ok ? 'Daily post test completed!' : 'Test failed');
             } catch (error) {
                 alert('Connection error');
@@ -790,7 +790,7 @@
                 formData.append('title', title);
                 formData.append('text', content);
 
-                const response = await fetch('/admin/api/info-cards', {
+                const response = await apiCall('/admin/api/info-cards', {
                     method: 'POST',
                     body: formData
                 });
@@ -812,7 +812,7 @@
             container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading cards...</div>';
 
             try {
-                const response = await fetch('/admin/api/info-cards');
+                const response = await apiCall('/admin/api/info-cards');
                 const cards = await response.json();
 
                 if (!cards || cards.length === 0) {
@@ -845,7 +845,7 @@
             if (!confirm('Publish this card to Instagram?')) return;
 
             try {
-                const response = await fetch(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                const response = await apiCall(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
                 alert(response.ok ? 'Card published successfully!' : 'Error publishing card');
                 if (response.ok) loadInfoCards();
             } catch (error) {
@@ -857,7 +857,7 @@
             if (!confirm('Delete this card?')) return;
 
             try {
-                const response = await fetch(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                const response = await apiCall(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
                 alert(response.ok ? 'Card deleted successfully!' : 'Error deleting card');
                 if (response.ok) loadInfoCards();
             } catch (error) {
@@ -899,7 +899,7 @@
                 formData.append('title', title);
                 formData.append('text', content);
 
-                const response = await fetch('/admin/api/info-cards', {
+                const response = await apiCall('/admin/api/info-cards', {
                     method: 'POST',
                     body: formData
                 });
@@ -921,7 +921,7 @@
             container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading cards...</div>';
 
             try {
-                const response = await fetch('/admin/api/info-cards');
+                const response = await apiCall('/admin/api/info-cards');
                 const cards = await response.json();
 
                 if (!cards || cards.length === 0) {
@@ -954,7 +954,7 @@
             if (!confirm('Publish this card to Instagram?')) return;
 
             try {
-                const response = await fetch(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                const response = await apiCall(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
                 alert(response.ok ? 'Card published successfully!' : 'Error publishing card');
                 if (response.ok) loadInfoCards();
             } catch (error) {
@@ -966,7 +966,7 @@
             if (!confirm('Delete this card?')) return;
 
             try {
-                const response = await fetch(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                const response = await apiCall(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
                 alert(response.ok ? 'Card deleted successfully!' : 'Error deleting card');
                 if (response.ok) loadInfoCards();
             } catch (error) {
@@ -977,14 +977,14 @@
         // System settings
         async function loadSystemSettings() {
             try {
-                const igResponse = await fetch('/admin/api/settings/instagram');
+                const igResponse = await apiCall('/admin/api/settings/instagram');
                 const igData = await igResponse.json();
                 document.getElementById('igStatus').innerHTML = `
                     Username: ${igData.username || 'Not configured'}<br>
                     Status: <span style="color: ${igData.configured ? '#10b981' : '#f44336'};">${igData.configured ? 'Configured' : 'Not configured'}</span>
                 `;
 
-                const geminiResponse = await fetch('/admin/api/settings/gemini');
+                const geminiResponse = await apiCall('/admin/api/settings/gemini');
                 const geminiData = await geminiResponse.json();
                 document.getElementById('geminiStatus').innerHTML = `
                     Status: <span style="color: ${geminiData.configured ? '#10b981' : '#f44336'};">${geminiData.status}</span>
