@@ -50,32 +50,51 @@ elif test_python "/opt/python/3.x/bin/python3"; then
     PYTHON_CMD="/opt/python/3.x/bin/python3"
     PIP_CMD="/opt/python/3.x/bin/pip3"
     echo "✅ Found Python: /opt/python/3.x/bin/python3"
-# Try to find in Nix store
+# Try to find in Nix store (quick search)
 else
-    echo "🔍 Searching in Nix store..."
-    for nix_python in $(find /nix/store -maxdepth 3 -name python3 -type f -executable 2>/dev/null | head -5); do
-        if test_python "$nix_python"; then
-            PYTHON_CMD="$nix_python"
-            # Try to find corresponding pip
-            nix_dir=$(dirname "$nix_python")
+    echo "🔍 Quick search in common Nix locations..."
+
+    # Quick check of most common Nix locations
+    for nix_path in "/nix/store"/*/bin/python3; do
+        if [ -f "$nix_path" ] && test_python "$nix_path"; then
+            PYTHON_CMD="$nix_path"
+            nix_dir=$(dirname "$nix_path")
             if [ -x "$nix_dir/pip3" ]; then
                 PIP_CMD="$nix_dir/pip3"
             else
-                PIP_CMD="$nix_python -m pip"
+                PIP_CMD="$PYTHON_CMD -m pip"
             fi
             echo "✅ Found Python: $PYTHON_CMD"
             break
         fi
     done
 
-    # Last resort: search entire system for python3
+    # If still not found, try a faster find with timeout
     if [ -z "$PYTHON_CMD" ]; then
-        echo "🔍 Last resort: searching entire system for python3..."
-        SYSTEM_PYTHON=$(find /usr /opt /home/runner -name python3 -type f -executable 2>/dev/null | grep -v -E '\.(pyc|pyo)$' | head -1)
-        if [ -n "$SYSTEM_PYTHON" ] && test_python "$SYSTEM_PYTHON"; then
-            PYTHON_CMD="$SYSTEM_PYTHON"
-            PIP_CMD="$PYTHON_CMD -m pip"
-            echo "✅ Found Python (system search): $PYTHON_CMD"
+        echo "🔍 Faster search in Nix store..."
+        # Use a more targeted find command with timeout
+        timeout 10 find /nix/store -maxdepth 2 -name python3 -type f -executable 2>/dev/null | head -3 | while read -r nix_python; do
+            if test_python "$nix_python"; then
+                PYTHON_CMD="$nix_python"
+                nix_dir=$(dirname "$nix_python")
+                if [ -x "$nix_dir/pip3" ]; then
+                    PIP_CMD="$nix_dir/pip3"
+                else
+                    PIP_CMD="$nix_python -m pip"
+                fi
+                echo "✅ Found Python: $PYTHON_CMD"
+                break
+            fi
+        done
+    fi
+
+    # Emergency fallback - try direct python3 command again
+    if [ -z "$PYTHON_CMD" ]; then
+        echo "🔍 Emergency fallback..."
+        if test_python python3 2>/dev/null; then
+            PYTHON_CMD="python3"
+            PIP_CMD="pip3"
+            echo "✅ Found Python (emergency): python3"
         fi
     fi
 fi
