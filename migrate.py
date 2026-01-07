@@ -111,21 +111,21 @@ def run_migration():
                 print(f"❌ Errore tabella 'daily_post_settings': {e}")
             connection.rollback()
 
-    # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)
-    try:
-        # Aggiorna tutti i valori minuscoli al formato corretto maiuscolo
-        connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE LOWER(message_type) = 'spotted'"))
-        connection.execute(text("UPDATE spotted_messages SET message_type = 'INFO' WHERE LOWER(message_type) = 'info'"))
-        # Imposta default per valori nulli
-        connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE message_type IS NULL OR message_type = ''"))
-        connection.commit()
-        print("ℹ️ Corretti valori message_type al formato enum corretto (maiuscolo)")
-    except Exception as e:
-        print(f"ℹ️ Colonna message_type già corretta: {e}")
+        # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)
         try:
-            connection.rollback()
-        except:
-            pass
+            # Aggiorna tutti i valori minuscoli al formato corretto maiuscolo
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE LOWER(message_type) = 'spotted'"))
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'INFO' WHERE LOWER(message_type) = 'info'"))
+            # Imposta default per valori nulli
+            connection.execute(text("UPDATE spotted_messages SET message_type = 'SPOTTED' WHERE message_type IS NULL OR message_type = ''"))
+            connection.commit()
+            print("✅ Corretti valori message_type al formato enum corretto (maiuscolo)")
+        except Exception as e:
+            print(f"ℹ️ Colonna message_type già corretta: {e}")
+            try:
+                connection.rollback()
+            except:
+                pass
 
     print("\n🎉 Migrazione database completata con successo!")
 
