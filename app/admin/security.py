@@ -39,12 +39,18 @@ except Exception as e:
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")  # Deve essere pre-hashato!
 
+# Debug: mostra TUTTE le variabili d'ambiente disponibili
+logger.info("🔍 DEBUG: Checking all environment variables...")
+for key, value in os.environ.items():
+    if 'ADMIN' in key.upper() or 'SECRET' in key.upper():
+        logger.info(f"🔍 ENV VAR: {key} = {'***HIDDEN***' if 'PASSWORD' in key.upper() else value}")
+
 # Prima priorità: ADMIN_PASSWORD (se fornita, hashala)
 admin_pwd = os.getenv("ADMIN_PASSWORD")
 if admin_pwd and not ADMIN_PASSWORD_HASH:
     try:
         ADMIN_PASSWORD_HASH = pwd_context.hash(admin_pwd)
-        logger.info("✅ Password configurata da ADMIN_PASSWORD")
+        logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)})")
     except Exception as e:
         logger.warning(f"⚠️ Bcrypt fallito ({e}), uso SHA256")
         import hashlib
@@ -52,7 +58,7 @@ if admin_pwd and not ADMIN_PASSWORD_HASH:
 
 # Seconda priorità: ADMIN_PASSWORD_HASH (se fornita direttamente)
 elif ADMIN_PASSWORD_HASH:
-    logger.info("✅ Password hash configurata direttamente")
+    logger.info(f"✅ Password hash configurata direttamente (len={len(ADMIN_PASSWORD_HASH)})")
 
 # Terza priorità: fallback temporaneo per test
 else:
