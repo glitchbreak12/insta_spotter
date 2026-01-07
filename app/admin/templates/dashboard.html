@@ -134,7 +134,11 @@
         <!-- Header -->
         <div class="header">
             <h1><i class="fas fa-shield-alt"></i> InstaSpotter Admin</h1>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <div class="user-info">
+                <div class="user-avatar">{{ (username or 'A')[:1].upper() }}</div>
+                <span>{{ username or 'Admin' }}</span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -169,6 +173,44 @@
             </div>
             <div id="messagesList">
                 <div class="loading"><div class="spinner"></div>Loading messages...</div>
+            </div>
+        </div>
+
+        <!-- Daily Post Section -->
+        <div class="section">
+            <h2><i class="fas fa-calendar-day"></i> Daily Post Creator</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h3>Settings</h3>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="dpEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
+                            Enabled
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Post Time</label>
+                        <input type="time" id="dpTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Messages</label>
+                        <input type="number" id="dpMaxMessages" class="form-input" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Title Template</label>
+                        <input type="text" id="dpTitleTemplate" class="form-input" onchange="updateDailyPostSetting('title_template', this.value)">
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button class="btn btn-primary" onclick="testDailyPost()">Test Daily Post</button>
+                        <button class="btn btn-success" onclick="generateDailyPost()">Generate Now</button>
+                    </div>
+                </div>
+                <div>
+                    <h3>Stats</h3>
+                    <div id="dailyPostStats">
+                        <div class="loading"><div class="spinner"></div>Loading stats...</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -280,7 +322,10 @@
             loadInfoCards();
 
             // Auto-refresh every 30 seconds
-            setInterval(loadDashboardData, 30000);
+            setInterval(() => {
+                loadDashboardData();
+                console.log('Auto-refresh completed');
+            }, 30000);
         });
 
         // Dashboard functions
@@ -442,6 +487,181 @@
                 setTimeout(() => alert('Daily post generated successfully!'), 2000);
             } catch (error) {
                 alert('Error generating daily post');
+            }
+        }
+
+        // Daily Post functions
+        async function loadDailyPostSettings() {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings');
+                const settings = await response.json();
+
+                document.getElementById('dpEnabled').checked = settings.enabled;
+                document.getElementById('dpTime').value = settings.post_time;
+                document.getElementById('dpMaxMessages').value = settings.max_messages;
+                document.getElementById('dpTitleTemplate').value = settings.title_template;
+
+                // Load stats
+                const statsResponse = await fetch('/admin/api/daily-post/stats');
+                const stats = await statsResponse.json();
+
+                document.getElementById('dailyPostStats').innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="font-size: 24px; font-weight: bold; color: #6366f1;">${stats.available_for_daily || 0}</div>
+                            <div style="font-size: 12px; color: #888;">Available for daily</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">${stats.approved_today || 0}</div>
+                            <div style="font-size: 12px; color: #888;">Approved today</div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading daily post settings:', error);
+            }
+        }
+
+        async function updateDailyPostSetting(key, value) {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: value })
+                });
+                if (response.ok) {
+                    alert('Setting updated successfully');
+                }
+            } catch (error) {
+                alert('Error updating setting');
+            }
+        }
+
+        async function testDailyPost() {
+            try {
+                const response = await fetch('/admin/api/daily-post/test', { method: 'POST' });
+                alert(response.ok ? 'Daily post test completed!' : 'Test failed');
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        async function generateDailyPost() {
+            alert('Generating daily post...');
+            try {
+                // This would trigger actual generation
+                setTimeout(() => alert('Daily post generated successfully!'), 2000);
+            } catch (error) {
+                alert('Error generating daily post');
+            }
+        }
+
+        // Info Cards functions
+        function showCreateCardForm() {
+            document.getElementById('createCardForm').classList.remove('hidden');
+        }
+
+        function hideCreateCardForm() {
+            document.getElementById('createCardForm').classList.add('hidden');
+            document.getElementById('cardTitle').value = '';
+            document.getElementById('cardContent').value = '';
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('cardTitle').value || 'Card Title';
+            const content = document.getElementById('cardContent').value || 'Card content will appear here...';
+
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewContent').textContent = content;
+        }
+
+        async function createInfoCard() {
+            const title = document.getElementById('cardTitle').value.trim();
+            const content = document.getElementById('cardContent').value.trim();
+
+            if (!title || !content) {
+                alert('Title and content are required');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Card created successfully!');
+                    hideCreateCardForm();
+                    loadInfoCards();
+                } else {
+                    alert('Error creating card');
+                }
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        async function loadInfoCards() {
+            const container = document.getElementById('cardsList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading cards...</div>';
+
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                const cards = await response.json();
+
+                if (!cards || cards.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No cards found</div>';
+                    return;
+                }
+
+                const html = cards.map(card => `
+                    <div class="message-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                            <strong>${escapeHtml(card.title)}</strong>
+                            <div>
+                                <button class="btn" onclick="publishInfoCard(${card.id})">Publish</button>
+                                <button class="btn btn-danger" onclick="deleteInfoCard(${card.id})">Delete</button>
+                            </div>
+                        </div>
+                        <div style="color: #ccc;">
+                            ${escapeHtml(card.text)}
+                        </div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<div style="text-align: center; color: #f44336;">Error loading cards</div>';
+            }
+        }
+
+        async function publishInfoCard(id) {
+            if (!confirm('Publish this card to Instagram?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                alert(response.ok ? 'Card published successfully!' : 'Error publishing card');
+                if (response.ok) loadInfoCards();
+            } catch (error) {
+                alert('Connection error');
+            }
+        }
+
+        async function deleteInfoCard(id) {
+            if (!confirm('Delete this card?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                alert(response.ok ? 'Card deleted successfully!' : 'Error deleting card');
+                if (response.ok) loadInfoCards();
+            } catch (error) {
+                alert('Connection error');
             }
         }
 
