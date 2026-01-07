@@ -760,6 +760,53 @@ class ImageGenerator:
             print(f"❌ Errore nella creazione del collage giornaliero: {e}")
             return None
 
+    def create_daily_carousel(self, messages: list, base_filename: str, title: str = None) -> Optional[list]:
+        """
+        Crea un carousel giornaliero con immagini separate per ogni messaggio.
+        La prima immagine contiene il titolo "ecco i post della giornata".
+        Ritorna una lista di percorsi di immagini per carousel Instagram.
+        """
+        if not messages:
+            return None
+
+        try:
+            print(f"🎨 Creando carousel giornaliero con {len(messages)} messaggi...")
+
+            image_paths = []
+
+            # 1. Crea immagine di introduzione con il titolo
+            intro_text = f"📸 {title}\n\nEcco i post della giornata! 🌟"
+            intro_filename = f"{base_filename}_intro.png"
+            intro_path = self.from_text(intro_text, intro_filename, 0)  # ID 0 per intro
+            if intro_path:
+                image_paths.append(intro_path)
+                print(f"✅ Creata immagine introduzione: {intro_path}")
+
+            # 2. Crea immagini individuali per ogni messaggio
+            for i, message in enumerate(messages, 1):
+                try:
+                    message_filename = f"{base_filename}_{i}.png"
+                    message_path = self.from_text(message.text, message_filename, message.id)
+                    if message_path:
+                        image_paths.append(message_path)
+                        print(f"✅ Creata immagine messaggio {i}: {message_path}")
+                    else:
+                        print(f"⚠️ Saltata immagine messaggio {i} - generazione fallita")
+                except Exception as e:
+                    print(f"❌ Errore creazione immagine messaggio {i}: {e}")
+                    continue
+
+            if len(image_paths) > 1:  # Almeno intro + 1 messaggio
+                print(f"🎉 Carousel creato con {len(image_paths)} immagini")
+                return image_paths
+            else:
+                print("❌ Carousel non creato - poche immagini valide")
+                return None
+
+        except Exception as e:
+            print(f"❌ Errore nella creazione del carousel giornaliero: {e}")
+            return None
+
     def _create_grid_layout(self, messages: list, base_filename: str, rows: int, cols: int, title: str = None) -> list:
         """Crea un layout a griglia per il collage giornaliero."""
         if not PIL_AVAILABLE:

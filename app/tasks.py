@@ -235,16 +235,16 @@ def daily_post_task():
 
             print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi per il post giornaliero ---")
 
-            # Genera collage giornaliero
+            # Genera carousel giornaliero
             generator = ImageGenerator()
             today = datetime.utcnow().strftime("%d/%m/%Y")
 
             # Prepara titolo
             title = settings.title_template.format(date=today)
 
-            # Genera collage
-            base_filename = f"daily_recap_{datetime.utcnow().strftime('%Y%m%d')}.png"
-            image_paths = generator.create_daily_collage(messages, base_filename, title)
+            # Genera carousel con immagini individuali
+            base_filename = f"daily_recap_{datetime.utcnow().strftime('%Y%m%d')}"
+            image_paths = generator.create_daily_carousel(messages, base_filename, title)
 
             if not image_paths:
                 print("--- DEBUG [DAILY POST]: ERRORE nella generazione del collage ---")
