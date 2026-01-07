@@ -111,6 +111,14 @@ def run_migration():
                 print(f"❌ Errore tabella 'daily_post_settings': {e}")
             connection.rollback()
 
+    # Correggi valori message_type errati (dovrebbero essere 'spotted' o 'info')
+    try:
+        # Aggiorna tutti i valori nulli o vuoti a 'spotted'
+        conn.execute(text("UPDATE spotted_messages SET message_type = 'spotted' WHERE message_type IS NULL OR message_type = ''"))
+        print("ℹ️ Corretti valori message_type nulli/vuoti")
+    except Exception as e:
+        print(f"ℹ️ Colonna message_type già corretta o non esistente: {e}")
+
     print("\n🎉 Migrazione database completata con successo!")
 
 if __name__ == "__main__":
