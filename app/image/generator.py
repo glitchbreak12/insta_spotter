@@ -77,7 +77,9 @@ class ImageGenerator:
 
     def _render_html(self, message_text: str, message_id: int) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
-        template = self.template_env.get_template(os.path.basename(settings.image.template_path))
+        template_path = settings.image.template_path
+        print(f"🎨 [DEBUG] Usando template: {template_path}")
+        template = self.template_env.get_template(os.path.basename(template_path))
         
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
