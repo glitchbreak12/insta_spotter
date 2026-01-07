@@ -1210,9 +1210,9 @@
             <div class="user-info">
                 <div class="user-avatar">{{ username[:1].upper() }}</div>
                 <span>{{ username }}</span>
-                <a href="/admin/logout" class="btn btn-secondary">
+                <button onclick="logout()" class="btn btn-secondary">
                     <i class="fas fa-sign-out-alt"></i>
-                </a>
+                </button>
             </div>
         </header>
 
@@ -2185,12 +2185,29 @@
         }
 
         // Live preview for info cards
-        function updatePreview() {
+        async function updatePreview() {
             const title = document.getElementById('cardTitle').value || 'Titolo Card';
             const content = document.getElementById('cardContent').value || 'Il contenuto apparirà qui...';
 
-            document.querySelector('.card-preview-title').textContent = title;
-            document.querySelector('.card-preview-content').textContent = content;
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
+                const response = await fetch('/admin/api/info-cards/preview', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.querySelector('.card-preview').innerHTML = data.preview_html;
+                }
+            } catch (error) {
+                // Fallback to simple preview
+                document.querySelector('.card-preview-title').textContent = title;
+                document.querySelector('.card-preview-content').textContent = content;
+            }
         }
 
         async function createInfoCard() {
@@ -2203,10 +2220,13 @@
             }
 
             try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
                 const response = await fetch('/admin/api/info-cards', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, text: content })
+                    body: formData
                 });
 
                 if (response.ok) {
@@ -2214,7 +2234,8 @@
                     clearForm();
                     loadInfoCards();
                 } else {
-                    showNotification('Errore creazione card', 'error');
+                    const errorData = await response.json();
+                    showNotification(errorData.message || 'Errore creazione card', 'error');
                 }
             } catch (error) {
                 showNotification('Errore connessione', 'error');
@@ -2400,6 +2421,15 @@
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => notification.remove(), 300);
             }, 4000);
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Vuoi davvero uscire?')) {
+                fetch('/admin/logout', { method: 'POST' })
+                    .then(() => window.location.href = '/admin/login')
+                    .catch(() => window.location.href = '/admin/login');
+            }
         }
 
         // Initialize on page load

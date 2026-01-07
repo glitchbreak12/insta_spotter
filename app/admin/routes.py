@@ -648,7 +648,8 @@ def get_info_cards(user: str = Depends(get_current_user), db: Session = Depends(
 
 @router.post("/api/info-cards")
 def create_info_card(
-    card_data: dict,
+    title: str = Form(...),
+    text: str = Form(...),
     user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -657,18 +658,15 @@ def create_info_card(
     from app.tasks import generate_technical_user
 
     try:
-        title = card_data.get('title')
-        content = card_data.get('text')  # Nota: il JS invia 'text', non 'content'
-
-        if not title or not content:
-            return {"status": "error", "message": "Title and content are required"}
+        if not title or not text:
+            return {"status": "error", "message": "Title and text are required"}
 
         # Crea utente tecnico admin
         admin_user = generate_technical_user(db)
 
         # Crea la info card
         info_card = SpottedMessage(
-            text=content,
+            text=text,
             message_type=MessageType.INFO,
             title=title,
             status=MessageStatus.APPROVED,  # Le info cards sono automaticamente approvate
@@ -723,22 +721,21 @@ def publish_info_card(card_id: int, user: str = Depends(get_current_user), db: S
 
 @router.post("/api/info-cards/preview")
 def preview_info_card(
-    card_data: dict,
+    title: str = Form(""),
+    text: str = Form(""),
     user: str = Depends(get_current_user)
 ):
     """API per ottenere una preview dell'info card."""
     try:
-        title = card_data.get('title', '')
-        content = card_data.get('text', '')
-
-        if not title or not content:
-            return {"status": "error", "message": "Title and content are required for preview"}
+        if not title or not text:
+            title = "Titolo Card"
+            text = "Il contenuto apparirà qui..."
 
         # Genera HTML preview
         preview_html = f"""
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto;">
             <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem; text-align: center;">{title}</h2>
-            <p style="margin: 0; line-height: 1.6; text-align: center;">{content}</p>
+            <p style="margin: 0; line-height: 1.6; text-align: center;">{text}</p>
         </div>
         """
 
