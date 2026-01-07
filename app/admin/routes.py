@@ -366,6 +366,7 @@ def show_dashboard(request: Request, db: Session = Depends(get_db), user: str = 
 
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
+        "username": user,
         "messages": messages,
         "kpis": kpis,
         "chart_data": chart_data,
