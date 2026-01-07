@@ -7,10 +7,11 @@ warnings.filterwarnings("ignore", message=".*google.generativeai.*")
 warnings.filterwarnings("ignore", message=".*All support for.*")
 
 try:
-import google.generativeai as genai
+    import google.generativeai as genai
 except ImportError:
     # Se non è installato, solleverà un errore più chiaro
     genai = None
+
 import json
 from config import settings
 from typing import NamedTuple
