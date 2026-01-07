@@ -41,6 +41,15 @@ elif test_python "/usr/local/bin/python3"; then
     PYTHON_CMD="/usr/local/bin/python3"
     PIP_CMD="/usr/local/bin/pip3"
     echo "✅ Found Python: /usr/local/bin/python3"
+# Try Replit-specific Python installations
+elif test_python "/opt/replit/python3/bin/python3"; then
+    PYTHON_CMD="/opt/replit/python3/bin/python3"
+    PIP_CMD="/opt/replit/python3/bin/pip3"
+    echo "✅ Found Python: /opt/replit/python3/bin/python3"
+elif test_python "/opt/python/3.x/bin/python3"; then
+    PYTHON_CMD="/opt/python/3.x/bin/python3"
+    PIP_CMD="/opt/python/3.x/bin/pip3"
+    echo "✅ Found Python: /opt/python/3.x/bin/python3"
 # Try to find in Nix store
 else
     echo "🔍 Searching in Nix store..."
@@ -58,6 +67,17 @@ else
             break
         fi
     done
+
+    # Last resort: search entire system for python3
+    if [ -z "$PYTHON_CMD" ]; then
+        echo "🔍 Last resort: searching entire system for python3..."
+        SYSTEM_PYTHON=$(find /usr /opt /home/runner -name python3 -type f -executable 2>/dev/null | grep -v -E '\.(pyc|pyo)$' | head -1)
+        if [ -n "$SYSTEM_PYTHON" ] && test_python "$SYSTEM_PYTHON"; then
+            PYTHON_CMD="$SYSTEM_PYTHON"
+            PIP_CMD="$PYTHON_CMD -m pip"
+            echo "✅ Found Python (system search): $PYTHON_CMD"
+        fi
+    fi
 fi
 
 # Final check
