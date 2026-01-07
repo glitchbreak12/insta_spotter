@@ -1,12 +1,12 @@
 import os
 import secrets
 import logging
+import hashlib
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext
 
 logger = logging.getLogger("insta_spotter")
 
@@ -20,20 +20,19 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30  # Ridotto a 30 minuti per sicurezza
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-# Password hashing context - fallback per errori bcrypt
-try:
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-except Exception as e:
-    logger.warning(f"Errore bcrypt, uso fallback sha256: {e}")
-    try:
-        pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
-    except Exception as e2:
-        logger.warning(f"Anche sha256 fallito, uso plaintext fallback: {e2}")
-        # Fallback di emergenza - NON USARE IN PRODUZIONE!
-        class PlaintextContext:
-            def hash(self, password): return password
-            def verify(self, plain, hashed): return plain == hashed
-        pwd_context = PlaintextContext()
+# Password hashing context - usa SHA256 direttamente per evitare problemi bcrypt
+import hashlib
+
+class SHA256Context:
+    def hash(self, password):
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def verify(self, plain, hashed):
+        expected = hashlib.sha256(plain.encode()).hexdigest()
+        return expected == hashed
+
+pwd_context = SHA256Context()
+logger.info("✅ Usando SHA256 per hashing password (semplificato)")
 
 # --- Variabili di Ambiente ---
 ADMIN_USERNAME = (
@@ -48,7 +47,7 @@ for key, value in os.environ.items():
     if 'ADMIN' in key.upper() or 'SECRET' in key.upper():
         logger.info(f"🔍 ENV VAR: {key} = {'***HIDDEN***' if 'PASSWORD' in key.upper() else value}")
 
-# Priorità 1: ADMIN_PASSWORD (plaintext) - ha massima priorità
+# Priorità 1: ADMIN_PASSWORD (plaintext) - usa SHA256 per evitare problemi bcrypt
 admin_pwd = (
     os.getenv("ADMIN_PASSWORD") or
     os.getenv("REPLIT_ADMIN_PASSWORD") or
@@ -56,13 +55,9 @@ admin_pwd = (
 )
 
 if admin_pwd:
-    try:
-        ADMIN_PASSWORD_HASH = pwd_context.hash(admin_pwd)
-        logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)})")
-    except Exception as e:
-        logger.warning(f"⚠️ Bcrypt fallito ({e}), uso SHA256")
-        import hashlib
-        ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
+    import hashlib
+    ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
+    logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
 
 # Priorità 2: ADMIN_PASSWORD_HASH (solo se non abbiamo già una password da plaintext)
 elif not ADMIN_PASSWORD_HASH:
@@ -97,20 +92,14 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica una password in modo sicuro (timing-safe)."""
+    """Verifica una password usando SHA256 (semplificato per evitare problemi bcrypt)."""
     try:
-        # Prima prova con bcrypt
-        return pwd_context.verify(plain_password, hashed_password)
-    except Exception as bcrypt_error:
-        logger.warning(f"Bcrypt verification failed ({bcrypt_error}), trying SHA256 fallback")
-        try:
-            # Fallback a SHA256 se bcrypt fallisce (per credenziali temporanee)
-            import hashlib
-            expected_hash = hashlib.sha256(plain_password.encode()).hexdigest()
-            return expected_hash == hashed_password
-        except Exception as sha_error:
-            logger.error(f"Both bcrypt and SHA256 verification failed: bcrypt={bcrypt_error}, sha={sha_error}")
-            return False
+        import hashlib
+        expected_hash = hashlib.sha256(plain_password.encode()).hexdigest()
+        return expected_hash == hashed_password
+    except Exception as error:
+        logger.error(f"Password verification failed: {error}")
+        return False
 
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     """Crea un JWT access token."""
