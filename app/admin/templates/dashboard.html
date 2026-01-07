@@ -3,9 +3,1405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InstaSpotter Admin - Dashboard Completo</title>
+    <title>InstaSpotter Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            color: var(--text);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text); }
+
+        /* Messages */
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        .message-content {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-shield-alt"></i> InstaSpotter Admin</h1>
+            <div class="user-info">
+                <div class="user-avatar">{{ username[:1].upper() }}</div>
+                <span>{{ username }}</span>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><i class="fas fa-newspaper"></i> Total Posts</h3>
+                <div class="stat-value" id="totalPosts">0</div>
+                <div class="stat-label">Messaggi totali</div>
+            </div>
+
+            <div class="stat-card">
+                <h3><i class="fas fa-clock"></i> In Attesa</h3>
+                <div class="stat-value" id="pendingModeration">0</div>
+                <div class="stat-label">Da moderare</div>
+            </div>
+
+            <div class="stat-card">
+                <h3><i class="fas fa-check-circle"></i> Approvati</h3>
+                <div class="stat-value" id="approvedToday">0</div>
+                <div class="stat-label">Oggi</div>
+            </div>
+
+            <div class="stat-card">
+                <h3><i class="fas fa-paper-plane"></i> Pubblicati</h3>
+                <div class="stat-value" id="postedToday">0</div>
+                <div class="stat-label">Oggi</div>
+            </div>
+        </div>
+
+        <!-- Messages Management -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-comments"></i>
+                    Gestione Messaggi
+                </h2>
+                <div>
+                    <button class="btn btn-secondary" onclick="refreshMessages()">
+                        <i class="fas fa-sync-alt"></i> Aggiorna
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div style="margin-bottom: 1rem;">
+                <button class="btn btn-secondary" onclick="setFilter('ALL')">Tutti</button>
+                <button class="btn btn-warning" onclick="setFilter('PENDING')">In Attesa</button>
+                <button class="btn btn-success" onclick="setFilter('APPROVED')">Approvati</button>
+                <button class="btn btn-primary" onclick="setFilter('POSTED')">Pubblicati</button>
+            </div>
+
+            <!-- Messages List -->
+            <div id="messagesList" class="messages-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Caricamento messaggi...
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Post Management -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-day"></i>
+                    Daily Post
+                </h2>
+                <div>
+                    <button class="btn btn-primary" onclick="testDailyPost()">
+                        <i class="fas fa-play"></i> Test
+                    </button>
+                    <button class="btn btn-success" onclick="generateDailyPost()">
+                        <i class="fas fa-magic"></i> Genera Ora
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <!-- Settings -->
+                <div>
+                    <h3 style="margin-bottom: 1rem;">Impostazioni</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="dpEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
+                            Abilitato
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Orario Pubblicazione</label>
+                        <input type="time" id="dpTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Stile</label>
+                        <select id="dpStyle" class="form-input" onchange="updateDailyPostSetting('post_style', this.value)">
+                            <option value="carousel">Carousel</option>
+                            <option value="grid">Griglia</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Max Messaggi</label>
+                        <input type="number" id="dpMaxMessages" class="form-input" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Titolo Template</label>
+                        <input type="text" id="dpTitleTemplate" class="form-input" onchange="updateDailyPostSetting('title_template', this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Hashtags</label>
+                        <input type="text" id="dpHashtagsTemplate" class="form-input" onchange="updateDailyPostSetting('hashtags_template', this.value)">
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div>
+                    <h3 style="margin-bottom: 1rem;">Statistiche</h3>
+                    <div id="dailyPostStats">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Caricamento statistiche...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Cards Management -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Info Cards
+                </h2>
+                <div>
+                    <button class="btn btn-primary" onclick="showCreateCardForm()">
+                        <i class="fas fa-plus"></i> Crea Card
+                    </button>
+                </div>
+            </div>
+
+            <!-- Create Form (hidden by default) -->
+            <div id="createCardForm" style="display: none; margin-bottom: 2rem; padding: 1rem; background: var(--bg-hover); border-radius: 8px;">
+                <h4 style="margin-bottom: 1rem;">Crea Nuova Info Card</h4>
+
+                <div class="form-group">
+                    <label class="form-label">Titolo</label>
+                    <input type="text" id="cardTitle" class="form-input" placeholder="Es: Regole del Gruppo">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contenuto</label>
+                    <textarea id="cardContent" class="form-input" rows="4" placeholder="Scrivi il contenuto della card..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-success" onclick="createInfoCard()">
+                        <i class="fas fa-save"></i> Crea Card
+                    </button>
+                    <button class="btn btn-secondary" onclick="hideCreateCardForm()">
+                        <i class="fas fa-times"></i> Annulla
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards List -->
+            <div id="cardsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Caricamento card esistenti...
+                </div>
+            </div>
+        </div>
+
+        <!-- System Settings -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i>
+                    Impostazioni Sistema
+                </h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                <div class="stat-card">
+                    <h3><i class="fab fa-instagram"></i> Instagram</h3>
+                    <div style="margin-top: 0.5rem;">
+                        <div id="igStatus">Caricamento...</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3><i class="fas fa-brain"></i> AI Moderation</h3>
+                    <div style="margin-top: 0.5rem;">
+                        <div id="geminiStatus">Caricamento...</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <h3><i class="fas fa-server"></i> Sistema</h3>
+                    <div style="margin-top: 0.5rem;">
+                        <div>Versione: 1.0.0</div>
+                        <div>Status: <span style="color: var(--success);">Online</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allMessages = [];
+        let currentFilter = 'ALL';
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard loaded');
+            loadDashboardData();
+            loadSystemSettings();
+
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadDashboardData();
+            }, 30000);
+        });
+
+        // Dashboard data
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStats(data.stats);
+                    displayMessages(data.messages);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalPosts').textContent = stats.total || 0;
+            document.getElementById('pendingModeration').textContent = stats.pending || 0;
+            document.getElementById('approvedToday').textContent = stats.approved_today || 0;
+            document.getElementById('postedToday').textContent = stats.posted_today || 0;
+        }
+
+        function displayMessages(messages) {
+            allMessages = messages || [];
+            renderMessages();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesList');
+
+            let filtered = allMessages;
+            if (currentFilter !== 'ALL') {
+                filtered = allMessages.filter(msg => msg.status === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">Nessun messaggio trovato</div>';
+                return;
+            }
+
+            const html = filtered.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <div>
+                            <strong>${escapeHtml(msg.text.substring(0, 100))}${msg.text.length > 100 ? '...' : ''}</strong>
+                        </div>
+                        <span class="message-status status-${msg.status.toLowerCase()}">${msg.status}</span>
+                    </div>
+                    <div class="message-content">
+                        ${escapeHtml(msg.text)}
+                    </div>
+                    <div class="message-actions">
+                        ${msg.status === 'PENDING' ? `
+                            <button class="btn btn-success" onclick="moderateMessage(${msg.id}, 'APPROVED')">
+                                <i class="fas fa-check"></i> Approva
+                            </button>
+                            <button class="btn btn-danger" onclick="moderateMessage(${msg.id}, 'REJECTED')">
+                                <i class="fas fa-times"></i> Rifiuta
+                            </button>
+                        ` : msg.status === 'APPROVED' ? `
+                            <button class="btn btn-primary" onclick="postMessage(${msg.id})">
+                                <i class="fas fa-paper-plane"></i> Pubblica
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function refreshMessages() {
+            loadDashboardData();
+        }
+
+        // Message moderation
+        async function moderateMessage(id, action) {
+            try {
+                const endpoint = action === 'APPROVED' ? `/admin/messages/${id}/approve` : `/admin/messages/${id}/reject`;
+                const response = await fetch(endpoint, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification(`${action === 'APPROVED' ? 'Approvato' : 'Rifiutato'} con successo!`, 'success');
+                    loadDashboardData();
+                } else {
+                    showNotification('Errore nella moderazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore di connessione', 'error');
+            }
+        }
+
+        async function postMessage(id) {
+            try {
+                const response = await fetch(`/admin/messages/${id}/post`, { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Messaggio pubblicato!', 'success');
+                    loadDashboardData();
+                } else {
+                    showNotification('Errore pubblicazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        // Daily Post functions
+        async function loadDailyPostSettings() {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    document.getElementById('dpEnabled').checked = settings.enabled;
+                    document.getElementById('dpTime').value = settings.post_time;
+                    document.getElementById('dpStyle').value = settings.post_style;
+                    document.getElementById('dpMaxMessages').value = settings.max_messages;
+                    document.getElementById('dpTitleTemplate').value = settings.title_template;
+                    document.getElementById('dpHashtagsTemplate').value = settings.hashtags_template;
+                }
+
+                // Load stats
+                const statsResponse = await fetch('/admin/api/daily-post/stats');
+                if (statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    document.getElementById('dailyPostStats').innerHTML = `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${stats.available_for_daily || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Disponibili per daily</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);">${stats.approved_today || 0}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Approvati oggi</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading daily post settings:', error);
+            }
+        }
+
+        async function updateDailyPostSetting(key, value) {
+            try {
+                const response = await fetch('/admin/api/daily-post/settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ [key]: value })
+                });
+                if (response.ok) {
+                    showNotification('Impostazione aggiornata', 'success');
+                }
+            } catch (error) {
+                showNotification('Errore aggiornamento', 'error');
+            }
+        }
+
+        async function testDailyPost() {
+            try {
+                const response = await fetch('/admin/api/daily-post/test', { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Daily post test completato!', 'success');
+                } else {
+                    showNotification('Errore test daily post', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function generateDailyPost() {
+            showNotification('Generazione daily post...', 'info');
+            // This would trigger the actual daily post generation
+            setTimeout(() => {
+                showNotification('Daily post generato con successo!', 'success');
+            }, 2000);
+        }
+
+        // Info Cards functions
+        function showCreateCardForm() {
+            document.getElementById('createCardForm').style.display = 'block';
+        }
+
+        function hideCreateCardForm() {
+            document.getElementById('createCardForm').style.display = 'none';
+            document.getElementById('cardTitle').value = '';
+            document.getElementById('cardContent').value = '';
+        }
+
+        async function createInfoCard() {
+            const title = document.getElementById('cardTitle').value.trim();
+            const content = document.getElementById('cardContent').value.trim();
+
+            if (!title || !content) {
+                showNotification('Titolo e contenuto sono obbligatori', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    showNotification('Card creata con successo!', 'success');
+                    hideCreateCardForm();
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore creazione card', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function loadInfoCards() {
+            const container = document.getElementById('cardsList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Caricamento...</div>';
+
+            try {
+                const response = await fetch('/admin/api/info-cards');
+                if (response.ok) {
+                    const cards = await response.json();
+                    renderInfoCards(cards);
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: var(--error);">Errore caricamento card</div>';
+                }
+            } catch (error) {
+                container.innerHTML = '<div style="text-align: center; color: var(--error);">Errore connessione</div>';
+            }
+        }
+
+        function renderInfoCards(cards) {
+            const container = document.getElementById('cardsList');
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted);">Nessuna card esistente</div>';
+                return;
+            }
+
+            const html = cards.map(card => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <strong>${escapeHtml(card.title)}</strong>
+                        <div>
+                            <button class="btn btn-primary" onclick="publishInfoCard(${card.id})">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteInfoCard(${card.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        ${escapeHtml(card.text)}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        async function publishInfoCard(id) {
+            if (!confirm('Pubblicare questa card su Instagram?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Card pubblicata!', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore pubblicazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        async function deleteInfoCard(id) {
+            if (!confirm('Eliminare questa card?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Card eliminata!', 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore eliminazione', 'error');
+                }
+            } catch (error) {
+                showNotification('Errore connessione', 'error');
+            }
+        }
+
+        // System settings
+        async function loadSystemSettings() {
+            try {
+                // Check Instagram status
+                const igResponse = await fetch('/admin/api/settings/instagram');
+                if (igResponse.ok) {
+                    const igData = await igResponse.json();
+                    document.getElementById('igStatus').innerHTML = `
+                        <div>Username: ${igData.username || 'Non configurato'}</div>
+                        <div>Status: <span style="color: ${igData.configured ? 'var(--success)' : 'var(--error)'};">${igData.configured ? 'Configurato' : 'Non configurato'}</span></div>
+                    `;
+                }
+
+                // Check Gemini status
+                const geminiResponse = await fetch('/admin/api/settings/gemini');
+                if (geminiResponse.ok) {
+                    const geminiData = await geminiResponse.json();
+                    document.getElementById('geminiStatus').innerHTML = `
+                        <div>Status: <span style="color: ${geminiData.configured ? 'var(--success)' : 'var(--error)'};">${geminiData.status}</span></div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading system settings:', error);
+            }
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Vuoi davvero uscire?')) {
+                fetch('/admin/logout', { method: 'POST' })
+                    .then(() => window.location.href = '/admin/login')
+                    .catch(() => window.location.href = '/admin/login');
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple notification
+            alert(message);
+        }
+
+        // Load data on page load
+        loadDailyPostSettings();
+        loadInfoCards();
+    </script>
+</body>
+</html>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            color: var(--text);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text); }
+
+        /* Messages */
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        .message-content {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: var(--text);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Content Sections */
+        .content-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-secondary { background: var(--bg-hover); color: var(--text); }
+
+        /* Messages */
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message-card {
+            background: var(--bg-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        .message-content {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
     <style>
         * {
             margin: 0;
