@@ -1862,6 +1862,8 @@
         let allMessages = [];
         let currentFilter = 'all';
 
+        // Global QR Code functions (available before DOMContentLoaded)
+
         // Navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -4110,9 +4112,6 @@
         }
         */
 
-        // Make function globally available for retry button
-        window.generateClientSideQR = generateClientSideQR;
-
         // Initialize analytics when settings section is loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Load analytics when settings tab is shown (temporarily disabled)
@@ -4247,8 +4246,6 @@
             }
         }
 
-        // Make generateClientSideQR globally available for retry button
-        window.generateClientSideQR = null;
 
         // QR Code functionality
         async function generateQRCode() {
