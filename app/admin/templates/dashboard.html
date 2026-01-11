@@ -1462,6 +1462,20 @@
                                 Test AI
                             </button>
                         </div>
+
+                        <!-- Advanced Features Notice -->
+                        <div style="margin-top: var(--space-lg); padding: var(--space-md); background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); border-radius: var(--radius);">
+                            <div style="display: flex; align-items: flex-start; gap: var(--space-sm);">
+                                <i class="fas fa-info-circle" style="color: var(--warning); margin-top: 2px;"></i>
+                                <div>
+                                    <strong style="color: var(--warning);">Funzionalità Avanzate Temporaneamente Disabilitate</strong>
+                                    <p style="margin: var(--space-xs) 0 0 0; font-size: 0.9rem; color: var(--text-muted);">
+                                        Analytics avanzati, report e alcune funzionalità di sistema sono temporaneamente disabilitate.
+                                        Verranno implementate nelle prossime versioni per offrire una dashboard completa da un milione di euro!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- System Settings -->
@@ -2618,12 +2632,23 @@
 
         async function loadSystemInfo() {
             try {
+                // Temporarily disabled - endpoint not implemented
+                /*
                 const response = await fetch('/admin/api/debug', {
                     credentials: 'same-origin'
                 });
 
                 if (response.ok) {
                     const data = await response.json();
+                */
+                // Mock system info for now
+                const data = {
+                    python_version: '3.11.x',
+                    platform: 'Replit (NixOS)',
+                    uptime: 'Running',
+                    memory_usage: 'N/A',
+                    cpu_usage: 'N/A'
+                };
                     document.getElementById('systemSettings').innerHTML = `
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                             <div>
@@ -2648,6 +2673,7 @@
                             </div>
                         </div>
                     `;
+                /*
                 } else {
                     document.getElementById('systemSettings').innerHTML = `
                         <div style="text-align: center; color: var(--error);">
@@ -2656,6 +2682,7 @@
                         </div>
                     `;
                 }
+                */
             } catch (error) {
                 console.error('Error loading system info:', error);
                 document.getElementById('systemSettings').innerHTML = `
@@ -3856,6 +3883,8 @@
             showNotification('Info', 'Funzione export in sviluppo', 'info');
         }
 
+        // Temporarily disabled - endpoint not implemented
+        /*
         async function generateAnalyticsReport() {
             try {
                 showNotification('Info', 'Generando report analytics...', 'info');
@@ -3888,7 +3917,10 @@
                 showNotification('Errore', 'Impossibile generare il report analytics', 'error');
             }
         }
+        */
 
+        // Temporarily disabled - endpoint not implemented
+        /*
         async function exportAnalyticsData() {
             try {
                 const response = await fetch('/admin/api/analytics/export', {
@@ -3915,16 +3947,21 @@
                 showNotification('Errore', 'Impossibile esportare i dati analytics', 'error');
             }
         }
+        */
 
         async function scheduleAutomaticBackup() {
             // Toggle automatic backup scheduling
             showNotification('Info', 'Funzione backup automatico in sviluppo', 'info');
         }
 
-        // Analytics Functions
+        // Analytics Functions (temporarily disabled)
+        /*
         let messagesHourlyChart = null;
         let messagesStatusChart = null;
+        */
 
+        // Temporarily disabled - endpoint not implemented
+        /*
         async function loadAdvancedAnalytics() {
             try {
                 console.log('Loading advanced analytics...');
@@ -3949,7 +3986,10 @@
                 console.error('Error loading analytics:', error);
             }
         }
+        */
 
+        // Temporarily disabled - endpoint not implemented
+        /*
         function updateAnalyticsDisplay(analytics) {
             // Update user activity stats
             const users24h = analytics.users_24h || 0;
@@ -3979,7 +4019,10 @@
                 traffic: { uniqueIPs, topCountry, trafficTrend }
             });
         }
+        */
 
+        // Temporarily disabled - Chart.js not available or endpoint not implemented
+        /*
         function initializeCharts(analytics) {
             // Destroy existing charts if they exist
             if (messagesHourlyChart) {
@@ -4065,10 +4108,12 @@
                 });
             }
         }
+        */
 
         // Initialize analytics when settings section is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Load analytics when settings tab is shown
+            // Load analytics when settings tab is shown (temporarily disabled)
+            /*
             const settingsTab = document.querySelector('[data-section="settings"]');
             if (settingsTab) {
                 settingsTab.addEventListener('click', function() {
@@ -4077,6 +4122,7 @@
                     }, 100);
                 });
             }
+            */
         });
 
         // Utility functions
@@ -4341,26 +4387,29 @@
                 console.log('Using qrcode.js library');
                 try {
                     const canvasId = 'qrcode-canvas-' + Date.now();
-                    qrContainer.innerHTML = `<div id="${canvasId}" style="display: inline-block;"></div>`;
+                    qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
 
-                    QRCode.toCanvas(document.getElementById(canvasId), url, {
+                    const canvas = document.getElementById(canvasId);
+                    QRCode.toCanvas(canvas, url, {
                         width: 256,
                         height: 256,
                         colorDark: "#000000",
                         colorLight: "#FFFFFF",
                         correctLevel: QRCode.CorrectLevel.H
-                    }, function (error) {
-                        if (error) {
-                            console.error('qrcode.js generation failed:', error);
-                            tryQrious(url);
-                        } else {
-                            console.log('QR code generated successfully with qrcode.js');
-                        }
+                    }).then(() => {
+                        console.log('QR code generated successfully with qrcode.js');
+                    }).catch((error) => {
+                        console.error('qrcode.js generation failed:', error);
+                        tryQrious(url);
                     });
                     return;
                 } catch (error) {
                     console.error('qrcode.js failed:', error);
+                    tryQrious(url);
                 }
+            } else {
+                console.log('QRCode library not available, trying Qrious');
+                tryQrious(url);
             }
 
             // Fallback to Qrious
