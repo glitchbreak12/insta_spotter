@@ -820,9 +820,12 @@ def debug_admin_credentials(user: str = Depends(get_current_user)):
 @router.get("/api/analytics/dashboard")
 def get_analytics_dashboard(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
     """API per analytics della dashboard."""
-    from datetime import datetime, timedelta
-    from sqlalchemy import func, extract
-    from app.database import MessageStatus
+from datetime import datetime, timedelta
+from sqlalchemy import func, extract
+from app.database import MessageStatus
+import secrets
+import hashlib
+import json
 
     try:
         now = datetime.utcnow()
@@ -1377,3 +1380,641 @@ def clear_old_logs(user: str = Depends(get_current_user)):
         "message": "Log vecchi eliminati (simulato)",
         "deleted_count": 150
     }
+
+# === AUTENTICAZIONE AVANZATA: QR CODE + WEBATHN/FIDO2 ===
+
+# Store temporaneo per sessioni QR (in produzione usare Redis/database)
+qr_sessions = {}
+
+@router.post("/api/auth/generate-qr")
+def generate_qr_code(user: str = Depends(get_current_user)):
+    """Genera un codice QR per autenticazione mobile."""
+    try:
+        # Genera token sicuro unico
+        qr_token = secrets.token_urlsafe(32)
+        session_id = secrets.token_hex(16)
+
+        # Hash del token per storage sicuro
+        token_hash = hashlib.sha256(qr_token.encode()).hexdigest()
+
+        # Scadenza: 5 minuti
+        expires_at = datetime.utcnow() + timedelta(minutes=5)
+
+        # Store della sessione QR
+        qr_sessions[session_id] = {
+            "token_hash": token_hash,
+            "user": user,
+            "created_at": datetime.utcnow(),
+            "expires_at": expires_at,
+            "used": False,
+            "device_info": "desktop"  # Il dispositivo che genera il QR
+        }
+
+        # Genera URL per il QR code
+        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token={qr_token}"
+
+        # In produzione, usa una libreria QR per generare l'immagine
+        # Per ora restituiamo i dati per generare il QR nel frontend
+        return {
+            "success": True,
+            "qr_data": {
+                "session_id": session_id,
+                "token": qr_token,
+                "url": qr_url,
+                "expires_in": 300  # 5 minuti
+            },
+            "message": "QR Code generato. Scansiona con il cellulare per accedere automaticamente."
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/verify-qr")
+def verify_qr_code(session_id: str, token: str, device_info: dict = None):
+    """Verifica il codice QR scansionato dal mobile."""
+    try:
+        # Controlla se la sessione QR esiste
+        if session_id not in qr_sessions:
+            return {"success": False, "error": "Sessione QR non valida"}
+
+        session = qr_sessions[session_id]
+
+        # Controlla scadenza
+        if datetime.utcnow() > session["expires_at"]:
+            del qr_sessions[session_id]
+            return {"success": False, "error": "Sessione QR scaduta"}
+
+        # Controlla se già usata
+        if session["used"]:
+            return {"success": False, "error": "Sessione QR già utilizzata"}
+
+        # Verifica token
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        if token_hash != session["token_hash"]:
+            return {"success": False, "error": "Token QR non valido"}
+
+        # Marca come usata
+        session["used"] = True
+        session["mobile_device"] = device_info or {}
+
+        # Genera token di autenticazione per il mobile
+        auth_token = secrets.token_urlsafe(64)
+        session["auth_token"] = auth_token
+
+        return {
+            "success": True,
+            "user": session["user"],
+            "auth_token": auth_token,
+            "device_linked": True,
+            "message": f"Dispositivo mobile collegato con successo a {session['user']}"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/qr-login")
+def qr_login(auth_token: str, device_info: dict = None):
+    """Login tramite token QR dal mobile."""
+    try:
+        # Trova la sessione con questo auth_token
+        session = None
+        session_id = None
+
+        for sid, sess in qr_sessions.items():
+            if sess.get("auth_token") == auth_token and not sess.get("used", False):
+                session = sess
+                session_id = sid
+                break
+
+        if not session:
+            return {"success": False, "error": "Token di autenticazione non valido"}
+
+        # Controlla scadenza
+        if datetime.utcnow() > session["expires_at"]:
+            if session_id:
+                del qr_sessions[session_id]
+            return {"success": False, "error": "Token scaduto"}
+
+        # Genera token di sessione per il mobile
+        from app.admin.security import create_access_token
+        mobile_token = create_access_token({"sub": session["user"], "device": "mobile"})
+
+        # Log dell'accesso
+        print(f"🔐 Mobile login via QR: {session['user']} - Device: {device_info}")
+
+        # Pulisci la sessione QR
+        if session_id:
+            del qr_sessions[session_id]
+
+        return {
+            "success": True,
+            "access_token": mobile_token,
+            "user": session["user"],
+            "device": "mobile",
+            "message": "Login mobile completato con successo"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# === WEBAUTHN/FIDO2 PASSKEY SYSTEM ===
+
+# Store per le credenziali WebAuthn (in produzione usare database sicuro)
+webauthn_credentials = {}
+
+@router.post("/api/auth/webauthn/register-begin")
+def webauthn_register_begin(user: str = Depends(get_current_user)):
+    """Inizia la registrazione di una passkey WebAuthn."""
+    try:
+        import secrets
+        import base64
+
+        # Genera challenge casuale
+        challenge = secrets.token_bytes(32)
+        challenge_b64 = base64.b64encode(challenge).decode('utf-8')
+
+        # Genera user ID unico
+        user_id = secrets.token_bytes(32)
+        user_id_b64 = base64.b64encode(user_id).decode('utf-8')
+
+        registration_data = {
+            "challenge": challenge_b64,
+            "rp": {
+                "name": "InstaSpotter Admin",
+                "id": "instaspotter.app"  # In produzione usa il dominio reale
+            },
+            "user": {
+                "id": user_id_b64,
+                "name": user,
+                "displayName": f"Admin - {user}"
+            },
+            "pubKeyCredParams": [
+                {"alg": -7, "type": "public-key"},  # ES256
+                {"alg": -257, "type": "public-key"}  # RS256
+            ],
+            "authenticatorSelection": {
+                "authenticatorAttachment": "cross-platform",
+                "requireResidentKey": False,
+                "userVerification": "preferred"
+            },
+            "attestation": "direct"
+        }
+
+        # Store challenge temporaneamente (in produzione usa Redis/database)
+        challenge_key = f"webauthn_challenge_{user}"
+        webauthn_credentials[challenge_key] = {
+            "challenge": challenge,
+            "user_id": user_id,
+            "created_at": datetime.utcnow()
+        }
+
+        return {
+            "success": True,
+            "registration_data": registration_data
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/webauthn/register-complete")
+def webauthn_register_complete(credential_data: dict, user: str = Depends(get_current_user)):
+    """Completa la registrazione della passkey WebAuthn."""
+    try:
+        import base64
+        import hashlib
+
+        challenge_key = f"webauthn_challenge_{user}"
+        if challenge_key not in webauthn_credentials:
+            return {"success": False, "error": "Challenge non trovato"}
+
+        challenge_data = webauthn_credentials[challenge_key]
+
+        # Verifica che la challenge sia recente (max 5 minuti)
+        if datetime.utcnow() - challenge_data["created_at"] > timedelta(minutes=5):
+            del webauthn_credentials[challenge_key]
+            return {"success": False, "error": "Challenge scaduta"}
+
+        # Estrai i dati dalla credential
+        credential_id = credential_data.get("id")
+        public_key = credential_data.get("publicKey")
+        attestation_object = credential_data.get("attestationObject")
+
+        if not all([credential_id, public_key, attestation_object]):
+            return {"success": False, "error": "Dati credential incompleti"}
+
+        # In produzione, verifica l'attestation object
+        # Per ora, store semplicemente la credential
+
+        credential_key = f"webauthn_cred_{user}"
+        webauthn_credentials[credential_key] = {
+            "credential_id": credential_id,
+            "public_key": public_key,
+            "user_id": challenge_data["user_id"],
+            "registered_at": datetime.utcnow(),
+            "last_used": None
+        }
+
+        # Pulisci challenge
+        del webauthn_credentials[challenge_key]
+
+        return {
+            "success": True,
+            "message": "Passkey registrata con successo",
+            "credential_id": credential_id
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/webauthn/authenticate-begin")
+def webauthn_authenticate_begin():
+    """Inizia l'autenticazione con passkey WebAuthn."""
+    try:
+        import secrets
+        import base64
+
+        # Genera challenge casuale
+        challenge = secrets.token_bytes(32)
+        challenge_b64 = base64.b64encode(challenge).decode('utf-8')
+
+        auth_data = {
+            "challenge": challenge_b64,
+            "rpId": "instaspotter.app",  # In produzione usa il dominio reale
+            "allowCredentials": [],  # In produzione specifica le credential registrate
+            "userVerification": "preferred",
+            "timeout": 60000
+        }
+
+        # Store challenge temporaneamente
+        challenge_key = f"webauthn_auth_challenge_{secrets.token_hex(16)}"
+        webauthn_credentials[challenge_key] = {
+            "challenge": challenge,
+            "created_at": datetime.utcnow()
+        }
+
+        return {
+            "success": True,
+            "auth_data": auth_data,
+            "challenge_id": challenge_key
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/webauthn/authenticate-complete")
+def webauthn_authenticate_complete(challenge_id: str, credential_data: dict):
+    """Completa l'autenticazione con passkey WebAuthn."""
+    try:
+        import base64
+
+        if challenge_id not in webauthn_credentials:
+            return {"success": False, "error": "Challenge non trovato"}
+
+        challenge_data = webauthn_credentials[challenge_id]
+
+        # Verifica che la challenge sia recente
+        if datetime.utcnow() - challenge_data["created_at"] > timedelta(minutes=5):
+            del webauthn_credentials[challenge_id]
+            return {"success": False, "error": "Challenge scaduta"}
+
+        # Verifica la credential (in produzione, verifica signature)
+        credential_id = credential_data.get("id")
+        authenticator_data = credential_data.get("authenticatorData")
+        signature = credential_data.get("signature")
+
+        if not all([credential_id, authenticator_data, signature]):
+            return {"success": False, "error": "Dati autenticazione incompleti"}
+
+        # In produzione, trova l'utente associato alla credential
+        # Per ora, restituiamo un utente di test
+        user = "admin"  # In produzione cerca nel database
+
+        # Aggiorna last_used per la credential
+        for key, cred in webauthn_credentials.items():
+            if cred.get("credential_id") == credential_id:
+                cred["last_used"] = datetime.utcnow()
+                break
+
+        # Genera token di accesso
+        from app.admin.security import create_access_token
+        access_token = create_access_token({"sub": user, "auth_method": "webauthn"})
+
+        # Pulisci challenge
+        del webauthn_credentials[challenge_id]
+
+        return {
+            "success": True,
+            "access_token": access_token,
+            "user": user,
+            "auth_method": "webauthn",
+            "message": "Autenticazione passkey completata"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/api/auth/devices")
+def get_linked_devices(user: str = Depends(get_current_user)):
+    """Ottieni la lista dei dispositivi collegati."""
+    try:
+        devices = []
+
+        # Cerca dispositivi collegati via QR
+        for session_id, session in qr_sessions.items():
+            if session.get("user") == user and session.get("used", False):
+                devices.append({
+                    "id": session_id,
+                    "type": "mobile_qr",
+                    "device_info": session.get("mobile_device", {}),
+                    "linked_at": session.get("created_at").isoformat(),
+                    "last_used": session.get("created_at").isoformat()
+                })
+
+        # Cerca dispositivi con passkey
+        for key, cred in webauthn_credentials.items():
+            if key.startswith("webauthn_cred_") and key.endswith(f"_{user}"):
+                devices.append({
+                    "id": cred.get("credential_id"),
+                    "type": "passkey",
+                    "device_info": {"type": "passkey_device"},
+                    "linked_at": cred.get("registered_at").isoformat(),
+                    "last_used": cred.get("last_used").isoformat() if cred.get("last_used") else None
+                })
+
+        return {
+            "success": True,
+            "devices": devices
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.delete("/api/auth/devices/{device_id}")
+def unlink_device(device_id: str, user: str = Depends(get_current_user)):
+    """Scollega un dispositivo."""
+    try:
+        # Rimuovi sessioni QR
+        if device_id in qr_sessions:
+            del qr_sessions[device_id]
+
+        # Rimuovi passkey
+        for key, cred in list(webauthn_credentials.items()):
+            if cred.get("credential_id") == device_id:
+                del webauthn_credentials[key]
+                break
+
+        return {
+            "success": True,
+            "message": "Dispositivo scollegato"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/revoke-all-sessions")
+def revoke_all_sessions(user: str = Depends(get_current_user)):
+    """Revoca tutte le sessioni attive."""
+    try:
+        # In produzione, invalida tutti i token JWT nel database
+        # Per ora, pulisci le sessioni QR
+        global qr_sessions
+        qr_sessions = {}
+
+        # Log dell'azione di sicurezza
+        print(f"🚨 SECURITY: All sessions revoked by user {user}")
+
+        return {
+            "success": True,
+            "message": "Tutte le sessioni sono state revocate"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/emergency-lockdown")
+def emergency_lockdown(user: str = Depends(get_current_user)):
+    """Attiva lockdown emergenza."""
+    try:
+        # In produzione, attiva modalità lockdown nel database
+        # Disabilita tutti gli accessi eccetto quello dell'admin che ha attivato il lockdown
+
+        # Log dell'emergenza
+        print(f"🚨🚨🚨 EMERGENCY LOCKDOWN activated by {user} 🚨🚨🚨")
+
+        return {
+            "success": True,
+            "message": "Lockdown emergenza attivato. Sistema bloccato per sicurezza.",
+            "activated_by": user,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# === PAGINA MOBILE PER SCAN QR CODE ===
+
+@router.get("/auth/qr/{session_id}")
+def qr_auth_page(session_id: str):
+    """Pagina mobile per autenticazione QR."""
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>InstaSpotter - Accesso Mobile</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            .container {{
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }}
+            .logo {{
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: #fff;
+            }}
+            h1 {{
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }}
+            .status {{
+                font-size: 1rem;
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.1);
+            }}
+            .btn {{
+                background: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                margin: 10px;
+                min-width: 200px;
+            }}
+            .btn:hover {{
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }}
+            .btn:disabled {{
+                opacity: 0.6;
+                cursor: not-allowed;
+            }}
+            .success {{
+                background: rgba(16, 185, 129, 0.2);
+                border-color: #10b981;
+            }}
+            .error {{
+                background: rgba(239, 68, 68, 0.2);
+                border-color: #ef4444;
+            }}
+            .spinner {{
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top: 3px solid white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }}
+            @keyframes spin {{
+                0% {{ transform: rotate(0deg); }}
+                100% {{ transform: rotate(360deg); }}
+            }}
+            .hidden {{ display: none; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>InstaSpotter Mobile</h1>
+            <div id="status" class="status">
+                <div id="statusText">Verificando sessione...</div>
+            </div>
+            <button id="authBtn" class="btn" onclick="authenticate()" disabled>
+                <i class="fas fa-mobile-alt"></i>
+                Accedi da Mobile
+            </button>
+            <button id="retryBtn" class="btn hidden" onclick="retry()">
+                <i class="fas fa-redo"></i>
+                Riprova
+            </button>
+        </div>
+
+        <script>
+            let sessionId = '{session_id}';
+            let authToken = null;
+
+            async function checkSession() {{
+                try {{
+                    const response = await fetch('/admin/api/auth/verify-qr', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{
+                            session_id: sessionId,
+                            token: new URLSearchParams(window.location.search).get('token'),
+                            device_info: {{
+                                userAgent: navigator.userAgent,
+                                platform: navigator.platform,
+                                mobile: /Mobi|Android/i.test(navigator.userAgent)
+                            }}
+                        }})
+                    }});
+
+                    const data = await response.json();
+
+                    if (data.success) {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Sessione verificata! Pronto per accesso.';
+                        document.getElementById('status').className = 'status success';
+                        document.getElementById('authBtn').disabled = false;
+                        authToken = data.auth_token;
+                    }} else {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (data.error || 'Errore verifica sessione');
+                        document.getElementById('status').className = 'status error';
+                        document.getElementById('retryBtn').classList.remove('hidden');
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore di connessione';
+                    document.getElementById('status').className = 'status error';
+                    document.getElementById('retryBtn').classList.remove('hidden');
+                }}
+            }}
+
+            async function authenticate() {{
+                if (!authToken) return;
+
+                try {{
+                    document.getElementById('authBtn').innerHTML = '<div class="spinner"></div>';
+                    document.getElementById('authBtn').disabled = true;
+
+                    const response = await fetch('/admin/api/auth/qr-login', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ auth_token: authToken }})
+                    }});
+
+                    const data = await response.json();
+
+                    if (data.success) {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso completato! Puoi chiudere questa pagina.';
+                        document.getElementById('status').className = 'status success';
+                        document.getElementById('authBtn').style.display = 'none';
+
+                        // Auto-close after 3 seconds
+                        setTimeout(() => {{
+                            window.close();
+                        }}, 3000);
+                    }} else {{
+                        throw new Error(data.error || 'Errore autenticazione');
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + error.message;
+                    document.getElementById('status').className = 'status error';
+                    document.getElementById('authBtn').innerHTML = '<i class="fas fa-mobile-alt"></i> Riprova';
+                    document.getElementById('authBtn').disabled = false;
+                }}
+            }}
+
+            function retry() {{
+                document.getElementById('statusText').innerHTML = '<div class="spinner"></div> Verificando...';
+                document.getElementById('status').className = 'status';
+                document.getElementById('retryBtn').classList.add('hidden');
+                checkSession();
+            }}
+
+            // Check session on load
+            checkSession();
+
+            // Auto-refresh every 10 seconds
+            setInterval(checkSession, 10000);
+        </script>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)

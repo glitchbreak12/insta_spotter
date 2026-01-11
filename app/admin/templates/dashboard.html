@@ -6,6 +6,7 @@
     <title>InstaSpotter Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1295,6 +1296,10 @@
                                 <i class="fas fa-shield-alt"></i>
                                 Backup & Sicurezza
                             </button>
+                            <button class="btn btn-primary btn-sm" onclick="showAdvancedAuth()">
+                                <i class="fas fa-key"></i>
+                                Autenticazione
+                            </button>
                         </div>
                     </div>
 
@@ -1758,6 +1763,120 @@
                             <button class="btn btn-danger btn-sm" onclick="clearOldLogs()">
                                 <i class="fas fa-trash"></i>
                                 Pulisci Log Vecchi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Authentication (Hidden by default) -->
+                <div id="advancedAuth" style="display: none; margin-top: var(--space-3xl);">
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-shield-alt" style="color: var(--success); margin-right: var(--space-sm);"></i>
+                            Autenticazione Avanzata - QR Code & Passkey
+                        </h4>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+                            <div style="text-align: center; padding: var(--space-xl); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-qrcode fa-3x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                                <h5 style="margin-bottom: var(--space-sm);">Accesso QR Code</h5>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    Genera un codice QR per accedere automaticamente dal cellulare quando sei già loggato dal PC
+                                </p>
+                                <button class="btn btn-primary" onclick="generateQRCode()">
+                                    <i class="fas fa-qrcode"></i>
+                                    Genera QR Code
+                                </button>
+                            </div>
+
+                            <div style="text-align: center; padding: var(--space-xl); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-fingerprint fa-3x" style="color: var(--success); margin-bottom: var(--space-md);"></i>
+                                <h5 style="margin-bottom: var(--space-sm);">Passkey WebAuthn</h5>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    Autenticazione biometrica sicura senza password usando WebAuthn/FIDO2
+                                </p>
+                                <button class="btn btn-success" onclick="registerPasskey()">
+                                    <i class="fas fa-fingerprint"></i>
+                                    Registra Passkey
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Display Area -->
+                        <div id="qrCodeArea" style="display: none; text-align: center; margin-bottom: var(--space-xl);">
+                            <div style="background: white; padding: var(--space-xl); border-radius: var(--radius-lg); display: inline-block; box-shadow: var(--shadow-lg);">
+                                <h5 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Scansiona il QR Code</h5>
+                                <div id="qrCodeContainer" style="margin-bottom: var(--space-lg);">
+                                    <!-- QR Code will be generated here -->
+                                    <div style="width: 256px; height: 256px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <div style="color: #666; text-align: center;">
+                                            <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
+                                            <div>Generando QR Code...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    Scansiona questo codice con il tuo cellulare per accedere automaticamente
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--warning);">
+                                    <i class="fas fa-clock"></i>
+                                    Scade tra <span id="qrCountdown">300</span> secondi
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Linked Devices -->
+                        <div id="linkedDevicesArea" style="margin-bottom: var(--space-xl);">
+                            <h5 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                                <i class="fas fa-mobile-alt" style="margin-right: var(--space-sm);"></i>
+                                Dispositivi Collegati
+                            </h5>
+                            <div id="devicesList" class="loading">
+                                <div class="spinner"></div>
+                                <div class="loading-text">Caricamento dispositivi...</div>
+                            </div>
+                        </div>
+
+                        <!-- Security Settings -->
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); border-radius: var(--radius-lg); padding: var(--space-lg);">
+                            <h5 style="margin-bottom: var(--space-md); color: var(--success);">
+                                <i class="fas fa-lock" style="margin-right: var(--space-sm);"></i>
+                                Sicurezza Avanzata
+                            </h5>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                                <div>
+                                    <label style="display: flex; align-items: center; gap: var(--space-sm); font-weight: 500;">
+                                        <input type="checkbox" id="twoFactorEnabled" onchange="toggle2FA(this.checked)">
+                                        2FA Abilitato
+                                    </label>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-xs);">
+                                        Autenticazione a due fattori
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display: flex; align-items: center; gap: var(--space-sm); font-weight: 500;">
+                                        <input type="checkbox" id="sessionMonitoring" onchange="toggleSessionMonitoring(this.checked)">
+                                        Monitoraggio Sessioni
+                                    </label>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-xs);">
+                                        Alert per accessi sospetti
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons" style="margin-top: var(--space-lg);">
+                            <button class="btn btn-info" onclick="showAuthLogs()">
+                                <i class="fas fa-history"></i>
+                                Log Accessi
+                            </button>
+                            <button class="btn btn-warning" onclick="revokeAllSessions()">
+                                <i class="fas fa-ban"></i>
+                                Revoca Tutte le Sessioni
+                            </button>
+                            <button class="btn btn-danger" onclick="emergencyLockdown()">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Lockdown Emergenza
                             </button>
                         </div>
                     </div>
@@ -3853,6 +3972,432 @@
         async function scheduleAutomaticBackup() {
             // Toggle automatic backup scheduling
             showNotification('Info', 'Funzione backup automatico in sviluppo', 'info');
+        }
+
+        // Advanced Authentication Functions
+
+        function showAdvancedAuth() {
+            const dangerZone = document.getElementById('dangerZone');
+            const backupManager = document.getElementById('backupManager');
+            const systemLogs = document.getElementById('systemLogs');
+            const advancedAuth = document.getElementById('advancedAuth');
+
+            // Hide others
+            dangerZone.style.display = 'none';
+            backupManager.style.display = 'none';
+            systemLogs.style.display = 'none';
+
+            // Show advanced auth
+            advancedAuth.style.display = advancedAuth.style.display === 'none' ? 'block' : 'none';
+
+            if (advancedAuth.style.display === 'block') {
+                loadLinkedDevices();
+            }
+        }
+
+        async function generateQRCode() {
+            try {
+                showNotification('Info', 'Generando codice QR...', 'info');
+
+                const response = await fetch('/admin/api/auth/generate-qr', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show QR code area
+                    document.getElementById('qrCodeArea').style.display = 'block';
+
+                    // Generate real QR code
+                    const qrContainer = document.getElementById('qrCodeContainer');
+                    qrContainer.innerHTML = '<div id="qrcode" style="display: inline-block;"></div>';
+
+                    // Create QR code with the auth URL
+                    QRCode.toCanvas(document.getElementById('qrcode'), data.qr_data.url, {
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#FFFFFF",
+                        correctLevel: QRCode.CorrectLevel.H
+                    }, function (error) {
+                        if (error) {
+                            console.error('QR Code generation error:', error);
+                            qrContainer.innerHTML = `
+                                <div style="color: var(--error); text-align: center;">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                    <div>Errore generazione QR</div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    // Start countdown
+                    let timeLeft = 300;
+                    const countdownEl = document.getElementById('qrCountdown');
+                    const countdownInterval = setInterval(() => {
+                        timeLeft--;
+                        countdownEl.textContent = timeLeft;
+
+                        if (timeLeft <= 0) {
+                            clearInterval(countdownInterval);
+                            document.getElementById('qrCodeArea').style.display = 'none';
+                            showNotification('Info', 'QR Code scaduto', 'warning');
+                        }
+                    }, 1000);
+
+                    showNotification('Success', 'QR Code generato! Scansiona con il cellulare per accedere automaticamente.', 'success');
+
+                } else {
+                    throw new Error(data.error || 'Errore generazione QR');
+                }
+
+            } catch (error) {
+                console.error('Error generating QR:', error);
+                showNotification('Errore', 'Impossibile generare il codice QR', 'error');
+            }
+        }
+
+        async function registerPasskey() {
+            try {
+                showNotification('Info', 'Iniziando registrazione passkey...', 'info');
+
+                // Check if WebAuthn is supported
+                if (!window.PublicKeyCredential) {
+                    showNotification('Errore', 'WebAuthn non supportato da questo browser', 'error');
+                    return;
+                }
+
+                // Start registration
+                const response = await fetch('/admin/api/auth/webauthn/register-begin', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Create credential
+                    const publicKeyCredentialCreationOptions = {
+                        challenge: Uint8Array.from(atob(data.registration_data.challenge), c => c.charCodeAt(0)),
+                        rp: data.registration_data.rp,
+                        user: {
+                            id: Uint8Array.from(atob(data.registration_data.user.id), c => c.charCodeAt(0)),
+                            name: data.registration_data.user.name,
+                            displayName: data.registration_data.user.displayName
+                        },
+                        pubKeyCredParams: data.registration_data.pubKeyCredParams,
+                        authenticatorSelection: data.registration_data.authenticatorSelection,
+                        attestation: data.registration_data.attestation
+                    };
+
+                    const credential = await navigator.credentials.create({
+                        publicKey: publicKeyCredentialCreationOptions
+                    });
+
+                    // Complete registration
+                    const completeResponse = await fetch('/admin/api/auth/webauthn/register-complete', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: credential.id,
+                            publicKey: btoa(String.fromCharCode(...new Uint8Array(credential.response.getPublicKey()))),
+                            attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+                        })
+                    });
+
+                    const completeData = await completeResponse.json();
+
+                    if (completeData.success) {
+                        showNotification('Successo', 'Passkey registrata con successo!', 'success');
+                        loadLinkedDevices();
+                    } else {
+                        throw new Error(completeData.error || 'Registrazione fallita');
+                    }
+
+                } else {
+                    throw new Error(data.error || 'Errore inizio registrazione');
+                }
+
+            } catch (error) {
+                console.error('Error registering passkey:', error);
+                if (error.name === 'NotAllowedError') {
+                    showNotification('Errore', 'Registrazione passkey annullata dall\'utente', 'warning');
+                } else {
+                    showNotification('Errore', 'Impossibile registrare la passkey: ' + error.message, 'error');
+                }
+            }
+        }
+
+        async function loadLinkedDevices() {
+            try {
+                const response = await fetch('/admin/api/auth/devices', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                const container = document.getElementById('devicesList');
+
+                if (data.success && data.devices.length > 0) {
+                    let html = '';
+
+                    data.devices.forEach(device => {
+                        const deviceIcon = device.type === 'mobile_qr' ? 'mobile-alt' :
+                                         device.type === 'passkey' ? 'fingerprint' : 'desktop';
+                        const deviceName = device.type === 'mobile_qr' ? 'Mobile (QR)' :
+                                         device.type === 'passkey' ? 'Passkey Device' : 'Desktop';
+
+                        html += `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-md); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-sm);">
+                                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                                    <i class="fas fa-${deviceIcon}" style="color: var(--primary);"></i>
+                                    <div>
+                                        <div style="font-weight: 600;">${deviceName}</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                            Collegato: ${new Date(device.linked_at).toLocaleDateString('it-IT')}
+                                            ${device.last_used ? ` - Ultimo uso: ${new Date(device.last_used).toLocaleDateString('it-IT')}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-danger btn-sm" onclick="unlinkDevice('${device.id}')">
+                                    <i class="fas fa-unlink"></i>
+                                    Scollega
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">
+                            <i class="fas fa-link-slash fa-2x" style="margin-bottom: var(--space-md);"></i>
+                            <div>Nessun dispositivo collegato</div>
+                            <div style="font-size: 0.9rem; margin-top: var(--space-sm);">
+                                Usa il QR Code o registra una passkey per collegare dispositivi
+                            </div>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                document.getElementById('devicesList').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore caricamento dispositivi
+                    </div>
+                `;
+            }
+        }
+
+        async function unlinkDevice(deviceId) {
+            if (!confirm('Sei sicuro di voler scollegare questo dispositivo?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/auth/devices/${deviceId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Dispositivo scollegato', 'success');
+                    loadLinkedDevices();
+                } else {
+                    throw new Error('Unlink failed');
+                }
+
+            } catch (error) {
+                console.error('Error unlinking device:', error);
+                showNotification('Errore', 'Impossibile scollegare il dispositivo', 'error');
+            }
+        }
+
+        function toggle2FA(enabled) {
+            console.log('2FA toggled:', enabled);
+            if (enabled) {
+                showNotification('Info', '2FA abilitato (in sviluppo)', 'info');
+            } else {
+                showNotification('Info', '2FA disabilitato', 'info');
+            }
+        }
+
+        function toggleSessionMonitoring(enabled) {
+            console.log('Session monitoring toggled:', enabled);
+            if (enabled) {
+                showNotification('Info', 'Monitoraggio sessioni abilitato', 'info');
+            } else {
+                showNotification('Info', 'Monitoraggio sessioni disabilitato', 'info');
+            }
+        }
+
+        async function showAuthLogs() {
+            // Show authentication logs in a modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px;">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Log Autenticazione</h4>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div id="authLogsContent" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento log autenticazione...</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Load auth logs (filter system logs by auth category)
+            loadAuthLogs();
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        async function loadAuthLogs() {
+            try {
+                const response = await fetch('/admin/api/logs?type=all&period=24h', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const logs = await response.json();
+
+                    // Filter auth-related logs
+                    const authLogs = logs.filter(log =>
+                        log.category && (
+                            log.category.toLowerCase().includes('auth') ||
+                            log.category.toLowerCase().includes('login') ||
+                            log.category.toLowerCase().includes('security')
+                        )
+                    );
+
+                    let html = `<h5>Log Autenticazione (${authLogs.length})</h5>`;
+
+                    if (authLogs.length === 0) {
+                        html += '<div style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">Nessun log autenticazione trovato</div>';
+                    } else {
+                        authLogs.forEach(log => {
+                            const logClass = log.level.toLowerCase();
+                            html += `
+                                <div style="display: flex; gap: var(--space-md); padding: var(--space-sm) 0; border-bottom: 1px solid var(--border); align-items: flex-start;">
+                                    <div style="font-weight: 600; color: var(--${logClass === 'error' ? 'error' : logClass === 'warning' ? 'warning' : 'info'}); min-width: 80px;">
+                                        ${log.level}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="color: var(--text-primary); margin-bottom: var(--space-xs);">
+                                            ${escapeHtml(log.message)}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                            ${new Date(log.timestamp).toLocaleString('it-IT')} - ${log.category || 'Sistema'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('authLogsContent').innerHTML = html;
+                } else {
+                    document.getElementById('authLogsContent').innerHTML = `
+                        <div style="text-align: center; color: var(--error);">
+                            Errore caricamento log
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading auth logs:', error);
+                document.getElementById('authLogsContent').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore caricamento log
+                    </div>
+                `;
+            }
+        }
+
+        async function revokeAllSessions() {
+            if (!confirm('Revocare TUTTE le sessioni attive? Verrai disconnesso da tutti i dispositivi.')) return;
+
+            try {
+                showNotification('Info', 'Revocando tutte le sessioni...', 'warning');
+
+                const response = await fetch('/admin/api/auth/revoke-all-sessions', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Tutte le sessioni revocate. Verrai reindirizzato al login.', 'success');
+                    setTimeout(() => window.location.href = '/admin/login', 2000);
+                } else {
+                    throw new Error('Revoke failed');
+                }
+
+            } catch (error) {
+                console.error('Error revoking sessions:', error);
+                showNotification('Errore', 'Impossibile revocare le sessioni', 'error');
+            }
+        }
+
+        async function emergencyLockdown() {
+            const confirmText = `🚨 LOCKDOWN EMERGENZA 🚨\n\nQuesta azione bloccherà immediatamente tutti gli accessi al sistema!\n\n• Tutti gli utenti verranno disconnessi\n• L'accesso admin verrà temporaneamente bloccato\n• Verrà inviato un alert di sicurezza\n\nSei sicuro di voler attivare il lockdown?`;
+
+            if (!confirm(confirmText)) return;
+
+            try {
+                showNotification('Avviso', 'Attivando lockdown emergenza...', 'error');
+
+                const response = await fetch('/admin/api/auth/emergency-lockdown', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Completato', 'Lockdown emergenza attivato. Sistema bloccato.', 'error');
+                    setTimeout(() => window.location.href = '/admin/login', 3000);
+                } else {
+                    throw new Error('Lockdown failed');
+                }
+
+            } catch (error) {
+                console.error('Error activating lockdown:', error);
+                showNotification('Errore', 'Impossibile attivare il lockdown', 'error');
+            }
         }
 
         // Analytics Functions
