@@ -4062,23 +4062,54 @@
                     qrContainer.innerHTML = '<div id="qrcode" style="display: inline-block;"></div>';
 
                     // Create QR code with the auth URL
-                    QRCode.toCanvas(document.getElementById('qrcode'), data.qr_data.url, {
-                        width: 256,
-                        height: 256,
-                        colorDark: "#000000",
-                        colorLight: "#FFFFFF",
-                        correctLevel: QRCode.CorrectLevel.H
-                    }, function (error) {
-                        if (error) {
-                            console.error('QR Code generation error:', error);
-                            qrContainer.innerHTML = `
-                                <div style="color: var(--error); text-align: center;">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
-                                    <div>Errore generazione QR</div>
+                    if (typeof QRCode === 'undefined') {
+                        qrContainer.innerHTML = `
+                            <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                <div style="margin-top: var(--space-sm);">Libreria QR Code non caricata</div>
+                                <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
+                                    Ricarica la pagina e riprova
                                 </div>
-                            `;
-                        }
-                    });
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    try {
+                        QRCode.toCanvas(document.getElementById('qrcode'), data.qr_data.url, {
+                            width: 256,
+                            height: 256,
+                            colorDark: "#000000",
+                            colorLight: "#FFFFFF",
+                            correctLevel: QRCode.CorrectLevel.H
+                        }, function (error) {
+                            if (error) {
+                                console.error('QR Code generation error:', error);
+                                qrContainer.innerHTML = `
+                                    <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
+                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                        <div style="margin-top: var(--space-sm);">Errore generazione QR</div>
+                                        <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
+                                            URL: ${data.qr_data.url.substring(0, 50)}...
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                console.log('QR Code generated successfully');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('QR Code library error:', error);
+                        qrContainer.innerHTML = `
+                            <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                <div style="margin-top: var(--space-sm);">Errore libreria QR Code</div>
+                                <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
+                                    Riprova o ricarica la pagina
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     // Start countdown
                     let timeLeft = 300;
@@ -4513,22 +4544,31 @@
                             </div>
                             <div class="modal-body">
                                 ${data.sessions.length === 0 ?
-                                    '<div style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">Nessuna sessione attiva</div>' :
+                                    '<div style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">Caricamento sessioni...</div>' :
                                     data.sessions.map(session => `
-                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-md); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-sm);">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-md); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-sm); ${session.is_current ? 'background: rgba(16, 185, 129, 0.1); border-color: var(--success);' : ''}">
                                             <div>
-                                                <div style="font-weight: 600; color: var(--text-primary);">${session.device}</div>
+                                                <div style="font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: var(--space-sm);">
+                                                    ${session.device}
+                                                    ${session.is_current ? '<span style="background: var(--success); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">CORRENTE</span>' : ''}
+                                                </div>
                                                 <div style="font-size: 0.8rem; color: var(--text-muted);">
                                                     IP: ${session.ip} • ${new Date(session.created_at).toLocaleString('it-IT')}
                                                 </div>
                                                 <div style="font-size: 0.8rem; color: var(--text-muted);">
                                                     Ultima attività: ${new Date(session.last_activity).toLocaleString('it-IT')}
                                                 </div>
+                                                <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                                                    User-Agent: ${session.user_agent.substring(0, 50)}${session.user_agent.length > 50 ? '...' : ''}
+                                                </div>
                                             </div>
-                                            <button class="btn btn-danger btn-sm" onclick="terminateSession('${session.id}')">
-                                                <i class="fas fa-times"></i>
-                                                Termina
-                                            </button>
+                                            ${session.is_current ?
+                                                '<div style="color: var(--success); font-size: 0.8rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Sessione attiva</div>' :
+                                                `<button class="btn btn-danger btn-sm" onclick="terminateSession('${session.id}')">
+                                                    <i class="fas fa-times"></i>
+                                                    Termina
+                                                </button>`
+                                            }
                                         </div>
                                     `).join('')
                                 }
@@ -4553,7 +4593,7 @@
         }
 
         async function terminateSession(sessionId) {
-            if (!confirm('Terminare questa sessione?')) return;
+            if (!confirm('Terminare questa sessione? L\'utente verrà disconnesso da quel dispositivo.')) return;
 
             try {
                 const response = await fetch(`/admin/api/sessions/${sessionId}`, {
@@ -4562,9 +4602,11 @@
                 });
 
                 if (response.ok) {
-                    showNotification('Successo', 'Sessione terminata', 'success');
+                    showNotification('Successo', 'Sessione terminata con successo', 'success');
                     // Ricarica la lista delle sessioni
                     setTimeout(() => viewActiveSessions(), 500);
+                } else if (response.status === 403) {
+                    showNotification('Errore', 'Non puoi terminare la sessione corrente', 'error');
                 } else {
                     showNotification('Errore', 'Errore nella terminazione della sessione', 'error');
                 }

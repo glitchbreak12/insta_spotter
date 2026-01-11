@@ -1939,34 +1939,64 @@ def verify_2fa_code(code: str, user: str = Depends(get_current_user)):
         return {"success": False, "error": str(e)}
 
 @router.get("/api/sessions/active")
-def get_active_sessions(user: str = Depends(get_current_user)):
+def get_active_sessions(request: Request, user: str = Depends(get_current_user)):
     """Ottieni sessioni attive."""
     try:
         sessions = []
+
+        # Calcola l'ID della sessione corrente
+        client_ip = request.client.host if hasattr(request, 'client') and request.client else request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', 'unknown'))
+        user_agent = request.headers.get('User-Agent', 'unknown')
+        current_session_id = hashlib.sha256(f"{user}_{client_ip}_{user_agent}".encode()).hexdigest()[:16]
+
         for session_id, session_data in active_sessions.items():
             if session_data.get("user") == user:
-                sessions.append({
+                session_info = {
                     "id": session_id,
                     "ip": session_data.get("ip", "unknown"),
                     "user_agent": session_data.get("user_agent", "unknown"),
-                    "created_at": session_data.get("created_at", datetime.utcnow().isoformat()),
-                    "last_activity": session_data.get("last_activity", datetime.utcnow().isoformat()),
-                    "device": session_data.get("device", "desktop")
-                })
+                    "created_at": session_data.get("created_at").isoformat() if hasattr(session_data.get("created_at"), 'isoformat') else str(session_data.get("created_at")),
+                    "last_activity": session_data.get("last_activity").isoformat() if hasattr(session_data.get("last_activity"), 'isoformat') else str(session_data.get("last_activity")),
+                    "device": session_data.get("device", "desktop"),
+                    "is_current": session_id == current_session_id
+                }
+                sessions.append(session_info)
+
+        # Se non ci sono sessioni ma l'utente è autenticato, aggiungi la sessione corrente
+        if len(sessions) == 0 and user:
+            sessions.append({
+                "id": current_session_id,
+                "ip": client_ip,
+                "user_agent": user_agent,
+                "created_at": datetime.utcnow().isoformat(),
+                "last_activity": datetime.utcnow().isoformat(),
+                "device": "desktop" if "desktop" in user_agent.lower() else "mobile",
+                "is_current": True
+            })
 
         return {
             "success": True,
             "sessions": sessions,
             "total": len(sessions),
-            "max_allowed": security_settings.get("max_concurrent_sessions", 5)
+            "max_allowed": security_settings.get("max_concurrent_sessions", 5),
+            "current_session_id": current_session_id
         }
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 @router.delete("/api/sessions/{session_id}")
-def terminate_session(session_id: str, user: str = Depends(get_current_user)):
+def terminate_session(request: Request, session_id: str, user: str = Depends(get_current_user)):
     """Termina una sessione specifica."""
     try:
+        # Calcola l'ID della sessione corrente per impedire auto-terminazione
+        client_ip = request.client.host if hasattr(request, 'client') and request.client else request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', 'unknown'))
+        user_agent = request.headers.get('User-Agent', 'unknown')
+        current_session_id = hashlib.sha256(f"{user}_{client_ip}_{user_agent}".encode()).hexdigest()[:16]
+
+        # Non permettere di terminare la sessione corrente
+        if session_id == current_session_id:
+            return {"success": False, "error": "Non puoi terminare la sessione corrente", "code": "current_session"}
+
         if session_id in active_sessions:
             session_data = active_sessions[session_id]
             if session_data.get("user") == user:
