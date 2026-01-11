@@ -8,6 +8,7 @@ import secrets
 import hashlib
 import json
 import io
+import os
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
@@ -807,8 +808,9 @@ def generate_qr_code(user: str = Depends(get_current_user)):
             "used": False
         }
 
-        # Genera URL per il QR code
-        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token={qr_token}"
+        # Genera URL per il QR code - usa URL dinamico per Replit
+        base_url = os.getenv("REPLIT_APP_URL", "http://localhost:8000").replace("https://", "http://")
+        qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
 
         # Try server-side QR generation (optional, client-side will always work)
         qr_image_b64 = None
@@ -819,6 +821,7 @@ def generate_qr_code(user: str = Depends(get_current_user)):
             import qrcode
             from PIL import Image
             import base64
+            import io
 
             print("✅ QRCode and PIL libraries imported successfully")
 
@@ -839,8 +842,8 @@ def generate_qr_code(user: str = Depends(get_current_user)):
 
             print("✅ QR image generated and saved to buffer")
 
-            # Create direct image URL
-            qr_image_url = f"/admin/api/auth/qr-image/{session_id}"
+            # Create direct image URL only if generation succeeded
+            qr_image_url = f"{base_url}/admin/api/auth/qr-image/{session_id}"
 
             # Also create base64 as backup
             image_data = buffer.getvalue()
@@ -855,9 +858,6 @@ def generate_qr_code(user: str = Depends(get_current_user)):
             print(f"❌ Server-side QR generation failed: {qr_error}")
             import traceback
             traceback.print_exc()
-
-        # Crea URL per immagine QR diretta
-        qr_image_url = f"/admin/api/auth/qr-image/{session_id}"
 
         return {
             "success": True,
