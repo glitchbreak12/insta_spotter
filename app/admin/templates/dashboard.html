@@ -6,8 +6,9 @@
     <title>InstaSpotter Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- QR Code generation - client-side fallback -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- QR Code generation - multiple fallbacks -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onerror="console.log('qrcode.js failed to load')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js" onerror="console.log('Qrious failed to load')"></script>
     <style>
         /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -4328,32 +4329,67 @@
             }
         }
 
-        // Generate QR code client-side using Qrious
+        // Generate QR code client-side - try multiple libraries
         function generateClientSideQR(url) {
-            console.log('Generating QR code client-side with Qrious for URL:', url);
+            console.log('Generating QR code client-side for URL:', url);
+            console.log('Available libraries - QRCode:', typeof QRCode, ', QRious:', typeof QRious);
 
-            try {
-                const qrContainer = document.getElementById('qrCodeContainer');
+            const qrContainer = document.getElementById('qrCodeContainer');
 
-                // Create a unique ID for the canvas
-                const canvasId = 'qrious-canvas-' + Date.now();
+            // Try qrcode.js first (the one we know works)
+            if (typeof QRCode !== 'undefined') {
+                console.log('Using qrcode.js library');
+                try {
+                    const canvasId = 'qrcode-canvas-' + Date.now();
+                    qrContainer.innerHTML = `<div id="${canvasId}" style="display: inline-block;"></div>`;
 
-                // Generate QR code using Qrious
-                qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
+                    QRCode.toCanvas(document.getElementById(canvasId), url, {
+                        width: 256,
+                        height: 256,
+                        colorDark: "#000000",
+                        colorLight: "#FFFFFF",
+                        correctLevel: QRCode.CorrectLevel.H
+                    }, function (error) {
+                        if (error) {
+                            console.error('qrcode.js generation failed:', error);
+                            tryQrious(url);
+                        } else {
+                            console.log('QR code generated successfully with qrcode.js');
+                        }
+                    });
+                    return;
+                } catch (error) {
+                    console.error('qrcode.js failed:', error);
+                }
+            }
 
-                // Create QR code with Qrious
-                const qr = new QRious({
-                    element: document.getElementById(canvasId),
-                    value: url,
-                    size: 256,
-                    level: 'H' // High error correction
-                });
+            // Fallback to Qrious
+            function tryQrious(url) {
+                if (typeof QRious !== 'undefined') {
+                    console.log('Trying Qrious as fallback');
+                    try {
+                        const canvasId = 'qrious-canvas-' + Date.now();
+                        qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
 
-                console.log('QR code generated successfully with Qrious');
+                        const qr = new QRious({
+                            element: document.getElementById(canvasId),
+                            value: url,
+                            size: 256
+                        });
+                        console.log('QR code generated successfully with Qrious');
+                    } catch (error) {
+                        console.error('Qrious also failed:', error);
+                        showQRUrlFallback(url);
+                    }
+                } else {
+                    console.error('No QR libraries available');
+                    showQRUrlFallback(url);
+                }
+            }
 
-            } catch (error) {
-                console.error('Qrious QR generation failed:', error);
-                showQRUrlFallback(url);
+            // If qrcode.js is not available, try Qrious immediately
+            if (typeof QRCode === 'undefined') {
+                tryQrious(url);
             }
         }
 
