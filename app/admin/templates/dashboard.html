@@ -4274,30 +4274,12 @@
                 if (data.success) {
                     // Show QR code area
                     document.getElementById('qrCodeArea').style.display = 'block';
+                    console.log('QR data received:', data.qr_data);
 
-                    // Try to use server-generated QR image first
-                    if (data.qr_data.qr_image_url) {
-                        // Use direct image URL (more reliable)
-                        document.getElementById('qrCodeContainer').innerHTML = `
-                            <img src="${data.qr_data.qr_image_url}"
-                                 alt="QR Code"
-                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"
-                                 onerror="generateClientSideQR('${data.qr_data.url}')">
-                        `;
-                        console.log('Using server-generated QR image URL:', data.qr_data.qr_image_url);
-                    } else if (data.qr_data.qr_image_b64) {
-                        // Fallback to base64
-                        document.getElementById('qrCodeContainer').innerHTML = `
-                            <img src="${data.qr_data.qr_image_b64}"
-                                 alt="QR Code"
-                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"
-                                 onerror="generateClientSideQR('${data.qr_data.url}')">
-                        `;
-                        console.log('Using server-generated QR base64 image');
-                    } else {
-                        // No server image available, generate client-side immediately
-                        generateClientSideQR(data.qr_data.url);
-                    }
+                    // Since server-side QR generation is not available on Replit,
+                    // go directly to client-side generation (most reliable approach)
+                    console.log('🚀 Using client-side QR generation (server-side not available)');
+                    generateClientSideQR(data.qr_data.url);
 
                     // Start countdown
                     let timeLeft = 300;
@@ -4377,19 +4359,52 @@
 
         // Generate QR code client-side - try multiple libraries
         function generateClientSideQR(url) {
-            console.log('Generating QR code client-side for URL:', url);
-            console.log('Available libraries - QRCode:', typeof QRCode, ', QRious:', typeof QRious);
+            console.log('🔄 generateClientSideQR called with URL:', url);
+            console.log('📚 Available libraries - QRCode:', typeof QRCode, ', QRious:', typeof QRious);
 
             const qrContainer = document.getElementById('qrCodeContainer');
 
+            // Check if libraries are loaded (give them a moment if not ready)
+            if (typeof QRCode === 'undefined' && typeof QRious === 'undefined') {
+                console.log('⏳ Libraries not ready yet, waiting...');
+                qrContainer.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner"></div><p>Caricamento librerie...</p></div>';
+
+                setTimeout(() => {
+                    console.log('⏰ Retry after delay - QRCode:', typeof QRCode, ', QRious:', typeof QRious);
+                    if (typeof QRCode === 'undefined' && typeof QRious === 'undefined') {
+                        console.error('❌ Libraries still not loaded after delay');
+                        showQRUrlFallback(url);
+                        return;
+                    }
+                    // Retry with libraries now available
+                    generateClientSideQR(url);
+                }, 2000);
+                return;
+            }
+            if (!qrContainer) {
+                console.error('❌ QR container not found!');
+                showQRUrlFallback(url);
+                return;
+            }
+
+            // Clear previous content
+            qrContainer.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="spinner"></div><p>Generando QR code...</p></div>';
+
             // Try qrcode.js first (the one we know works)
             if (typeof QRCode !== 'undefined') {
-                console.log('Using qrcode.js library');
+                console.log('🎯 Using qrcode.js library');
                 try {
                     const canvasId = 'qrcode-canvas-' + Date.now();
                     qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
 
                     const canvas = document.getElementById(canvasId);
+                    if (!canvas) {
+                        console.error('❌ Canvas element not created!');
+                        tryQrious(url);
+                        return;
+                    }
+
+                    console.log('🖼️ Calling QRCode.toCanvas...');
                     QRCode.toCanvas(canvas, url, {
                         width: 256,
                         height: 256,
@@ -4397,41 +4412,51 @@
                         colorLight: "#FFFFFF",
                         correctLevel: QRCode.CorrectLevel.H
                     }).then(() => {
-                        console.log('QR code generated successfully with qrcode.js');
+                        console.log('✅ QR code generated successfully with qrcode.js');
+                        showNotification('Successo', 'QR Code generato! Scansiona con il cellulare.', 'success');
                     }).catch((error) => {
-                        console.error('qrcode.js generation failed:', error);
+                        console.error('❌ qrcode.js generation failed:', error);
                         tryQrious(url);
                     });
                     return;
                 } catch (error) {
-                    console.error('qrcode.js failed:', error);
+                    console.error('❌ qrcode.js setup failed:', error);
                     tryQrious(url);
                 }
             } else {
-                console.log('QRCode library not available, trying Qrious');
+                console.log('⚠️ QRCode library not available, trying Qrious');
                 tryQrious(url);
             }
 
             // Fallback to Qrious
             function tryQrious(url) {
+                console.log('🔄 Trying Qrious as fallback, available:', typeof QRious);
                 if (typeof QRious !== 'undefined') {
-                    console.log('Trying Qrious as fallback');
                     try {
                         const canvasId = 'qrious-canvas-' + Date.now();
                         qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
 
+                        const canvas = document.getElementById(canvasId);
+                        if (!canvas) {
+                            console.error('❌ Qrious canvas not created');
+                            showQRUrlFallback(url);
+                            return;
+                        }
+
+                        console.log('🎨 Creating Qrious QR code...');
                         const qr = new QRious({
-                            element: document.getElementById(canvasId),
+                            element: canvas,
                             value: url,
                             size: 256
                         });
-                        console.log('QR code generated successfully with Qrious');
+                        console.log('✅ QR code generated successfully with Qrious');
+                        showNotification('Successo', 'QR Code generato con Qrious! Scansiona con il cellulare.', 'success');
                     } catch (error) {
-                        console.error('Qrious also failed:', error);
+                        console.error('❌ Qrious generation failed:', error);
                         showQRUrlFallback(url);
                     }
                 } else {
-                    console.error('No QR libraries available');
+                    console.error('❌ No QR libraries available at all');
                     showQRUrlFallback(url);
                 }
             }
@@ -4450,7 +4475,7 @@
 
         // Show URL fallback when all QR generation methods fail
         function showQRUrlFallback(url) {
-            console.log('All QR generation methods failed, showing URL fallback');
+            console.log('❌ All QR generation methods failed, showing URL fallback');
             const qrContainer = document.getElementById('qrCodeContainer');
             qrContainer.innerHTML = `
                 <div style="text-align: center; padding: var(--space-lg);">
@@ -4458,15 +4483,22 @@
                     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
                         Generazione QR fallita. Usa questo link:
                     </p>
-                    <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-bottom: var(--space-md);">
+                    <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-bottom: var(--space-md); border: 1px solid var(--border);">
                         ${url}
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${url}')">
-                        <i class="fas fa-copy"></i>
-                        Copia Link
-                    </button>
+                    <div style="display: flex; gap: var(--space-sm); justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${url}')">
+                            <i class="fas fa-copy"></i>
+                            Copia Link
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="generateClientSideQR('${url}')">
+                            <i class="fas fa-redo"></i>
+                            Riprova QR
+                        </button>
+                    </div>
                 </div>
             `;
+            showNotification('Avviso', 'QR Code non disponibile. Usa il link per accedere dal cellulare.', 'warning');
         }
 
         function showNotification(type, message, style) {
