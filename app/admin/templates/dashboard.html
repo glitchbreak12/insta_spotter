@@ -1397,17 +1397,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard initializing...');
 
-            // Check authentication first
-            checkAuthentication().then(isAuthenticated => {
-                if (!isAuthenticated) {
-                    window.location.href = '/admin/login';
-                    return;
-                }
-
-                // Load initial data
+            // Small delay to allow session to stabilize after login redirect
+            setTimeout(() => {
+                // Load initial data - authentication will be checked per API call
                 loadDashboardData();
                 loadSystemSettings();
-            });
+                loadDailyPostSettings();
+                loadInfoCards();
+            }, 1000); // 1 second delay
+
+            // Auto-refresh every 30 seconds (starts after initial load)
+            setTimeout(() => {
+                setInterval(() => {
+                    loadDashboardData();
+                    console.log('Auto-refresh completed');
+                }, 30000);
+            }, 5000); // Start auto-refresh after 5 seconds
         });
 
         // Authentication check
