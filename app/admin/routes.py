@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Response, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
+import secrets
+import hashlib
+import json
+import io
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
@@ -774,3 +778,353 @@ def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Se
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
+
+# === SISTEMA QR LOGIN MOBILE ===
+
+# Store temporaneo per sessioni QR (in memoria)
+qr_sessions = {}
+
+@router.post("/api/auth/generate-qr")
+def generate_qr_code(user: str = Depends(get_current_user)):
+    """Genera un codice QR per autenticazione mobile."""
+    try:
+        # Genera token sicuro unico
+        qr_token = secrets.token_urlsafe(32)
+        session_id = secrets.token_hex(16)
+
+        # Hash del token per storage sicuro
+        token_hash = hashlib.sha256(qr_token.encode()).hexdigest()
+
+        # Scadenza: 5 minuti
+        expires_at = datetime.utcnow() + timedelta(minutes=5)
+
+        # Store della sessione QR
+        qr_sessions[session_id] = {
+            "token_hash": token_hash,
+            "user": user,
+            "created_at": datetime.utcnow(),
+            "expires_at": expires_at,
+            "used": False
+        }
+
+        # Genera URL per il QR code
+        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token={qr_token}"
+
+        # Prova a generare QR code lato server se qrcode è disponibile
+        qr_image_b64 = None
+        try:
+            import qrcode
+            from PIL import Image
+
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            qr_image_b64 = f"data:image/png;base64,{__import__('base64').b64encode(buffer.getvalue()).decode('utf-8')}"
+
+        except ImportError:
+            # qrcode library not available, will use client-side generation
+            pass
+        except Exception as qr_error:
+            print(f"Server-side QR generation failed: {qr_error}")
+            pass
+
+        return {
+            "success": True,
+            "qr_data": {
+                "session_id": session_id,
+                "url": qr_url,
+                "expires_in": 300,  # 5 minuti
+                "qr_image": qr_image_b64  # Base64 encoded PNG if available
+            },
+            "message": "QR Code generato. Scansiona con il cellulare per accedere automaticamente."
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/verify-qr")
+def verify_qr_code(session_id: str, token: str):
+    """Verifica il codice QR scansionato dal mobile."""
+    try:
+        # Controlla se la sessione QR esiste
+        if session_id not in qr_sessions:
+            return {"success": False, "error": "Sessione QR non valida"}
+
+        session = qr_sessions[session_id]
+
+        # Controlla scadenza
+        if datetime.utcnow() > session["expires_at"]:
+            del qr_sessions[session_id]
+            return {"success": False, "error": "Sessione QR scaduta"}
+
+        # Controlla se già usata
+        if session["used"]:
+            return {"success": False, "error": "Sessione QR già utilizzata"}
+
+        # Verifica token
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        if token_hash != session["token_hash"]:
+            return {"success": False, "error": "Token QR non valido"}
+
+        # Marca come usata
+        session["used"] = True
+
+        return {
+            "success": True,
+            "user": session["user"],
+            "message": f"Dispositivo mobile collegato con successo a {session['user']}"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/qr-login")
+def qr_mobile_login(session_id: str):
+    """Login tramite QR dal mobile."""
+    try:
+        if session_id not in qr_sessions:
+            return {"success": False, "error": "Sessione non trovata"}
+
+        session = qr_sessions[session_id]
+        if not session.get("used", False):
+            return {"success": False, "error": "Sessione non verificata"}
+
+        # Genera token di sessione per il mobile
+        from app.admin.security import create_access_token
+        mobile_token = create_access_token({"sub": session["user"], "device": "mobile"})
+
+        # Log dell'accesso
+        print(f"🔐 Mobile login via QR: {session['user']}")
+
+        # Pulisci la sessione QR dopo uso
+        del qr_sessions[session_id]
+
+        return {
+            "success": True,
+            "access_token": mobile_token,
+            "user": session["user"],
+            "device": "mobile",
+            "message": "Login mobile completato con successo"
+        }
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# === PAGINA MOBILE PER SCAN QR CODE ===
+
+@router.get("/auth/qr/{session_id}")
+def qr_auth_page(session_id: str):
+    """Pagina mobile per autenticazione QR."""
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>InstaSpotter - Accesso Mobile</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            .container {{
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }}
+            .logo {{
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: #fff;
+            }}
+            h1 {{
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }}
+            .status {{
+                font-size: 1rem;
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.1);
+            }}
+            .btn {{
+                background: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                margin: 10px;
+                min-width: 200px;
+            }}
+            .btn:hover {{
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }}
+            .btn:disabled {{
+                opacity: 0.6;
+                cursor: not-allowed;
+            }}
+            .success {{
+                background: rgba(16, 185, 129, 0.2);
+                border-color: #10b981;
+            }}
+            .error {{
+                background: rgba(239, 68, 68, 0.2);
+                border-color: #ef4444;
+            }}
+            .spinner {{
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top: 3px solid white;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto;
+            }}
+            @keyframes spin {{
+                0% {{ transform: rotate(0deg); }}
+                100% {{ transform: rotate(360deg); }}
+            }}
+            .hidden {{ display: none; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h1>InstaSpotter Mobile</h1>
+            <div id="status" class="status">
+                <div id="statusText">Verificando sessione...</div>
+            </div>
+            <button id="authBtn" class="btn" onclick="authenticate()" disabled>
+                <i class="fas fa-mobile-alt"></i>
+                Accedi da Mobile
+            </button>
+            <button id="retryBtn" class="btn hidden" onclick="retry()">
+                <i class="fas fa-redo"></i>
+                Riprova
+            </button>
+        </div>
+
+        <script>
+            let sessionId = '{session_id}';
+            let qrToken = null;
+
+            // Estrai token dall'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            qrToken = urlParams.get('token');
+
+            async function checkSession() {{
+                if (!qrToken) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Token QR mancante';
+                    document.getElementById('status').className = 'status error';
+                    return;
+                }}
+
+                try {{
+                    const response = await fetch('/admin/api/auth/verify-qr', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{
+                            session_id: sessionId,
+                            token: qrToken
+                        }})
+                    }});
+
+                    const data = await response.json();
+
+                    if (data.success) {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Sessione verificata! Pronto per accesso.';
+                        document.getElementById('status').className = 'status success';
+                        document.getElementById('authBtn').disabled = false;
+                    }} else {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (data.error || 'Errore verifica sessione');
+                        document.getElementById('status').className = 'status error';
+                        document.getElementById('retryBtn').classList.remove('hidden');
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore di connessione';
+                    document.getElementById('status').className = 'status error';
+                    document.getElementById('retryBtn').classList.remove('hidden');
+                }}
+            }}
+
+            async function authenticate() {{
+                try {{
+                    document.getElementById('authBtn').innerHTML = '<div class="spinner"></div>';
+                    document.getElementById('authBtn').disabled = true;
+
+                    const response = await fetch('/admin/api/auth/qr-login', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ session_id: sessionId }})
+                    }});
+
+                    const data = await response.json();
+
+                    if (data.success) {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso completato! Puoi chiudere questa pagina.';
+                        document.getElementById('status').className = 'status success';
+                        document.getElementById('authBtn').style.display = 'none';
+
+                        // Auto-close after 3 seconds
+                        setTimeout(() => {{
+                            window.close();
+                        }}, 3000);
+                    }} else {{
+                        throw new Error(data.error || 'Errore autenticazione');
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + error.message;
+                    document.getElementById('status').className = 'status error';
+                    document.getElementById('authBtn').innerHTML = '<i class="fas fa-mobile-alt"></i> Riprova';
+                    document.getElementById('authBtn').disabled = false;
+                }}
+            }}
+
+            function retry() {{
+                document.getElementById('statusText').innerHTML = '<div class="spinner"></div> Verificando...';
+                document.getElementById('status').className = 'status';
+                document.getElementById('retryBtn').classList.add('hidden');
+                checkSession();
+            }}
+
+            // Check session on load
+            checkSession();
+
+            // Auto-refresh every 10 seconds
+            setInterval(checkSession, 10000);
+        </script>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)

@@ -1667,32 +1667,56 @@
                     <div class="stat-card">
                         <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
                             <i class="fas fa-key" style="color: var(--primary); margin-right: var(--space-sm);"></i>
-                            Autenticazione Avanzata
+                            Autenticazione Mobile QR
                         </h4>
 
                         <div style="text-align: center; padding: var(--space-xl); background: var(--bg-tertiary); border-radius: var(--radius-lg); margin-bottom: var(--space-lg);">
-                            <i class="fas fa-info-circle fa-2x" style="color: var(--info); margin-bottom: var(--space-md);"></i>
-                            <h5 style="margin-bottom: var(--space-sm);">Sistema di Autenticazione</h5>
-                            <p style="font-size: 0.9rem; color: var(--text-muted);">
-                                Funzionalità avanzate di sicurezza e autenticazione multi-fattore disponibili.
+                            <i class="fas fa-mobile-alt fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                            <h5 style="margin-bottom: var(--space-sm);">Accesso Mobile con QR Code</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-lg);">
+                                Genera un QR code per accedere automaticamente dal tuo cellulare quando sei già loggato.
                             </p>
-                            <div style="margin-top: var(--space-lg);">
-                                <button class="btn btn-primary" onclick="showNotification('Info', 'Sistema 2FA e monitoraggio sessioni in sviluppo', 'info')">
-                                    <i class="fas fa-cog"></i>
-                                    Configura Sicurezza
-                                </button>
+                            <button class="btn btn-primary" onclick="generateQRCode()" id="generateQRBtn">
+                                <i class="fas fa-qrcode"></i>
+                                Genera QR Code
+                            </button>
+                        </div>
+
+                        <!-- QR Code Display Area -->
+                        <div id="qrCodeArea" style="display: none; text-align: center; margin-bottom: var(--space-lg);">
+                            <div style="background: white; padding: var(--space-xl); border-radius: var(--radius-lg); display: inline-block; box-shadow: var(--shadow-lg);">
+                                <h5 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Scansiona il QR Code</h5>
+                                <div id="qrCodeContainer" style="margin-bottom: var(--space-lg);">
+                                    <!-- QR Code will be generated here -->
+                                    <div style="width: 256px; height: 256px; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                                        <div style="color: #666; text-align: center;">
+                                            <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
+                                            <div>Generando QR Code...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    Scansiona questo codice con il tuo cellulare per accedere automaticamente
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--warning);">
+                                    <i class="fas fa-clock"></i>
+                                    Scade tra <span id="qrCountdown">300</span> secondi
+                                </div>
                             </div>
                         </div>
 
-                        <div class="action-buttons">
-                            <button class="btn btn-success btn-sm" onclick="showNotification('Info', 'Sistema 2FA disponibile nella prossima versione', 'success')">
-                                <i class="fas fa-shield-alt"></i>
-                                Abilita 2FA
-                            </button>
-                            <button class="btn btn-info btn-sm" onclick="showNotification('Info', 'Monitoraggio sessioni attivo', 'info')">
-                                <i class="fas fa-eye"></i>
-                                Sessioni Attive
-                            </button>
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); border-radius: var(--radius-lg); padding: var(--space-lg);">
+                            <h5 style="margin-bottom: var(--space-md); color: var(--success);">
+                                <i class="fas fa-info-circle" style="margin-right: var(--space-sm);"></i>
+                                Come Funziona
+                            </h5>
+                            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                                <ol style="padding-left: var(--space-lg);">
+                                    <li style="margin-bottom: var(--space-xs);">1. Clicca "Genera QR Code" mentre sei loggato</li>
+                                    <li style="margin-bottom: var(--space-xs);">2. Scansiona il QR con il tuo cellulare</li>
+                                    <li style="margin-bottom: var(--space-xs);">3. Verrai automaticamente loggato sul mobile</li>
+                                </ol>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4171,6 +4195,96 @@
             }
         }
 
+        // QR Code functionality
+        async function generateQRCode() {
+            console.log('generateQRCode called');
+            try {
+                showNotification('Info', 'Generando codice QR...', 'info');
+
+                // Disable button during generation
+                const btn = document.getElementById('generateQRBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+
+                const response = await fetch('/admin/api/auth/generate-qr', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show QR code area
+                    document.getElementById('qrCodeArea').style.display = 'block';
+
+                    // Check if server-side QR image is available
+                    if (data.qr_data.qr_image) {
+                        // Use server-generated QR image
+                        document.getElementById('qrCodeContainer').innerHTML = `
+                            <img src="${data.qr_data.qr_image}"
+                                 alt="QR Code"
+                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
+                        `;
+                        console.log('Using server-generated QR code image');
+                    } else {
+                        // Fallback: show URL for manual entry
+                        document.getElementById('qrCodeContainer').innerHTML = `
+                            <div style="text-align: center; padding: var(--space-lg);">
+                                <i class="fas fa-link fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    QR Code non disponibile. Usa questo link:
+                                </p>
+                                <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all;">
+                                    ${data.qr_data.url}
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${data.qr_data.url}')" style="margin-top: var(--space-sm);">
+                                    <i class="fas fa-copy"></i>
+                                    Copia Link
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // Start countdown
+                    let timeLeft = 300;
+                    const countdownEl = document.getElementById('qrCountdown');
+                    const countdownInterval = setInterval(() => {
+                        timeLeft--;
+                        if (countdownEl) countdownEl.textContent = timeLeft;
+
+                        if (timeLeft <= 0) {
+                            clearInterval(countdownInterval);
+                            document.getElementById('qrCodeArea').style.display = 'none';
+                            showNotification('Info', 'QR Code scaduto', 'warning');
+                        }
+                    }, 1000);
+
+                    showNotification('Success', 'QR Code generato! Scansiona con il cellulare per accedere automaticamente.', 'success');
+
+                } else {
+                    throw new Error(data.error || 'Errore generazione QR');
+                }
+
+            } catch (error) {
+                console.error('Error generating QR:', error);
+                showNotification('Errore', 'Impossibile generare il codice QR: ' + error.message, 'error');
+            } finally {
+                // Re-enable button
+                const btn = document.getElementById('generateQRBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-qrcode"></i> Genera QR Code';
+            }
+        }
+
         function showDangerZone() {
             console.log('showDangerZone called');
             const dangerZone = document.getElementById('dangerZone');
@@ -4192,6 +4306,27 @@
             const systemLogs = document.getElementById('systemLogs');
             if (systemLogs) {
                 systemLogs.style.display = systemLogs.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // Copy to clipboard utility
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification('Successo', 'Link copiato negli appunti!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('Successo', 'Link copiato negli appunti!', 'success');
+                } catch (fallbackError) {
+                    showNotification('Errore', 'Impossibile copiare automaticamente. Seleziona e copia manualmente.', 'error');
+                }
+                document.body.removeChild(textArea);
             }
         }
 
