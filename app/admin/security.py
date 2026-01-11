@@ -1,7 +1,6 @@
 import os
 import secrets
 import logging
-import hashlib
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer
@@ -149,33 +148,7 @@ def get_current_user(request: Request) -> Optional[str]:
         if not secrets.compare_digest(username, ADMIN_USERNAME):
             return None
 
-        # === TRACKING SESSIONI ATTIVE ===
-        # Importa qui per evitare circular imports
-        from app.admin.routes import active_sessions
-
-        # Ottieni informazioni sulla sessione
-        client_ip = request.client.host if hasattr(request, 'client') and request.client else request.headers.get('X-Forwarded-For', request.headers.get('X-Real-IP', 'unknown'))
-        user_agent = request.headers.get('User-Agent', 'unknown')
-        session_id = hashlib.sha256(f"{username}_{client_ip}_{user_agent}".encode()).hexdigest()[:16]
-
-        # Aggiorna o crea la sessione
-        active_sessions[session_id] = {
-            "user": username,
-            "ip": client_ip,
-            "user_agent": user_agent,
-            "created_at": datetime.now(timezone.utc),
-            "last_activity": datetime.now(timezone.utc),
-            "device": "desktop" if "desktop" in user_agent.lower() else "mobile"
-        }
-
-        # Limpa sessioni scadute (più vecchie di 24 ore)
-        expired_sessions = []
-        for sid, session in active_sessions.items():
-            if datetime.now(timezone.utc) - session["last_activity"] > timedelta(hours=24):
-                expired_sessions.append(sid)
-
-        for sid in expired_sessions:
-            del active_sessions[sid]
+        # Session tracking temporaneamente disabilitato per stabilità
 
         return username
     except JWTError as e:
