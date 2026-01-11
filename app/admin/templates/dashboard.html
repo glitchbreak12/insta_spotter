@@ -4,122 +4,315 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InstaSpotter Admin Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Reset and Base Styles */
+        /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* CSS Variables */
+        /* Advanced Design System Variables */
         :root {
             --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #8b5cf6;
             --success: #10b981;
+            --success-dark: #059669;
             --warning: #f59e0b;
-            --error: #dc3545;
-            --bg: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --text: #f8fafc;
+            --warning-dark: #d97706;
+            --error: #ef4444;
+            --error-dark: #dc2626;
+            --info: #06b6d4;
+
+            /* Background Colors */
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-hover: #475569;
+            --bg-accent: #f8fafc;
+
+            /* Text Colors */
+            --text-primary: #f8fafc;
+            --text-secondary: #e2e8f0;
             --text-muted: #94a3b8;
+            --text-accent: #6366f1;
+
+            /* Border & Shadow */
             --border: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
+            --border-light: #475569;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            --gradient-success: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            --gradient-warning: linear-gradient(135deg, var(--warning) 0%, var(--warning-dark) 100%);
+            --gradient-error: linear-gradient(135deg, var(--error) 0%, var(--error-dark) 100%);
+
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 0.75rem;
+            --space-lg: 1rem;
+            --space-xl: 1.5rem;
+            --space-2xl: 2rem;
+            --space-3xl: 3rem;
+
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+            --radius-2xl: 2rem;
+
+            /* Transitions */
+            --transition-fast: 150ms ease-in-out;
+            --transition-normal: 250ms ease-in-out;
+            --transition-slow: 350ms ease-in-out;
         }
 
         /* Base Styles */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             line-height: 1.6;
+            font-size: 14px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Mobile-First Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0.75rem;
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
         }
 
-        /* Header - Mobile Optimized */
+        h1 { font-size: 2rem; }
+        h2 { font-size: 1.75rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+        h5 { font-size: 1.125rem; }
+        h6 { font-size: 1rem; }
+
+        /* Layout Components */
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg);
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Header - Modern Design */
         .header {
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-light);
+            padding: var(--space-lg) var(--space-xl);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px var(--shadow);
+            box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .header h1 {
-            color: var(--primary);
-            font-size: 1.2rem;
-            font-weight: 700;
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: var(--space-lg);
         }
 
-        .header h1 i { font-size: 1.2rem; }
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-        .user-info {
+        .logo i {
+            color: #fff;
+            margin-right: var(--space-sm);
+        }
+
+        .user-menu {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: var(--space-md);
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 0.8rem;
-            border: 2px solid var(--border);
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .logout-btn {
-            background: var(--error);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 0.5rem 0.75rem;
-            border: none;
-            border-radius: 8px;
+            padding: var(--space-sm) var(--space-lg);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
+            transition: var(--transition-fast);
             display: flex;
             align-items: center;
-            gap: 0.25rem;
-            transition: all 0.2s ease;
+            gap: var(--space-sm);
         }
 
-        .logout-btn:hover { background: #b02a37; }
-        .logout-btn:active { transform: scale(0.95); }
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
 
-        /* Stats Grid - Mobile Optimized */
-        .stats {
+        /* Navigation - Advanced Tab System */
+        .nav-container {
+            margin-bottom: var(--space-2xl);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--space-sm);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg) var(--space-md);
+            border-radius: var(--radius-lg);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            min-width: 80px;
+            flex: 1;
+            position: relative;
+        }
+
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+            transition: var(--transition-normal);
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .nav-tab.active::before {
+            width: 100%;
+        }
+
+        .nav-tab i {
+            font-size: 1.5rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .nav-tab span {
+            font-size: 0.75rem;
+            line-height: 1;
+            text-align: center;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Grid - Advanced Cards */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-3xl);
         }
 
         .stat-card {
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 12px;
-            text-align: center;
+            background: var(--bg-secondary);
             border: 1px solid var(--border);
-            box-shadow: 0 1px 3px var(--shadow);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow);
+            transition: var(--transition-normal);
             position: relative;
             overflow: hidden;
         }
@@ -130,182 +323,410 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), #8b5cf6);
+            height: 4px;
+            background: var(--gradient-primary);
         }
 
-        .stat-card h3 {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
         }
 
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            line-height: 1;
-        }
-
-        /* Sections - Mobile Optimized */
-        .section {
-            background: var(--bg-card);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border);
-            box-shadow: 0 1px 3px var(--shadow);
-        }
-
-        .section h2 {
-            color: var(--primary);
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
+        .stat-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
         }
 
-        .section h2 i { font-size: 1.1rem; }
-
-        /* Buttons - Mobile Optimized */
-        .btn {
-            background: var(--primary);
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
             color: white;
-            padding: 0.5rem 0.75rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.8rem;
+        }
+
+        .stat-icon.primary { background: var(--gradient-primary); }
+        .stat-icon.success { background: var(--gradient-success); }
+        .stat-icon.warning { background: var(--gradient-warning); }
+        .stat-icon.error { background: var(--gradient-error); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: var(--space-xs);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.75rem;
             font-weight: 600;
+            margin-top: var(--space-sm);
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--error);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: var(--space-md) var(--space-lg);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            transition: all 0.2s ease;
+            gap: var(--space-sm);
             white-space: nowrap;
-            min-height: 36px;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
         }
 
-        .btn:hover { background: #4f46e5; transform: translateY(-1px); }
-        .btn:active { transform: translateY(0) scale(0.98); }
-        .btn-success { background: var(--success); }
-        .btn-success:hover { background: #059669; }
-        .btn-danger { background: var(--error); }
-        .btn-danger:hover { background: #b02a37; }
-        .btn-secondary { background: var(--bg-hover); color: var(--text); }
-        .btn-secondary:hover { background: #475569; }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
 
-        /* Message Cards - Mobile Optimized */
-        .message-card {
-            background: var(--bg-hover);
-            padding: 0.875rem;
-            border-radius: 10px;
-            margin-bottom: 0.75rem;
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--gradient-warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--gradient-error);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             border: 1px solid var(--border);
-            transition: all 0.2s ease;
         }
 
-        .message-card:hover { background: #475569; }
-        .message-card:active { transform: scale(0.98); }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: var(--space-sm) var(--space-md);
+            font-size: 0.75rem;
+        }
+
+        .btn-lg {
+            padding: var(--space-lg) var(--space-xl);
+            font-size: 1rem;
+        }
+
+        /* Message Cards - Advanced Design */
+        .messages-section {
+            margin-bottom: var(--space-3xl);
+        }
+
+        .messages-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .messages-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-md);
+        }
+
+        .message-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+            opacity: 0;
+            transition: var(--transition-normal);
+        }
+
+        .message-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .message-card:hover::before {
+            opacity: 1;
+        }
 
         .message-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .message-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .message-status {
+            display: inline-flex;
+            align-items: center;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-2xl);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-approved {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-posted {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.3);
         }
 
         .message-content {
-            color: var(--text);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            margin-bottom: 0.75rem;
-            word-break: break-word;
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin-bottom: var(--space-md);
+            font-size: 0.95rem;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
         }
 
         .message-actions {
             display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
         }
 
-        .message-status {
-            padding: 0.2rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+        .message-actions .btn {
+            padding: var(--space-sm) var(--space-md);
+            font-size: 0.75rem;
         }
 
-        .status-PENDING { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-        .status-APPROVED { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .status-REJECTED { background: rgba(239, 68, 68, 0.2); color: var(--error); }
-        .status-POSTED { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
-
-        /* Forms - Mobile Optimized */
+        /* Forms - Modern Design */
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: var(--space-lg);
         }
 
         .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--space-sm);
             font-weight: 600;
-            color: var(--text);
-            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
         }
 
-        .form-input {
+        .form-input, .form-textarea, .form-select {
             width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 0.9rem;
-            transition: border-color 0.2s ease;
+            padding: var(--space-md) var(--space-lg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: var(--transition-fast);
         }
 
-        .form-input:focus {
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
-        /* Preview Card */
-        .preview-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin: 1rem 0;
-            text-align: center;
-            border: 1px solid var(--border);
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: var(--space-xs);
+        }
+
+        /* Modal System */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition-normal);
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--space-2xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.9);
+            transition: var(--transition-normal);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--space-sm);
+            border-radius: var(--radius);
+            transition: var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
         }
 
         /* Loading States */
         .loading {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--text-muted);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            padding: var(--space-3xl) var(--space-xl);
+            color: var(--text-muted);
         }
 
         .spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid var(--border);
-            border-top: 2px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-bottom: var(--space-lg);
         }
 
         @keyframes spin {
@@ -313,704 +734,666 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Hidden Utility */
-        .hidden { display: none !important; }
-
-        /* Mobile-Specific Optimizations */
-        @media (max-width: 480px) {
-            .container { padding: 0.5rem; }
-            .stats { grid-template-columns: 1fr; }
-            .header { padding: 0.75rem; }
-            .section { padding: 0.75rem; }
-            .message-actions { flex-direction: column; gap: 0.375rem; }
-            .message-actions .btn { justify-content: center; }
+        .loading-text {
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        /* Touch-friendly interactions */
-        @media (hover: none) and (pointer: coarse) {
-            .btn:hover { transform: none; }
-            .message-card:hover { background: var(--bg-hover); }
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-3xl) var(--space-xl);
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: var(--space-lg);
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: var(--space-md);
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+            max-width: 400px;
+            margin: 0 auto var(--space-xl);
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: var(--space-2xl);
+            right: var(--space-xl);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: var(--transition-slow);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .notification-icon {
+            font-size: 1.25rem;
+            margin-top: 2px;
+        }
+
+        .notification.success .notification-icon {
+            color: var(--success);
+        }
+
+        .notification.error .notification-icon {
+            color: var(--error);
+        }
+
+        .notification.warning .notification-icon {
+            color: var(--warning);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            color: var(--text-primary);
+        }
+
+        .notification-message {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                padding: var(--space-md) var(--space-lg);
+                flex-direction: column;
+                gap: var(--space-md);
+            }
+
+            .header-left {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .user-menu {
+                justify-content: center;
+            }
+
+            .main-content {
+                padding: var(--space-md);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-md);
+            }
+
+            .nav-tabs {
+                padding: var(--space-xs);
+            }
+
+            .nav-tab {
+                padding: var(--space-md) var(--space-sm);
+                min-width: 70px;
+            }
+
+            .nav-tab i {
+                font-size: 1.25rem;
+            }
+
+            .nav-tab span {
+                font-size: 0.7rem;
+            }
+
+            .messages-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: var(--space-md);
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .modal-content {
+                padding: var(--space-lg);
+                margin: var(--space-md);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stat-card {
+                padding: var(--space-lg);
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .message-card {
+                padding: var(--space-lg);
+            }
+
+            .message-actions {
+                flex-direction: column;
+            }
+
+            .message-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+
+        .mb-xs { margin-bottom: var(--space-xs); }
+        .mb-sm { margin-bottom: var(--space-sm); }
+        .mb-md { margin-bottom: var(--space-md); }
+        .mb-lg { margin-bottom: var(--space-lg); }
+        .mb-xl { margin-bottom: var(--space-xl); }
+        .mb-2xl { margin-bottom: var(--space-2xl); }
+
+        .mt-xs { margin-top: var(--space-xs); }
+        .mt-sm { margin-top: var(--space-sm); }
+        .mt-md { margin-top: var(--space-md); }
+        .mt-lg { margin-top: var(--space-lg); }
+        .mt-xl { margin-top: var(--space-xl); }
+        .mt-2xl { margin-top: var(--space-2xl); }
+
+        .hidden { display: none; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-sm { gap: var(--space-sm); }
+        .gap-md { gap: var(--space-md); }
+        .gap-lg { gap: var(--space-lg); }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+            40%, 43% { transform: translateY(-8px); }
+            70% { transform: translateY(-4px); }
+            90% { transform: translateY(-2px); }
+        }
+
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus states for keyboard navigation */
+        .btn:focus-visible,
+        .form-input:focus-visible,
+        .form-textarea:focus-visible,
+        .form-select:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --border: #ffffff;
+                --bg-secondary: #000000;
+                --bg-tertiary: #1a1a1a;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1><i class="fas fa-shield-alt"></i> InstaSpotter Admin</h1>
-            <div class="user-info">
+    <div class="app-container">
+        <!-- Modern Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    InstaSpotter
+                </div>
+            </div>
+            <div class="user-menu">
+                <div class="user-info">
+                    <span class="user-name">{{ username or 'Admin' }}</span>
+                    <span class="user-role">Administrator</span>
+                </div>
                 <div class="user-avatar">{{ (username or 'A')[:1].upper() }}</div>
-                <span>{{ username or 'Admin' }}</span>
-                <button class="logout-btn" onclick="logout()">Logout</button>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Stats -->
-        <div class="stats">
-            <div class="stat-card">
-                <h3><i class="fas fa-newspaper"></i> Total Posts</h3>
-                <div class="stat-value" id="totalPosts">0</div>
-            </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-clock"></i> Pending</h3>
-                <div class="stat-value" id="pendingModeration">0</div>
-            </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-check-circle"></i> Approved Today</h3>
-                <div class="stat-value" id="approvedToday">0</div>
-            </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-paper-plane"></i> Posted Today</h3>
-                <div class="stat-value" id="postedToday">0</div>
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Navigation Tabs -->
+            <nav class="nav-container">
+                <div class="nav-tabs">
+                    <button class="nav-tab active" data-section="dashboard">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="nav-tab" data-section="messages">
+                        <i class="fas fa-comments"></i>
+                        <span>Messaggi</span>
+                    </button>
+                    <button class="nav-tab" data-section="daily-post">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>Daily Post</span>
+                    </button>
+                    <button class="nav-tab" data-section="info-cards">
+                        <i class="fas fa-id-card"></i>
+                        <span>Info Cards</span>
+                    </button>
+                    <button class="nav-tab" data-section="settings">
+                        <i class="fas fa-cogs"></i>
+                        <span>Impostazioni</span>
+                    </button>
+                </div>
+            </nav>
 
-        <!-- Messages Section -->
-        <div class="section">
-            <h2><i class="fas fa-comments"></i> Message Management</h2>
-            <div style="margin-bottom: 15px;">
-                <button class="btn btn-secondary" onclick="refreshMessages()">Refresh</button>
-                <button class="btn" onclick="setFilter('ALL')">All</button>
-                <button class="btn" onclick="setFilter('PENDING')" style="background: #f59e0b;">Pending</button>
-                <button class="btn btn-success" onclick="setFilter('APPROVED')">Approved</button>
-                <button class="btn" onclick="setFilter('POSTED')" style="background: #6366f1;">Posted</button>
-            </div>
-            <div id="messagesList">
-                <div class="loading"><div class="spinner"></div>Loading messages...</div>
-            </div>
-        </div>
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="loadDashboardData()">
+                        <i class="fas fa-sync-alt"></i>
+                        Aggiorna Dati
+                    </button>
+                    <button class="btn btn-outline" onclick="exportData()">
+                        <i class="fas fa-download"></i>
+                        Esporta Report
+                    </button>
+                </div>
 
-        <!-- Daily Post Section -->
-        <div class="section">
-            <h2><i class="fas fa-calendar-day"></i> Daily Post Creator</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <h3>Settings</h3>
-                    <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" id="dpEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
-                            Enabled
-                        </label>
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +12%
+                            </div>
+                        </div>
+                        <div class="stat-value" id="totalPosts">0</div>
+                        <div class="stat-label">Messaggi Totali</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Post Time</label>
-                        <input type="time" id="dpTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-change">
+                                <i class="fas fa-minus"></i>
+                                In Attesa
+                            </div>
+                        </div>
+                        <div class="stat-value" id="pendingModeration">0</div>
+                        <div class="stat-label">Da Moderare</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Max Messages</label>
-                        <input type="number" id="dpMaxMessages" class="form-input" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +8%
+                            </div>
+                        </div>
+                        <div class="stat-value" id="approvedToday">0</div>
+                        <div class="stat-label">Approvati Oggi</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Title Template</label>
-                        <input type="text" id="dpTitleTemplate" class="form-input" onchange="updateDailyPostSetting('title_template', this.value)">
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <button class="btn btn-primary" onclick="testDailyPost()">Test Daily Post</button>
-                        <button class="btn btn-success" onclick="generateDailyPost()">Generate Now</button>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <div class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                +15%
+                            </div>
+                        </div>
+                        <div class="stat-value" id="postedToday">0</div>
+                        <div class="stat-label">Pubblicati Oggi</div>
                     </div>
                 </div>
-                <div>
-                    <h3>Stats</h3>
-                    <div id="dailyPostStats">
-                        <div class="loading"><div class="spinner"></div>Loading stats...</div>
+
+                <!-- Recent Activity -->
+                <div class="messages-section">
+                    <div class="messages-header">
+                        <h3>Attività Recente</h3>
+                        <button class="btn btn-outline btn-sm" onclick="loadDashboardData()">
+                            <i class="fas fa-refresh"></i>
+                            Aggiorna
+                        </button>
+                    </div>
+                    <div id="recentActivity" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento attività recente...</div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Daily Post Section -->
-        <div class="section">
-            <h2><i class="fas fa-calendar-day"></i> Daily Post Creator</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <h3>Settings</h3>
-                    <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" id="dpEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
-                            Enabled
-                        </label>
+            <!-- Messages Section -->
+            <section id="messages" class="content-section">
+                <div class="messages-section">
+                    <div class="messages-header">
+                        <h3>Gestione Messaggi</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="loadMessages()">
+                                <i class="fas fa-sync-alt"></i>
+                                Ricarica
+                            </button>
+                            <button class="btn btn-success" onclick="bulkApprove()">
+                                <i class="fas fa-check-double"></i>
+                                Approva Tutto
+                            </button>
+                            <button class="btn btn-danger" onclick="bulkReject()">
+                                <i class="fas fa-times-circle"></i>
+                                Rifiuta Tutto
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Post Time</label>
-                        <input type="time" id="dpTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
+
+                    <!-- Filters -->
+                    <div class="action-buttons" style="margin-bottom: var(--space-lg);">
+                        <button class="btn btn-outline btn-sm" onclick="filterMessages('all')">Tutti</button>
+                        <button class="btn btn-outline btn-sm" onclick="filterMessages('pending')">In Attesa</button>
+                        <button class="btn btn-outline btn-sm" onclick="filterMessages('approved')">Approvati</button>
+                        <button class="btn btn-outline btn-sm" onclick="filterMessages('rejected')">Rifiutati</button>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Max Messages</label>
-                        <input type="number" id="dpMaxMessages" class="form-input" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Title Template</label>
-                        <input type="text" id="dpTitleTemplate" class="form-input" onchange="updateDailyPostSetting('title_template', this.value)">
-                    </div>
-                    <div style="margin-top: 15px;">
-                        <button class="btn btn-primary" onclick="testDailyPost()">Test Daily Post</button>
-                        <button class="btn btn-success" onclick="generateDailyPost()">Generate Now</button>
+
+                    <div id="messagesList" class="messages-list">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento messaggi...</div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h3>Stats</h3>
-                    <div id="dailyPostStats">
-                        <div class="loading"><div class="spinner"></div>Loading stats...</div>
+            </section>
+
+            <!-- Daily Post Section -->
+            <section id="daily-post" class="content-section">
+                <div class="messages-section">
+                    <div class="messages-header">
+                        <h3>Daily Post Creator</h3>
+                        <button class="btn btn-primary" onclick="loadDailyPostSettings()">
+                            <i class="fas fa-sync-alt"></i>
+                            Ricarica
+                        </button>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Info Cards Section -->
-        <div class="section">
-            <h2><i class="fas fa-info-circle"></i> Info Cards Creator</h2>
-            <button class="btn btn-primary" onclick="showCreateCardForm()">Create New Card</button>
+                    <!-- Settings Card -->
+                    <div class="stat-card" style="margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Impostazioni Daily Post</h4>
 
-            <div id="createCardForm" class="hidden" style="margin-top: 20px; padding: 20px; background: #333; border-radius: 8px;">
-                <h3>Create Info Card</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-                    <div>
                         <div class="form-group">
-                            <label class="form-label">Title</label>
-                            <input type="text" id="cardTitle" class="form-input" placeholder="Card title" oninput="updateCardPreview()">
+                            <label class="form-label">
+                                <input type="checkbox" id="dailyPostEnabled" onchange="updateDailyPostSetting('enabled', this.checked)">
+                                Abilitato
+                            </label>
                         </div>
+
                         <div class="form-group">
-                            <label class="form-label">Content</label>
-                            <textarea id="cardContent" class="form-input" rows="6" placeholder="Card content..." oninput="updateCardPreview()"></textarea>
+                            <label class="form-label">Orario Pubblicazione</label>
+                            <input type="time" id="dailyPostTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
                         </div>
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-success" onclick="createInfoCard()">Create Card</button>
-                            <button class="btn btn-secondary" onclick="hideCreateCardForm()">Cancel</button>
+
+                        <div class="form-group">
+                            <label class="form-label">Max Messaggi per Post</label>
+                            <input type="number" id="maxMessages" class="form-input" min="1" max="20" onchange="updateDailyPostSetting('max_messages', this.value)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Template Titolo</label>
+                            <input type="text" id="titleTemplate" class="form-input" placeholder="Es: Post della giornata #{date}" onchange="updateDailyPostSetting('title_template', this.value)">
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="testDailyPost()">
+                                <i class="fas fa-play"></i>
+                                Test Daily Post
+                            </button>
+                            <button class="btn btn-primary" onclick="generateDailyPostNow()">
+                                <i class="fas fa-calendar-plus"></i>
+                                Genera Ora
+                            </button>
                         </div>
                     </div>
-                    <div>
-                        <h4>Live Preview</h4>
-                        <div id="cardPreview" class="preview-card">
-                            <div id="previewTitle">Card Title</div>
-                            <div id="previewContent">Card content will appear here...</div>
+
+                    <!-- Stats Card -->
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Statistiche Daily Post</h4>
+                        <div id="dailyPostStats" class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento statistiche...</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div id="cardsList" style="margin-top: 20px;">
-                <div class="loading"><div class="spinner"></div>Loading cards...</div>
-            </div>
+            <!-- Info Cards Section -->
+            <section id="info-cards" class="content-section">
+                <div class="messages-section">
+                    <div class="messages-header">
+                        <h3>Info Cards Creator</h3>
+                        <button class="btn btn-primary" onclick="showCreateCardForm()">
+                            <i class="fas fa-plus"></i>
+                            Crea Nuova Card
+                        </button>
+                    </div>
+
+                    <!-- Create Card Form (Hidden by default) -->
+                    <div id="createCardForm" class="stat-card" style="display: none; margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Crea Info Card</h4>
+
+                        <div class="form-group">
+                            <label class="form-label">Titolo</label>
+                            <input type="text" id="cardTitle" class="form-input" placeholder="Titolo della card">
+                            <div class="form-hint">Il titolo apparirà in grassetto nella card</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Contenuto</label>
+                            <textarea id="cardContent" class="form-textarea" placeholder="Contenuto della card..." rows="4"></textarea>
+                            <div class="form-hint">Descrivi cosa vuoi comunicare nella card</div>
+                        </div>
+
+                        <!-- Live Preview -->
+                        <div class="form-group">
+                            <label class="form-label">Anteprima Live</label>
+                            <div id="cardPreview" style="border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); min-height: 150px; background: var(--bg-primary);">
+                                <div style="text-align: center; color: var(--text-muted);">
+                                    <i class="fas fa-eye fa-2x" style="margin-bottom: var(--space-md);"></i>
+                                    <div>L'anteprima apparirà qui mentre digiti</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="createInfoCard()">
+                                <i class="fas fa-save"></i>
+                                Crea Card
+                            </button>
+                            <button class="btn btn-secondary" onclick="hideCreateCardForm()">
+                                <i class="fas fa-times"></i>
+                                Annulla
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cards List -->
+                    <div id="infoCardsList" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento cards...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="messages-section">
+                    <div class="messages-header">
+                        <h3>Impostazioni Sistema</h3>
+                    </div>
+
+                    <!-- Instagram Settings -->
+                    <div class="stat-card" style="margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fab fa-instagram" style="color: #E4405F; margin-right: var(--space-sm);"></i>
+                            Instagram
+                        </h4>
+                        <div id="instagramSettings" class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento impostazioni Instagram...</div>
+                        </div>
+                    </div>
+
+                    <!-- AI Moderation Settings -->
+                    <div class="stat-card" style="margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-brain" style="color: var(--primary); margin-right: var(--space-sm);"></i>
+                            AI Moderation
+                        </h4>
+                        <div id="geminiSettings" class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento impostazioni AI...</div>
+                        </div>
+                    </div>
+
+                    <!-- System Info -->
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-server" style="color: var(--success); margin-right: var(--space-sm);"></i>
+                            Sistema
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                            <div>
+                                <strong>Version:</strong> 1.0.0
+                            </div>
+                            <div>
+                                <strong>Status:</strong>
+                                <span style="color: var(--success); font-weight: 600;">
+                                    <i class="fas fa-circle" style="margin-right: var(--space-xs);"></i>
+                                    Online
+                                </span>
+                            </div>
+                            <div>
+                                <strong>Python:</strong> 3.11
+                            </div>
+                            <div>
+                                <strong>Database:</strong>
+                                <span style="color: var(--success); font-weight: 600;">
+                                    <i class="fas fa-check-circle" style="margin-right: var(--space-xs);"></i>
+                                    Connected
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification System -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">
+            <i class="fas fa-info-circle"></i>
         </div>
-
-        <!-- System Settings -->
-        <div class="section">
-            <h2><i class="fas fa-cog"></i> System Settings</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                <div class="stat-card">
-                    <h3><i class="fab fa-instagram"></i> Instagram</h3>
-                    <div id="igStatus">Loading...</div>
-                </div>
-                <div class="stat-card">
-                    <h3><i class="fas fa-brain"></i> AI Moderation</h3>
-                    <div id="geminiStatus">Loading...</div>
-                </div>
-                <div class="stat-card">
-                    <h3><i class="fas fa-server"></i> System</h3>
-                    <div>Version: 1.0.0<br>Status: <span style="color: #10b981;">Online</span></div>
-                </div>
-            </div>
+        <div class="notification-content">
+            <div class="notification-title">Notifica</div>
+            <div class="notification-message">Operazione completata con successo!</div>
         </div>
     </div>
 
     <script>
+        // Global variables
+        let allMessages = [];
+        let currentFilter = 'all';
 
-        // Dashboard functions
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const sectionId = this.dataset.section;
 
-                if (response.status === 401) {
-                    // Not authenticated, redirect to login
-                    window.location.href = '/admin/login';
-                    return;
-                }
+                // Update active tab
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                document.getElementById('totalPosts').textContent = data.stats.total || 0;
-                document.getElementById('pendingModeration').textContent = data.stats.pending || 0;
-                document.getElementById('approvedToday').textContent = data.stats.approved_today || 0;
-                document.getElementById('postedToday').textContent = data.stats.posted_today || 0;
-
-                allMessages = data.messages || [];
-                renderMessages();
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-                // Show error state
-                document.getElementById('messagesList').innerHTML = '<div style="text-align: center; padding: 20px; color: #f44336;">Error loading data. Please refresh the page.</div>';
-            }
-        }
-
-        function refreshMessages() {
-            loadDashboardData();
-        }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            renderMessages();
-        }
-
-        function renderMessages() {
-            const container = document.getElementById('messagesList');
-            let filtered = allMessages;
-
-            if (currentFilter !== 'ALL') {
-                filtered = allMessages.filter(msg => msg.status === currentFilter);
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No messages found</div>';
-                return;
-            }
-
-            const html = filtered.map(msg => `
-                <div class="message-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <strong>${escapeHtml(msg.text.substring(0, 80))}${msg.text.length > 80 ? '...' : ''}</strong>
-                        </div>
-                        <span class="message-status status-${msg.status}">${msg.status}</span>
-                    </div>
-                    <div style="margin-bottom: 10px; color: #ccc; font-size: 14px;">
-                        ${escapeHtml(msg.text)}
-                    </div>
-                    <div>
-                        ${msg.status === 'PENDING' ? `
-                            <button class="btn btn-success" onclick="moderateMessage(${msg.id}, 'APPROVED')">Approve</button>
-                            <button class="btn btn-danger" onclick="moderateMessage(${msg.id}, 'REJECTED')">Reject</button>
-                        ` : msg.status === 'APPROVED' ? `
-                            <button class="btn btn-primary" onclick="postMessage(${msg.id})">Post</button>
-                        ` : ''}
-                    </div>
-                </div>
-            `).join('');
-
-            container.innerHTML = html;
-        }
-
-        // Message actions
-        async function moderateMessage(id, action) {
-            try {
-                const endpoint = action === 'APPROVED' ? `/admin/messages/${id}/approve` : `/admin/messages/${id}/reject`;
-                const response = await fetch(endpoint, { method: 'POST' });
-
-                if (response.ok) {
-                    alert(`${action} successful!`);
-                    loadDashboardData();
-                } else {
-                    alert('Error moderating message');
-                }
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function postMessage(id) {
-            try {
-                const response = await fetch(`/admin/messages/${id}/post`, { method: 'POST' });
-                if (response.ok) {
-                    alert('Message posted successfully!');
-                    loadDashboardData();
-                } else {
-                    alert('Error posting message');
-                }
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        // Daily Post functions
-        async function loadDailyPostSettings() {
-            try {
-                const response = await apiCall('/admin/api/daily-post/settings');
-                const settings = await response.json();
-
-                document.getElementById('dpEnabled').checked = settings.enabled;
-                document.getElementById('dpTime').value = settings.post_time;
-                document.getElementById('dpMaxMessages').value = settings.max_messages;
-                document.getElementById('dpTitleTemplate').value = settings.title_template;
-
-                // Load stats
-                const statsResponse = await apiCall('/admin/api/daily-post/stats');
-                const stats = await statsResponse.json();
-
-                document.getElementById('dailyPostStats').innerHTML = `
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <div style="font-size: 24px; font-weight: bold; color: #6366f1;">${stats.available_for_daily || 0}</div>
-                            <div style="font-size: 12px; color: #888;">Available for daily</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">${stats.approved_today || 0}</div>
-                            <div style="font-size: 12px; color: #888;">Approved today</div>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading daily post settings:', error);
-            }
-        }
-
-        async function updateDailyPostSetting(key, value) {
-            try {
-                const response = await fetch('/admin/api/daily-post/settings', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [key]: value })
+                // Show selected section
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
                 });
-                if (response.ok) {
-                    alert('Setting updated successfully');
+                document.getElementById(sectionId).classList.add('active');
+
+                // Load section data
+                switch(sectionId) {
+                    case 'dashboard':
+                        loadDashboardData();
+                        break;
+                    case 'messages':
+                        loadMessages();
+                        break;
+                    case 'daily-post':
+                        loadDailyPostSettings();
+                        break;
+                    case 'info-cards':
+                        loadInfoCards();
+                        break;
+                    case 'settings':
+                        loadSystemSettings();
+                        break;
                 }
-            } catch (error) {
-                alert('Error updating setting');
-            }
-        }
+            });
+        });
 
-        async function testDailyPost() {
-            try {
-                const response = await apiCall('/admin/api/daily-post/test', { method: 'POST' });
-                alert(response.ok ? 'Daily post test completed!' : 'Test failed');
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function generateDailyPost() {
-            alert('Generating daily post...');
-            try {
-                // This would trigger actual generation
-                setTimeout(() => alert('Daily post generated successfully!'), 2000);
-            } catch (error) {
-                alert('Error generating daily post');
-            }
-        }
-
-        // Daily Post functions
-        async function loadDailyPostSettings() {
-            try {
-                const response = await apiCall('/admin/api/daily-post/settings');
-                const settings = await response.json();
-
-                document.getElementById('dpEnabled').checked = settings.enabled;
-                document.getElementById('dpTime').value = settings.post_time;
-                document.getElementById('dpMaxMessages').value = settings.max_messages;
-                document.getElementById('dpTitleTemplate').value = settings.title_template;
-
-                // Load stats
-                const statsResponse = await apiCall('/admin/api/daily-post/stats');
-                const stats = await statsResponse.json();
-
-                document.getElementById('dailyPostStats').innerHTML = `
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div>
-                            <div style="font-size: 24px; font-weight: bold; color: #6366f1;">${stats.available_for_daily || 0}</div>
-                            <div style="font-size: 12px; color: #888;">Available for daily</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">${stats.approved_today || 0}</div>
-                            <div style="font-size: 12px; color: #888;">Approved today</div>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading daily post settings:', error);
-            }
-        }
-
-        async function updateDailyPostSetting(key, value) {
-            try {
-                const response = await fetch('/admin/api/daily-post/settings', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ [key]: value })
-                });
-                if (response.ok) {
-                    alert('Setting updated successfully');
-                }
-            } catch (error) {
-                alert('Error updating setting');
-            }
-        }
-
-        async function testDailyPost() {
-            try {
-                const response = await apiCall('/admin/api/daily-post/test', { method: 'POST' });
-                alert(response.ok ? 'Daily post test completed!' : 'Test failed');
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function generateDailyPost() {
-            alert('Generating daily post...');
-            try {
-                // This would trigger actual generation
-                setTimeout(() => alert('Daily post generated successfully!'), 2000);
-            } catch (error) {
-                alert('Error generating daily post');
-            }
-        }
-
-        // Info Cards functions
-        function showCreateCardForm() {
-            document.getElementById('createCardForm').classList.remove('hidden');
-        }
-
-        function hideCreateCardForm() {
-            document.getElementById('createCardForm').classList.add('hidden');
-            document.getElementById('cardTitle').value = '';
-            document.getElementById('cardContent').value = '';
-            updateCardPreview();
-        }
-
-        function updateCardPreview() {
-            const title = document.getElementById('cardTitle').value || 'Card Title';
-            const content = document.getElementById('cardContent').value || 'Card content will appear here...';
-
-            document.getElementById('previewTitle').textContent = title;
-            document.getElementById('previewContent').textContent = content;
-        }
-
-        async function createInfoCard() {
-            const title = document.getElementById('cardTitle').value.trim();
-            const content = document.getElementById('cardContent').value.trim();
-
-            if (!title || !content) {
-                alert('Title and content are required');
-                return;
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('text', content);
-
-                const response = await apiCall('/admin/api/info-cards', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert('Card created successfully!');
-                    hideCreateCardForm();
-                    loadInfoCards();
-                } else {
-                    alert('Error creating card');
-                }
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function loadInfoCards() {
-            const container = document.getElementById('cardsList');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading cards...</div>';
-
-            try {
-                const response = await apiCall('/admin/api/info-cards');
-                const cards = await response.json();
-
-                if (!cards || cards.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No cards found</div>';
-                    return;
-                }
-
-                const html = cards.map(card => `
-                    <div class="message-card">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <strong>${escapeHtml(card.title)}</strong>
-                            <div>
-                                <button class="btn" onclick="publishInfoCard(${card.id})">Publish</button>
-                                <button class="btn btn-danger" onclick="deleteInfoCard(${card.id})">Delete</button>
-                            </div>
-                        </div>
-                        <div style="color: #ccc;">
-                            ${escapeHtml(card.text)}
-                        </div>
-                    </div>
-                `).join('');
-
-                container.innerHTML = html;
-            } catch (error) {
-                container.innerHTML = '<div style="text-align: center; color: #f44336;">Error loading cards</div>';
-            }
-        }
-
-        async function publishInfoCard(id) {
-            if (!confirm('Publish this card to Instagram?')) return;
-
-            try {
-                const response = await apiCall(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
-                alert(response.ok ? 'Card published successfully!' : 'Error publishing card');
-                if (response.ok) loadInfoCards();
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function deleteInfoCard(id) {
-            if (!confirm('Delete this card?')) return;
-
-            try {
-                const response = await apiCall(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
-                alert(response.ok ? 'Card deleted successfully!' : 'Error deleting card');
-                if (response.ok) loadInfoCards();
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        // Info Cards functions
-        function showCreateCardForm() {
-            document.getElementById('createCardForm').classList.remove('hidden');
-        }
-
-        function hideCreateCardForm() {
-            document.getElementById('createCardForm').classList.add('hidden');
-            document.getElementById('cardTitle').value = '';
-            document.getElementById('cardContent').value = '';
-            updateCardPreview();
-        }
-
-        function updateCardPreview() {
-            const title = document.getElementById('cardTitle').value || 'Card Title';
-            const content = document.getElementById('cardContent').value || 'Card content will appear here...';
-
-            document.getElementById('previewTitle').textContent = title;
-            document.getElementById('previewContent').textContent = content;
-        }
-
-        async function createInfoCard() {
-            const title = document.getElementById('cardTitle').value.trim();
-            const content = document.getElementById('cardContent').value.trim();
-
-            if (!title || !content) {
-                alert('Title and content are required');
-                return;
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append('title', title);
-                formData.append('text', content);
-
-                const response = await apiCall('/admin/api/info-cards', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert('Card created successfully!');
-                    hideCreateCardForm();
-                    loadInfoCards();
-                } else {
-                    alert('Error creating card');
-                }
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function loadInfoCards() {
-            const container = document.getElementById('cardsList');
-            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading cards...</div>';
-
-            try {
-                const response = await apiCall('/admin/api/info-cards');
-                const cards = await response.json();
-
-                if (!cards || cards.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #888;">No cards found</div>';
-                    return;
-                }
-
-                const html = cards.map(card => `
-                    <div class="message-card">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <strong>${escapeHtml(card.title)}</strong>
-                            <div>
-                                <button class="btn" onclick="publishInfoCard(${card.id})">Publish</button>
-                                <button class="btn btn-danger" onclick="deleteInfoCard(${card.id})">Delete</button>
-                            </div>
-                        </div>
-                        <div style="color: #ccc;">
-                            ${escapeHtml(card.text)}
-                        </div>
-                    </div>
-                `).join('');
-
-                container.innerHTML = html;
-            } catch (error) {
-                container.innerHTML = '<div style="text-align: center; color: #f44336;">Error loading cards</div>';
-            }
-        }
-
-        async function publishInfoCard(id) {
-            if (!confirm('Publish this card to Instagram?')) return;
-
-            try {
-                const response = await apiCall(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
-                alert(response.ok ? 'Card published successfully!' : 'Error publishing card');
-                if (response.ok) loadInfoCards();
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        async function deleteInfoCard(id) {
-            if (!confirm('Delete this card?')) return;
-
-            try {
-                const response = await apiCall(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
-                alert(response.ok ? 'Card deleted successfully!' : 'Error deleting card');
-                if (response.ok) loadInfoCards();
-            } catch (error) {
-                alert('Connection error');
-            }
-        }
-
-        // System settings
-        async function loadSystemSettings() {
-            try {
-                const igResponse = await apiCall('/admin/api/settings/instagram');
-                const igData = await igResponse.json();
-                document.getElementById('igStatus').innerHTML = `
-                    Username: ${igData.username || 'Not configured'}<br>
-                    Status: <span style="color: ${igData.configured ? '#10b981' : '#f44336'};">${igData.configured ? 'Configured' : 'Not configured'}</span>
-                `;
-
-                const geminiResponse = await apiCall('/admin/api/settings/gemini');
-                const geminiData = await geminiResponse.json();
-                document.getElementById('geminiStatus').innerHTML = `
-                    Status: <span style="color: ${geminiData.configured ? '#10b981' : '#f44336'};">${geminiData.status}</span>
-                `;
-            } catch (error) {
-                console.error('Error loading system settings:', error);
-            }
-        }
-
-        // Logout
-        function logout() {
-            if (confirm('Logout?')) {
-                fetch('/admin/logout', { method: 'POST' })
-                    .then(() => location.href = '/admin/login')
-                    .catch(() => location.href = '/admin/login');
-            }
-        }
-
-        // Utility
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Initialize on page load
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard initializing...');
 
@@ -1021,21 +1404,13 @@
                     return;
                 }
 
-                // Load all data
+                // Load initial data
                 loadDashboardData();
                 loadSystemSettings();
-                loadDailyPostSettings();
-                loadInfoCards();
-
-                // Auto-refresh every 30 seconds
-                setInterval(() => {
-                    loadDashboardData();
-                    console.log('Auto-refresh completed');
-                }, 30000);
             });
         });
 
-        // Check if user is authenticated
+        // Authentication check
         async function checkAuthentication() {
             try {
                 const response = await fetch('/admin/api/dashboard-data?t=' + Date.now());
@@ -1046,7 +1421,7 @@
             }
         }
 
-        // Helper function for API calls with auth handling
+        // API call helper with authentication
         async function apiCall(url, options = {}) {
             const response = await fetch(url, options);
             if (response.status === 401) {
@@ -1057,6 +1432,672 @@
                 throw new Error(`HTTP ${response.status}`);
             }
             return response;
+        }
+
+        // Dashboard functions
+        async function loadDashboardData() {
+            try {
+                const response = await apiCall('/admin/api/dashboard-data?t=' + Date.now());
+                const data = await response.json();
+
+                // Update stats
+                document.getElementById('totalPosts').textContent = data.stats.total || 0;
+                document.getElementById('pendingModeration').textContent = data.stats.pending || 0;
+                document.getElementById('approvedToday').textContent = data.stats.approved_today || 0;
+                document.getElementById('postedToday').textContent = data.stats.posted_today || 0;
+
+                // Update recent activity
+                allMessages = data.messages || [];
+                renderRecentActivity();
+
+                showNotification('Dati aggiornati', 'Dashboard aggiornato con successo', 'success');
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showNotification('Errore', 'Impossibile caricare i dati del dashboard', 'error');
+            }
+        }
+
+        function renderRecentActivity() {
+            const container = document.getElementById('recentActivity');
+
+            if (!allMessages.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nessun messaggio</h3>
+                        <p>Non ci sono messaggi da mostrare al momento.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const recentMessages = allMessages.slice(0, 10);
+            const html = recentMessages.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-id">#${msg.id}</span>
+                        <span class="message-status status-${msg.status.toLowerCase()}">${msg.status}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.text)}</div>
+                    <div class="message-meta">
+                        <span>${new Date(msg.created_at).toLocaleDateString('it-IT')} ${new Date(msg.created_at).toLocaleTimeString('it-IT')}</span>
+                        <span>${msg.status === 'APPROVED' ? 'Approvato' : msg.status === 'REJECTED' ? 'Rifiutato' : 'In Attesa'}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Messages management
+        async function loadMessages() {
+            try {
+                const response = await apiCall('/admin/api/dashboard-data?t=' + Date.now());
+                const data = await response.json();
+
+                allMessages = data.messages || [];
+                renderMessages();
+
+                showNotification('Messaggi caricati', `${allMessages.length} messaggi trovati`, 'success');
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                document.getElementById('messagesList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Errore</h3><p>Impossibile caricare i messaggi</p></div>';
+                showNotification('Errore', 'Impossibile caricare i messaggi', 'error');
+            }
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('messagesList');
+            const filteredMessages = allMessages.filter(msg => {
+                if (currentFilter === 'all') return true;
+                return msg.status.toLowerCase() === currentFilter;
+            });
+
+            if (!filteredMessages.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nessun messaggio</h3>
+                        <p>${currentFilter === 'all' ? 'Non ci sono messaggi.' : `Nessun messaggio ${currentFilter === 'pending' ? 'in attesa' : currentFilter === 'approved' ? 'approvato' : 'rifiutato'}.`}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = filteredMessages.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-id">#${msg.id}</span>
+                        <span class="message-status status-${msg.status.toLowerCase()}">${msg.status}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.text)}</div>
+                    <div class="message-meta">
+                        <span>${new Date(msg.created_at).toLocaleDateString('it-IT')} ${new Date(msg.created_at).toLocaleTimeString('it-IT')}</span>
+                        <span>IP: ${msg.ip_address || 'N/A'}</span>
+                    </div>
+                    <div class="message-actions">
+                        ${msg.status === 'PENDING' ? `
+                            <button class="btn btn-success btn-sm" onclick="moderateMessage(${msg.id}, 'APPROVED')">
+                                <i class="fas fa-check"></i>
+                                Approva
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="moderateMessage(${msg.id}, 'REJECTED')">
+                                <i class="fas fa-times"></i>
+                                Rifiuta
+                            </button>
+                        ` : msg.status === 'APPROVED' ? `
+                            <button class="btn btn-primary btn-sm" onclick="postMessage(${msg.id})">
+                                <i class="fas fa-paper-plane"></i>
+                                Pubblica
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-outline btn-sm" onclick="viewMessageDetails(${msg.id})">
+                            <i class="fas fa-eye"></i>
+                            Dettagli
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function filterMessages(filter) {
+            currentFilter = filter;
+            renderMessages();
+
+            // Update filter buttons
+            document.querySelectorAll('.action-buttons button').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(filter === 'all' ? 'tutti' : filter === 'pending' ? 'attesa' : filter === 'approved' ? 'approvati' : 'rifiutati')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        async function moderateMessage(id, action) {
+            try {
+                const endpoint = action === 'APPROVED' ? `/admin/messages/${id}/approve` : `/admin/messages/${id}/reject`;
+                const response = await apiCall(endpoint, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification('Successo', `Messaggio ${action === 'APPROVED' ? 'approvato' : 'rifiutato'} con successo`, 'success');
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Moderation failed');
+                }
+            } catch (error) {
+                console.error('Error moderating message:', error);
+                showNotification('Errore', 'Impossibile moderare il messaggio', 'error');
+            }
+        }
+
+        async function postMessage(id) {
+            try {
+                const response = await apiCall(`/admin/messages/${id}/post`, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Messaggio pubblicato su Instagram!', 'success');
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Posting failed');
+                }
+            } catch (error) {
+                console.error('Error posting message:', error);
+                showNotification('Errore', 'Impossibile pubblicare il messaggio', 'error');
+            }
+        }
+
+        async function bulkApprove() {
+            const pendingMessages = allMessages.filter(msg => msg.status === 'PENDING');
+            if (!pendingMessages.length) {
+                showNotification('Info', 'Nessun messaggio in attesa', 'warning');
+                return;
+            }
+
+            if (!confirm(`Approvare tutti i ${pendingMessages.length} messaggi in attesa?`)) return;
+
+            try {
+                for (const msg of pendingMessages) {
+                    await apiCall(`/admin/messages/${msg.id}/approve`, { method: 'POST' });
+                }
+                showNotification('Successo', `Approvati ${pendingMessages.length} messaggi`, 'success');
+                loadMessages();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error bulk approving:', error);
+                showNotification('Errore', 'Errore durante l\'approvazione bulk', 'error');
+            }
+        }
+
+        async function bulkReject() {
+            const pendingMessages = allMessages.filter(msg => msg.status === 'PENDING');
+            if (!pendingMessages.length) {
+                showNotification('Info', 'Nessun messaggio in attesa', 'warning');
+                return;
+            }
+
+            if (!confirm(`Rifiutare tutti i ${pendingMessages.length} messaggi in attesa?`)) return;
+
+            try {
+                for (const msg of pendingMessages) {
+                    await apiCall(`/admin/messages/${msg.id}/reject`, { method: 'POST' });
+                }
+                showNotification('Successo', `Rifiutati ${pendingMessages.length} messaggi`, 'success');
+                loadMessages();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error bulk rejecting:', error);
+                showNotification('Errore', 'Errore durante il rifiuto bulk', 'error');
+            }
+        }
+
+        // Daily Post functions
+        async function loadDailyPostSettings() {
+            try {
+                const response = await apiCall('/admin/api/daily-post/settings');
+                const settings = await response.json();
+
+                document.getElementById('dailyPostEnabled').checked = settings.enabled || false;
+                document.getElementById('dailyPostTime').value = settings.post_time || '16:27';
+                document.getElementById('maxMessages').value = settings.max_messages || 10;
+                document.getElementById('titleTemplate').value = settings.title_template || 'Post della giornata #{date}';
+
+                // Load stats
+                loadDailyPostStats();
+            } catch (error) {
+                console.error('Error loading daily post settings:', error);
+                showNotification('Errore', 'Impossibile caricare le impostazioni', 'error');
+            }
+        }
+
+        async function loadDailyPostStats() {
+            try {
+                const response = await apiCall('/admin/api/daily-post/stats');
+                const stats = await response.json();
+
+                document.getElementById('dailyPostStats').innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                        <div>
+                            <strong>Post Generati:</strong> ${stats.total_posts || 0}
+                        </div>
+                        <div>
+                            <strong>Ultimo Post:</strong> ${stats.last_post ? new Date(stats.last_post).toLocaleDateString('it-IT') : 'Mai'}
+                        </div>
+                        <div>
+                            <strong>Prossimo Post:</strong> ${stats.next_post ? new Date(stats.next_post).toLocaleDateString('it-IT') : 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Status:</strong>
+                            <span style="color: ${stats.enabled ? 'var(--success)' : 'var(--error)'}; font-weight: 600;">
+                                ${stats.enabled ? 'Abilitato' : 'Disabilitato'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('dailyPostStats').innerHTML = '<div style="color: var(--error);">Errore caricamento statistiche</div>';
+            }
+        }
+
+        async function updateDailyPostSetting(setting, value) {
+            try {
+                const response = await apiCall('/admin/api/daily-post/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        [setting]: value
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Impostazione aggiornata', 'success');
+                    loadDailyPostSettings();
+                }
+            } catch (error) {
+                console.error('Error updating setting:', error);
+                showNotification('Errore', 'Impossibile aggiornare l\'impostazione', 'error');
+            }
+        }
+
+        async function testDailyPost() {
+            try {
+                const response = await apiCall('/admin/api/daily-post/test', { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Successo', 'Test Daily Post completato!', 'success');
+                }
+            } catch (error) {
+                console.error('Error testing daily post:', error);
+                showNotification('Errore', 'Errore durante il test', 'error');
+            }
+        }
+
+        async function generateDailyPostNow() {
+            if (!confirm('Generare il Daily Post ora?')) return;
+
+            try {
+                const response = await apiCall('/admin/publish-summary', { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Successo', 'Daily Post generato e pubblicato!', 'success');
+                    loadDailyPostStats();
+                }
+            } catch (error) {
+                console.error('Error generating daily post:', error);
+                showNotification('Errore', 'Errore generazione Daily Post', 'error');
+            }
+        }
+
+        // Info Cards functions
+        async function loadInfoCards() {
+            try {
+                const response = await apiCall('/admin/api/info-cards');
+                const cards = await response.json();
+
+                renderInfoCards(cards);
+            } catch (error) {
+                console.error('Error loading info cards:', error);
+                document.getElementById('infoCardsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Errore</h3><p>Impossibile caricare le cards</p></div>';
+            }
+        }
+
+        function renderInfoCards(cards) {
+            const container = document.getElementById('infoCardsList');
+
+            if (!cards.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-id-card"></i>
+                        <h3>Nessuna Card</h3>
+                        <p>Crea la tua prima Info Card per iniziare.</p>
+                        <button class="btn btn-primary" onclick="showCreateCardForm()">
+                            <i class="fas fa-plus"></i>
+                            Crea Card
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = cards.map(card => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-id">#${card.id}</span>
+                        <span class="message-status status-posted">ATTIVA</span>
+                    </div>
+                    <div class="message-content">
+                        <strong>${escapeHtml(card.title)}</strong><br>
+                        ${escapeHtml(card.text)}
+                    </div>
+                    <div class="message-meta">
+                        <span>${new Date(card.created_at).toLocaleDateString('it-IT')}</span>
+                        <span>${card.publish_count || 0} pubblicazioni</span>
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn btn-primary btn-sm" onclick="publishInfoCard(${card.id})">
+                            <i class="fas fa-paper-plane"></i>
+                            Pubblica
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteInfoCard(${card.id})">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function showCreateCardForm() {
+            document.getElementById('createCardForm').style.display = 'block';
+            document.getElementById('cardTitle').focus();
+
+            // Add input listeners for live preview
+            document.getElementById('cardTitle').addEventListener('input', updateCardPreview);
+            document.getElementById('cardContent').addEventListener('input', updateCardPreview);
+        }
+
+        function hideCreateCardForm() {
+            document.getElementById('createCardForm').style.display = 'none';
+            document.getElementById('cardTitle').value = '';
+            document.getElementById('cardContent').value = '';
+            updateCardPreview();
+        }
+
+        function updateCardPreview() {
+            const title = document.getElementById('cardTitle').value || 'Titolo Card';
+            const content = document.getElementById('cardContent').value || 'Il contenuto apparirà qui...';
+
+            document.getElementById('cardPreview').innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 15px; font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto;">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.5rem; text-align: center;">${escapeHtml(title)}</h3>
+                    <p style="margin: 0; line-height: 1.6; text-align: center;">${escapeHtml(content)}</p>
+                </div>
+            `;
+
+            // Generate actual card preview image
+            generateCardPreview(title, content);
+        }
+
+        async function generateCardPreview(title, content) {
+            try {
+                const response = await apiCall('/admin/api/info-cards/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        title: title,
+                        text: content
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.image_url) {
+                        document.getElementById('cardPreview').innerHTML = `
+                            <img src="${data.image_url}" alt="Card Preview" style="max-width: 100%; max-height: 200px; border-radius: var(--radius-lg); box-shadow: var(--shadow);">
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error generating preview:', error);
+                // Keep the HTML preview as fallback
+            }
+        }
+
+        async function createInfoCard() {
+            const title = document.getElementById('cardTitle').value.trim();
+            const content = document.getElementById('cardContent').value.trim();
+
+            if (!title || !content) {
+                showNotification('Errore', 'Titolo e contenuto sono obbligatori', 'error');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
+                const response = await apiCall('/admin/api/info-cards', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Card creata con successo!', 'success');
+                    hideCreateCardForm();
+                    loadInfoCards();
+                } else {
+                    throw new Error('Creation failed');
+                }
+            } catch (error) {
+                console.error('Error creating card:', error);
+                showNotification('Errore', 'Impossibile creare la card', 'error');
+            }
+        }
+
+        async function publishInfoCard(id) {
+            if (!confirm('Pubblicare questa card su Instagram?')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/info-cards/${id}/publish`, { method: 'POST' });
+                if (response.ok) {
+                    showNotification('Successo', 'Card pubblicata su Instagram!', 'success');
+                    loadInfoCards();
+                } else {
+                    throw new Error('Publishing failed');
+                }
+            } catch (error) {
+                console.error('Error publishing card:', error);
+                showNotification('Errore', 'Impossibile pubblicare la card', 'error');
+            }
+        }
+
+        async function deleteInfoCard(id) {
+            if (!confirm('Eliminare questa card?')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/info-cards/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Successo', 'Card eliminata', 'success');
+                    loadInfoCards();
+                } else {
+                    throw new Error('Deletion failed');
+                }
+            } catch (error) {
+                console.error('Error deleting card:', error);
+                showNotification('Errore', 'Impossibile eliminare la card', 'error');
+            }
+        }
+
+        // Settings functions
+        async function loadSystemSettings() {
+            try {
+                // Load Instagram settings
+                const igResponse = await apiCall('/admin/api/settings/instagram');
+                const igData = await igResponse.json();
+
+                document.getElementById('instagramSettings').innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                        <div>
+                            <strong>Status:</strong>
+                            <span style="color: ${igData.connected ? 'var(--success)' : 'var(--error)'}; font-weight: 600;">
+                                ${igData.connected ? 'Connesso' : 'Non Connesso'}
+                            </span>
+                        </div>
+                        <div>
+                            <strong>Username:</strong> ${igData.username || 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Ultima Pubblicazione:</strong> ${igData.last_post ? new Date(igData.last_post).toLocaleString('it-IT') : 'Mai'}
+                        </div>
+                        <div>
+                            <strong>Stories Pubblicati:</strong> ${igData.stories_count || 0}
+                        </div>
+                    </div>
+                `;
+
+                // Load Gemini settings
+                const geminiResponse = await apiCall('/admin/api/settings/gemini');
+                const geminiData = await geminiResponse.json();
+
+                document.getElementById('geminiSettings').innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                        <div>
+                            <strong>Status:</strong>
+                            <span style="color: ${geminiData.configured ? 'var(--success)' : 'var(--error)'}; font-weight: 600;">
+                                ${geminiData.configured ? 'Configurato' : 'Non Configurato'}
+                            </span>
+                        </div>
+                        <div>
+                            <strong>Modello:</strong> ${geminiData.model || 'N/A'}
+                        </div>
+                        <div>
+                            <strong>Messaggi Moderati:</strong> ${geminiData.moderated_count || 0}
+                        </div>
+                        <div>
+                            <strong>Quota Utilizzata:</strong> ${geminiData.quota_used || 0}%
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading system settings:', error);
+                showNotification('Errore', 'Impossibile caricare le impostazioni di sistema', 'error');
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showNotification(title, message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const titleEl = notification.querySelector('.notification-title');
+            const messageEl = notification.querySelector('.notification-message');
+            const iconEl = notification.querySelector('.notification-icon');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            // Update icon and colors
+            notification.className = `notification ${type}`;
+            iconEl.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' :
+                              type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' :
+                              type === 'warning' ? '<i class="fas fa-exclamation-triangle"></i>' :
+                              '<i class="fas fa-info-circle"></i>';
+
+            // Show notification
+            notification.classList.add('show');
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function exportData() {
+            // Simple export functionality
+            const data = {
+                messages: allMessages,
+                exportDate: new Date().toISOString(),
+                totalMessages: allMessages.length
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `insta_spotter_export_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('Successo', 'Dati esportati con successo', 'success');
+        }
+
+        function viewMessageDetails(id) {
+            const message = allMessages.find(m => m.id === id);
+            if (!message) return;
+
+            // Simple modal for message details
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Dettagli Messaggio #${message.id}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div style="margin: var(--space-lg) 0;">
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Status:</strong>
+                            <span class="message-status status-${message.status.toLowerCase()}" style="margin-left: var(--space-sm);">${message.status}</span>
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Testo:</strong>
+                            <div style="margin-top: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius);">${escapeHtml(message.text)}</div>
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Data Creazione:</strong> ${new Date(message.created_at).toLocaleString('it-IT')}
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>IP Address:</strong> ${message.ip_address || 'N/A'}
+                        </div>
+                        ${message.gemini_analysis ? `
+                            <div>
+                                <strong>Analisi AI:</strong>
+                                <div style="margin-top: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius);">${escapeHtml(message.gemini_analysis)}</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                fetch('/admin/logout', { method: 'POST' })
+                    .then(() => location.href = '/admin/login')
+                    .catch(() => location.href = '/admin/login');
+            }
         }
     </script>
 </body>
