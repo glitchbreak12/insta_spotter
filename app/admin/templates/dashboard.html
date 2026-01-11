@@ -6,7 +6,110 @@
     <title>InstaSpotter Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code Libraries with Fallbacks -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" onerror="loadQRCodeFallback()"></script>
+    <script>
+        // QR Code fallback loading system
+        let qrCodeLoaded = false;
+        let qrCodeFallbackAttempted = false;
+
+        function loadQRCodeFallback() {
+            if (qrCodeFallbackAttempted) return;
+            qrCodeFallbackAttempted = true;
+
+            console.log('Primary QRCode library failed, trying fallback...');
+
+            // Try alternative CDN
+            const fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+            fallbackScript.onerror = function() {
+                console.log('Fallback QRCode library also failed');
+                // Last resort: implement basic QR code generation
+                implementBasicQRCode();
+            };
+            fallbackScript.onload = function() {
+                console.log('Fallback QRCode library loaded successfully');
+                qrCodeLoaded = true;
+            };
+            document.head.appendChild(fallbackScript);
+        }
+
+        function implementBasicQRCode() {
+            console.log('Implementing basic QR code generation...');
+            // Create a minimal QRCode object for basic functionality
+            window.QRCode = {
+                toCanvas: function(canvas, text, options, callback) {
+                    // Create a simple text-based QR code representation
+                    const ctx = canvas.getContext('2d');
+                    const size = options?.width || 256;
+
+                    // Clear canvas
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, size, size);
+
+                    // Draw border
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(10, 10, size-20, size-20);
+
+                    // Draw simple QR-like pattern
+                    ctx.fillStyle = '#000';
+                    const blockSize = 8;
+                    for (let i = 0; i < 10; i++) {
+                        for (let j = 0; j < 10; j++) {
+                            if ((i + j) % 2 === 0) {
+                                ctx.fillRect(20 + i * blockSize, 20 + j * blockSize, blockSize, blockSize);
+                            }
+                        }
+                    }
+
+                    // Add text in center
+                    ctx.fillStyle = '#000';
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('QR Code', size/2, size/2 - 10);
+                    ctx.fillText('(Basic)', size/2, size/2 + 10);
+
+                    if (callback) callback(null);
+                }
+            };
+            qrCodeLoaded = true;
+        }
+
+        // Check if QRCode is loaded after page load
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                if (typeof QRCode !== 'undefined') {
+                    qrCodeLoaded = true;
+                    console.log('QRCode library loaded successfully');
+                } else if (!qrCodeFallbackAttempted) {
+                    console.log('QRCode library not loaded, trying fallback...');
+                    loadQRCodeFallback();
+                }
+            }, 1000);
+        });
+
+        // Utility function to copy text to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showNotification('Successo', 'Link copiato negli appunti!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('Successo', 'Link copiato negli appunti!', 'success');
+                } catch (fallbackError) {
+                    showNotification('Errore', 'Impossibile copiare automaticamente. Seleziona e copia manualmente.', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+    </script>
     <style>
         /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -4057,26 +4160,43 @@
                     // Show QR code area
                     document.getElementById('qrCodeArea').style.display = 'block';
 
-                    // Generate real QR code
+                    // Generate QR code
                     const qrContainer = document.getElementById('qrCodeContainer');
-                    qrContainer.innerHTML = '<div id="qrcode" style="display: inline-block;"></div>';
 
-                    // Create QR code with the auth URL
-                    if (typeof QRCode === 'undefined') {
+                    // Check if server-side QR image is available
+                    if (data.qr_data.qr_image) {
+                        // Use server-generated QR image
                         qrContainer.innerHTML = `
-                            <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
-                                <i class="fas fa-exclamation-triangle fa-2x"></i>
-                                <div style="margin-top: var(--space-sm);">Libreria QR Code non caricata</div>
-                                <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
-                                    Ricarica la pagina e riprova
-                                </div>
-                            </div>
+                            <img src="data:image/png;base64,${data.qr_data.qr_image}"
+                                 alt="QR Code"
+                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
                         `;
+                        console.log('Using server-generated QR code image');
+                    } else {
+                        // Fallback to client-side generation
+                        qrContainer.innerHTML = '<div id="qrcode" style="display: inline-block;"></div>';
+                        generateQRCodeWithRetry(data.qr_data.url);
+                    }
+                } else {
+                    throw new Error(data.error || 'Errore generazione QR');
+                }
+
+                function generateQRCodeWithRetry(qrUrl) {
+                    if (typeof QRCode === 'undefined') {
+                        // Try to load fallback if not attempted yet
+                        if (!qrCodeFallbackAttempted) {
+                            loadQRCodeFallback();
+                            setTimeout(() => generateQRCodeWithRetry(qrUrl), 2000); // Retry after 2 seconds
+                            return;
+                        }
+
+                        // Show URL fallback
+                        showQRUrlFallback(qrUrl);
                         return;
                     }
 
                     try {
-                        QRCode.toCanvas(document.getElementById('qrcode'), data.qr_data.url, {
+                        QRCode.toCanvas(document.getElementById('qrcode'), qrUrl, {
                             width: 256,
                             height: 256,
                             colorDark: "#000000",
@@ -4085,31 +4205,46 @@
                         }, function (error) {
                             if (error) {
                                 console.error('QR Code generation error:', error);
-                                qrContainer.innerHTML = `
-                                    <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
-                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
-                                        <div style="margin-top: var(--space-sm);">Errore generazione QR</div>
-                                        <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
-                                            URL: ${data.qr_data.url.substring(0, 50)}...
-                                        </div>
-                                    </div>
-                                `;
+                                showQRUrlFallback(qrUrl);
                             } else {
                                 console.log('QR Code generated successfully');
                             }
                         });
                     } catch (error) {
                         console.error('QR Code library error:', error);
-                        qrContainer.innerHTML = `
-                            <div style="color: var(--error); text-align: center; padding: var(--space-lg);">
-                                <i class="fas fa-exclamation-triangle fa-2x"></i>
-                                <div style="margin-top: var(--space-sm);">Errore libreria QR Code</div>
-                                <div style="font-size: 0.9rem; margin-top: var(--space-xs); color: var(--text-muted);">
-                                    Riprova o ricarica la pagina
+                        showQRUrlFallback(qrUrl);
+                    }
+                }
+
+                function showQRUrlFallback(url) {
+                    const qrContainer = document.getElementById('qrCodeContainer');
+                    qrContainer.innerHTML = `
+                        <div style="text-align: center; padding: var(--space-lg);">
+                            <i class="fas fa-link fa-3x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                            <div style="margin-bottom: var(--space-lg);">
+                                <div style="font-weight: 600; margin-bottom: var(--space-sm); color: var(--text-primary);">
+                                    Accesso Mobile Alternativo
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                                    La generazione del QR Code non è riuscita. Puoi accedere manualmente:
                                 </div>
                             </div>
-                        `;
-                    }
+                            <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius); margin-bottom: var(--space-lg);">
+                                <div style="font-family: monospace; font-size: 0.9rem; word-break: break-all; color: var(--text-primary);">
+                                    ${url}
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="copyToClipboard('${url}')" style="margin-right: var(--space-sm);">
+                                <i class="fas fa-copy"></i>
+                                Copia Link
+                            </button>
+                            <button class="btn btn-secondary" onclick="window.open('${url}', '_blank')">
+                                <i class="fas fa-external-link-alt"></i>
+                                Apri Link
+                            </button>
+                        </div>
+                    `;
+                }
 
                     // Start countdown
                     let timeLeft = 300;

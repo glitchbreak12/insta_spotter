@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Form, Response, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import secrets
 import hashlib
 import json
+import io
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
@@ -1414,21 +1415,99 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         # Genera URL per il QR code
         qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token={qr_token}"
 
-        # In produzione, usa una libreria QR per generare l'immagine
-        # Per ora restituiamo i dati per generare il QR nel frontend
+        # Prova a generare QR code lato server se qrcode è disponibile
+        qr_image_b64 = None
+        try:
+            import qrcode
+            from PIL import Image
+            import base64
+
+            # Crea QR code con PIL/qrcode
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+            # Converti in base64
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            qr_image_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+
+        except ImportError:
+            # qrcode library not available, will use frontend generation
+            pass
+        except Exception as qr_error:
+            print(f"Server-side QR generation failed: {qr_error}")
+            pass
+
         return {
             "success": True,
             "qr_data": {
                 "session_id": session_id,
                 "token": qr_token,
                 "url": qr_url,
-                "expires_in": 300  # 5 minuti
+                "expires_in": 300,  # 5 minuti
+                "qr_image": qr_image_b64  # Base64 encoded PNG if available
             },
             "message": "QR Code generato. Scansiona con il cellulare per accedere automaticamente."
         }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@router.get("/api/auth/qr-image/{session_id}")
+def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
+    """Genera e restituisce un'immagine QR code."""
+    try:
+        if session_id not in qr_sessions:
+            raise HTTPException(status_code=404, detail="Sessione QR non trovata")
+
+        session = qr_sessions[session_id]
+        if session["user"] != user:
+            raise HTTPException(status_code=403, detail="Non autorizzato")
+
+        # Ricostruisci l'URL
+        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token=qr_sessions[session_id]['token_hash']"
+
+        # Genera QR code
+        try:
+            import qrcode
+            from PIL import Image
+
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+
+            # Restituisci come immagine PNG
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+
+            return StreamingResponse(
+                buffer,
+                media_type="image/png",
+                headers={"Content-Disposition": "inline; filename=qr_code.png"}
+            )
+
+        except ImportError:
+            raise HTTPException(status_code=500, detail="Libreria QR code non disponibile")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Errore generazione QR: {str(e)}")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/auth/verify-qr")
 def verify_qr_code(session_id: str, token: str, device_info: dict = None):
