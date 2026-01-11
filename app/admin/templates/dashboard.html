@@ -4226,15 +4226,24 @@
                     // Show QR code area
                     document.getElementById('qrCodeArea').style.display = 'block';
 
-                    // Check if server-side QR image is available
-                    if (data.qr_data.qr_image) {
-                        // Use server-generated QR image
+                    // Try to use server-generated QR image first
+                    if (data.qr_data.qr_image_url) {
+                        // Use direct image URL (more reliable)
                         document.getElementById('qrCodeContainer').innerHTML = `
-                            <img src="${data.qr_data.qr_image}"
+                            <img src="${data.qr_data.qr_image_url}"
+                                 alt="QR Code"
+                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"
+                                 onerror="handleQRImageError('${data.qr_data.url}')">
+                        `;
+                        console.log('Using server-generated QR image URL:', data.qr_data.qr_image_url);
+                    } else if (data.qr_data.qr_image_b64) {
+                        // Fallback to base64
+                        document.getElementById('qrCodeContainer').innerHTML = `
+                            <img src="${data.qr_data.qr_image_b64}"
                                  alt="QR Code"
                                  style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
                         `;
-                        console.log('Using server-generated QR code image');
+                        console.log('Using server-generated QR base64 image');
                     } else {
                         // Fallback: show URL for manual entry
                         document.getElementById('qrCodeContainer').innerHTML = `
@@ -4328,6 +4337,27 @@
                 }
                 document.body.removeChild(textArea);
             }
+        }
+
+        // Handle QR image loading error
+        function handleQRImageError(fallbackUrl) {
+            console.log('QR image failed to load, showing fallback URL');
+            const qrContainer = document.getElementById('qrCodeContainer');
+            qrContainer.innerHTML = `
+                <div style="text-align: center; padding: var(--space-lg);">
+                    <i class="fas fa-link fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                        Immagine QR non disponibile. Usa questo link:
+                    </p>
+                    <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-bottom: var(--space-md);">
+                        ${fallbackUrl}
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${fallbackUrl}')">
+                        <i class="fas fa-copy"></i>
+                        Copia Link
+                    </button>
+                </div>
+            `;
         }
 
         function showNotification(type, message, style) {

@@ -813,8 +813,12 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         # Prova a generare QR code lato server se qrcode è disponibile
         qr_image_b64 = None
         try:
+            print(f"🔧 Attempting server-side QR generation for user {user}")
             import qrcode
             from PIL import Image
+            import base64
+
+            print("✅ QRCode and PIL libraries imported successfully")
 
             qr = qrcode.QRCode(
                 version=1,
@@ -825,17 +829,31 @@ def generate_qr_code(user: str = Depends(get_current_user)):
             qr.add_data(qr_url)
             qr.make(fit=True)
 
+            print("✅ QR code data added and made")
+
             img = qr.make_image(fill_color="black", back_color="white")
             buffer = io.BytesIO()
             img.save(buffer, format="PNG")
-            qr_image_b64 = f"data:image/png;base64,{__import__('base64').b64encode(buffer.getvalue()).decode('utf-8')}"
 
-        except ImportError:
-            # qrcode library not available, will use client-side generation
+            print("✅ QR image generated and saved to buffer")
+
+            # Encode to base64
+            image_data = buffer.getvalue()
+            qr_image_b64 = f"data:image/png;base64,{base64.b64encode(image_data).decode('utf-8')}"
+
+            print(f"✅ QR image encoded to base64, size: {len(qr_image_b64)} chars")
+
+        except ImportError as e:
+            print(f"❌ QR libraries not available: {e}")
             pass
         except Exception as qr_error:
-            print(f"Server-side QR generation failed: {qr_error}")
+            print(f"❌ Server-side QR generation failed: {qr_error}")
+            import traceback
+            traceback.print_exc()
             pass
+
+        # Crea URL per immagine QR diretta
+        qr_image_url = f"/admin/api/auth/qr-image/{session_id}"
 
         return {
             "success": True,
@@ -843,7 +861,8 @@ def generate_qr_code(user: str = Depends(get_current_user)):
                 "session_id": session_id,
                 "url": qr_url,
                 "expires_in": 300,  # 5 minuti
-                "qr_image": qr_image_b64  # Base64 encoded PNG if available
+                "qr_image_url": qr_image_url,  # Direct image URL
+                "qr_image_b64": qr_image_b64   # Fallback base64
             },
             "message": "QR Code generato. Scansiona con il cellulare per accedere automaticamente."
         }
@@ -921,9 +940,84 @@ def qr_mobile_login(session_id: str):
 
 # === PAGINA MOBILE PER SCAN QR CODE ===
 
+@router.get("/api/auth/qr-image/{session_id}")
+def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
+    """Genera e restituisce un'immagine QR code come PNG."""
+    try:
+        print(f"🖼️ Generating QR image for session {session_id}, user {user}")
+
+        if session_id not in qr_sessions:
+            raise HTTPException(status_code=404, detail="Sessione QR non trovata")
+
+        session = qr_sessions[session_id]
+        if session["user"] != user:
+            raise HTTPException(status_code=403, detail="Non autorizzato")
+
+        # Ricostruisci l'URL
+        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token=qr_sessions[session_id]['token_hash']"
+
+        # Genera QR code
+        try:
+            import qrcode
+            from PIL import Image
+
+            print("✅ Generating QR code with qrcode library")
+
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(qr_url)
+            qr.make(fit=True)
+
+            img = qr.make_image(fill_color="black", back_color="white")
+
+            # Restituisci come immagine PNG
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+            buffer.seek(0)
+
+            print(f"✅ QR image generated successfully, size: {len(buffer.getvalue())} bytes")
+
+            return StreamingResponse(
+                buffer,
+                media_type="image/png",
+                headers={"Content-Disposition": "inline; filename=qr_code.png"}
+            )
+
+        except ImportError as e:
+            print(f"❌ QR libraries not available: {e}")
+            raise HTTPException(status_code=500, detail="Libreria QR code non disponibile")
+        except Exception as e:
+            print(f"❌ QR generation error: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Errore generazione QR: {str(e)}")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error in QR image generation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/auth/qr/{session_id}")
 def qr_auth_page(session_id: str):
     """Pagina mobile per autenticazione QR."""
+    # Verifica che la sessione esista
+    if session_id not in qr_sessions:
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html>
+        <head><title>Errore</title></head>
+        <body style="text-align: center; padding: 50px;">
+        <h1>Sessione QR non valida</h1>
+        <p>Il codice QR potrebbe essere scaduto. Torna al dashboard e genera un nuovo QR code.</p>
+        </body>
+        </html>
+        """)
+
     html_content = f"""
     <!DOCTYPE html>
     <html lang="it">
@@ -1038,11 +1132,16 @@ def qr_auth_page(session_id: str):
             let sessionId = '{session_id}';
             let qrToken = null;
 
+            console.log('📱 Mobile QR page loaded for session:', sessionId);
+
             // Estrai token dall'URL
             const urlParams = new URLSearchParams(window.location.search);
             qrToken = urlParams.get('token');
 
+            console.log('🔑 QR token extracted:', qrToken ? 'present' : 'missing');
+
             async function checkSession() {{
+                console.log('🔍 Checking QR session...');
                 if (!qrToken) {{
                     document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Token QR mancante';
                     document.getElementById('status').className = 'status error';
@@ -1059,7 +1158,10 @@ def qr_auth_page(session_id: str):
                         }})
                     }});
 
+                    console.log('📡 Verification response status:', response.status);
+
                     const data = await response.json();
+                    console.log('📋 Verification response data:', data);
 
                     if (data.success) {{
                         document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Sessione verificata! Pronto per accesso.';
@@ -1071,6 +1173,7 @@ def qr_auth_page(session_id: str):
                         document.getElementById('retryBtn').classList.remove('hidden');
                     }}
                 }} catch (error) {{
+                    console.error('❌ Connection error:', error);
                     document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore di connessione';
                     document.getElementById('status').className = 'status error';
                     document.getElementById('retryBtn').classList.remove('hidden');
@@ -1078,6 +1181,7 @@ def qr_auth_page(session_id: str):
             }}
 
             async function authenticate() {{
+                console.log('🚀 Starting mobile authentication...');
                 try {{
                     document.getElementById('authBtn').innerHTML = '<div class="spinner"></div>';
                     document.getElementById('authBtn').disabled = true;
@@ -1088,7 +1192,10 @@ def qr_auth_page(session_id: str):
                         body: JSON.stringify({{ session_id: sessionId }})
                     }});
 
+                    console.log('📡 Login response status:', response.status);
+
                     const data = await response.json();
+                    console.log('📋 Login response data:', data);
 
                     if (data.success) {{
                         document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso completato! Puoi chiudere questa pagina.';
@@ -1103,6 +1210,7 @@ def qr_auth_page(session_id: str):
                         throw new Error(data.error || 'Errore autenticazione');
                     }}
                 }} catch (error) {{
+                    console.error('❌ Authentication error:', error);
                     document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + error.message;
                     document.getElementById('status').className = 'status error';
                     document.getElementById('authBtn').innerHTML = '<i class="fas fa-mobile-alt"></i> Riprova';
