@@ -86,6 +86,17 @@
                     console.log('QRCode library not loaded, trying fallback...');
                     loadQRCodeFallback();
                 }
+
+                // Verify critical functions are loaded
+                const criticalFunctions = ['generateQRCode', 'showAdvancedAuth', 'copyToClipboard'];
+                const missingFunctions = criticalFunctions.filter(func => typeof window[func] === 'undefined');
+
+                if (missingFunctions.length > 0) {
+                    console.error('Missing critical functions:', missingFunctions);
+                    showNotification('Errore', 'Alcune funzioni JavaScript non sono state caricate correttamente. Ricarica la pagina.', 'error');
+                } else {
+                    console.log('All critical functions loaded successfully');
+                }
             }, 1000);
         });
 
@@ -4116,6 +4127,7 @@
         // Advanced Authentication Functions
 
         function showAdvancedAuth() {
+            console.log('showAdvancedAuth function called');
             const dangerZone = document.getElementById('dangerZone');
             const backupManager = document.getElementById('backupManager');
             const systemLogs = document.getElementById('systemLogs');
@@ -4203,6 +4215,7 @@
         }
 
         async function generateQRCode() {
+            console.log('generateQRCode function called');
             try {
                 showNotification('Info', 'Generando codice QR...', 'info');
 
