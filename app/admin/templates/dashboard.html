@@ -4136,6 +4136,72 @@
             }
         }
 
+        // QR Code helper functions (global scope)
+        function generateQRCodeWithRetry(qrUrl) {
+            if (typeof QRCode === 'undefined') {
+                // Try to load fallback if not attempted yet
+                if (!qrCodeFallbackAttempted) {
+                    loadQRCodeFallback();
+                    setTimeout(() => generateQRCodeWithRetry(qrUrl), 2000); // Retry after 2 seconds
+                    return;
+                }
+
+                // Show URL fallback
+                showQRUrlFallback(qrUrl);
+                return;
+            }
+
+            try {
+                QRCode.toCanvas(document.getElementById('qrcode'), qrUrl, {
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#FFFFFF",
+                    correctLevel: QRCode.CorrectLevel.H
+                }, function (error) {
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        showQRUrlFallback(qrUrl);
+                    } else {
+                        console.log('QR Code generated successfully');
+                    }
+                });
+            } catch (error) {
+                console.error('QR Code library error:', error);
+                showQRUrlFallback(qrUrl);
+            }
+        }
+
+        function showQRUrlFallback(url) {
+            const qrContainer = document.getElementById('qrCodeContainer');
+            qrContainer.innerHTML = `
+                <div style="text-align: center; padding: var(--space-lg);">
+                    <i class="fas fa-link fa-3x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
+                    <div style="margin-bottom: var(--space-lg);">
+                        <div style="font-weight: 600; margin-bottom: var(--space-sm); color: var(--text-primary);">
+                            Accesso Mobile Alternativo
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
+                            La generazione del QR Code non è riuscita. Puoi accedere manualmente:
+                        </div>
+                    </div>
+                    <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius); margin-bottom: var(--space-lg);">
+                        <div style="font-family: monospace; font-size: 0.9rem; word-break: break-all; color: var(--text-primary);">
+                            ${url}
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="copyToClipboard('${url}')" style="margin-right: var(--space-sm);">
+                        <i class="fas fa-copy"></i>
+                        Copia Link
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('${url}', '_blank')">
+                        <i class="fas fa-external-link-alt"></i>
+                        Apri Link
+                    </button>
+                </div>
+            `;
+        }
+
         async function generateQRCode() {
             try {
                 showNotification('Info', 'Generando codice QR...', 'info');
@@ -4181,70 +4247,6 @@
                     throw new Error(data.error || 'Errore generazione QR');
                 }
 
-                function generateQRCodeWithRetry(qrUrl) {
-                    if (typeof QRCode === 'undefined') {
-                        // Try to load fallback if not attempted yet
-                        if (!qrCodeFallbackAttempted) {
-                            loadQRCodeFallback();
-                            setTimeout(() => generateQRCodeWithRetry(qrUrl), 2000); // Retry after 2 seconds
-                            return;
-                        }
-
-                        // Show URL fallback
-                        showQRUrlFallback(qrUrl);
-                        return;
-                    }
-
-                    try {
-                        QRCode.toCanvas(document.getElementById('qrcode'), qrUrl, {
-                            width: 256,
-                            height: 256,
-                            colorDark: "#000000",
-                            colorLight: "#FFFFFF",
-                            correctLevel: QRCode.CorrectLevel.H
-                        }, function (error) {
-                            if (error) {
-                                console.error('QR Code generation error:', error);
-                                showQRUrlFallback(qrUrl);
-                            } else {
-                                console.log('QR Code generated successfully');
-                            }
-                        });
-                    } catch (error) {
-                        console.error('QR Code library error:', error);
-                        showQRUrlFallback(qrUrl);
-                    }
-                }
-
-                function showQRUrlFallback(url) {
-                    const qrContainer = document.getElementById('qrCodeContainer');
-                    qrContainer.innerHTML = `
-                        <div style="text-align: center; padding: var(--space-lg);">
-                            <i class="fas fa-link fa-3x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
-                            <div style="margin-bottom: var(--space-lg);">
-                                <div style="font-weight: 600; margin-bottom: var(--space-sm); color: var(--text-primary);">
-                                    Accesso Mobile Alternativo
-                                </div>
-                                <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
-                                    La generazione del QR Code non è riuscita. Puoi accedere manualmente:
-                                </div>
-                            </div>
-                            <div style="background: var(--bg-tertiary); padding: var(--space-md); border-radius: var(--radius); margin-bottom: var(--space-lg);">
-                                <div style="font-family: monospace; font-size: 0.9rem; word-break: break-all; color: var(--text-primary);">
-                                    ${url}
-                                </div>
-                            </div>
-                            <button class="btn btn-primary" onclick="copyToClipboard('${url}')" style="margin-right: var(--space-sm);">
-                                <i class="fas fa-copy"></i>
-                                Copia Link
-                            </button>
-                            <button class="btn btn-secondary" onclick="window.open('${url}', '_blank')">
-                                <i class="fas fa-external-link-alt"></i>
-                                Apri Link
-                            </button>
-                        </div>
-                    `;
-                }
 
                     // Start countdown
                     let timeLeft = 300;
