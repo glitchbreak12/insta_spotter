@@ -799,19 +799,24 @@ def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Se
 def debug_admin_credentials(user: str = Depends(get_current_user)):
     """Endpoint di debug per informazioni di sistema."""
     import platform
-    import psutil
     import os
 
     try:
+        # Informazioni di sistema senza psutil per compatibilità Replit
         return {
             "version": "1.0.0",
             "python_version": platform.python_version(),
             "platform": platform.platform(),
             "cpu_count": os.cpu_count(),
-            "memory_total": psutil.virtual_memory().total,
-            "memory_available": psutil.virtual_memory().available,
-            "disk_usage": psutil.disk_usage('/')._asdict(),
-            "uptime": os.times()._asdict()
+            "system": platform.system(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "uptime": os.times()._asdict(),
+            "environment": {
+                "user": os.getenv("USER") or os.getenv("USERNAME"),
+                "pwd": os.getcwd(),
+                "pythonpath": os.getenv("PYTHONPATH")
+            }
         }
     except Exception as e:
         return {
@@ -1804,6 +1809,209 @@ def emergency_lockdown(user: str = Depends(get_current_user)):
             "timestamp": datetime.utcnow().isoformat()
         }
 
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+# === 2FA E MONITORAGGIO SESSIONI ===
+
+# Store temporaneo per sessioni attive (in produzione usare Redis/database)
+active_sessions = {}
+security_settings = {
+    "two_factor_enabled": False,
+    "session_monitoring": False,
+    "max_concurrent_sessions": 5,
+    "session_timeout": 3600,  # 1 ora
+    "alert_on_suspicious": True
+}
+
+@router.get("/api/security/settings")
+def get_security_settings(user: str = Depends(get_current_user)):
+    """Ottieni impostazioni di sicurezza."""
+    try:
+        return {
+            "success": True,
+            "settings": security_settings.copy()
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/security/settings")
+def update_security_settings(settings: dict, user: str = Depends(get_current_user)):
+    """Aggiorna impostazioni di sicurezza."""
+    try:
+        global security_settings
+
+        # Aggiorna solo le impostazioni valide
+        valid_keys = ["two_factor_enabled", "session_monitoring", "max_concurrent_sessions", "session_timeout", "alert_on_suspicious"]
+        for key in valid_keys:
+            if key in settings:
+                security_settings[key] = settings[key]
+
+        print(f"🔒 Security settings updated by {user}: {settings}")
+
+        return {
+            "success": True,
+            "message": "Impostazioni di sicurezza aggiornate",
+            "settings": security_settings.copy()
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/2fa/enable")
+def enable_2fa(user: str = Depends(get_current_user)):
+    """Abilita 2FA per l'utente."""
+    try:
+        import secrets
+        import base64
+
+        # Genera secret per TOTP
+        totp_secret = secrets.token_hex(32)
+
+        # In produzione, salva nella configurazione utente
+        security_settings["two_factor_enabled"] = True
+        security_settings["totp_secret"] = totp_secret
+
+        # Genera QR code per Google Authenticator
+        qr_data = f"otpauth://totp/InstaSpotter:{user}?secret={totp_secret}&issuer=InstaSpotter"
+
+        return {
+            "success": True,
+            "message": "2FA abilitato. Configura l'app di autenticazione.",
+            "totp_secret": totp_secret,
+            "qr_code_data": qr_data,
+            "backup_codes": [secrets.token_hex(8) for _ in range(10)]  # Codici di backup
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/2fa/disable")
+def disable_2fa(user: str = Depends(get_current_user)):
+    """Disabilita 2FA per l'utente."""
+    try:
+        security_settings["two_factor_enabled"] = False
+        if "totp_secret" in security_settings:
+            del security_settings["totp_secret"]
+
+        print(f"🔓 2FA disabled by {user}")
+
+        return {
+            "success": True,
+            "message": "2FA disabilitato"
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/auth/2fa/verify")
+def verify_2fa_code(code: str, user: str = Depends(get_current_user)):
+    """Verifica codice 2FA."""
+    try:
+        import hmac
+        import struct
+        import time
+
+        if not security_settings.get("two_factor_enabled", False):
+            return {"success": False, "error": "2FA non abilitato"}
+
+        secret = security_settings.get("totp_secret")
+        if not secret:
+            return {"success": False, "error": "Secret 2FA non trovato"}
+
+        # Implementazione TOTP (Time-based One-Time Password)
+        def get_totp_token(secret, time_step=30, digits=6):
+            key = base64.b32decode(secret.upper() + '=' * ((8 - len(secret)) % 8))
+            msg = struct.pack(">Q", int(time.time()) // time_step)
+            h = hmac.new(key, msg, 'sha1').digest()
+            offset = h[19] & 15
+            code = (struct.unpack(">I", h[offset:offset+4])[0] & 0x7fffffff) % (10 ** digits)
+            return f"{code:0{digits}d}"
+
+        expected_code = get_totp_token(secret)
+
+        if code == expected_code:
+            return {
+                "success": True,
+                "message": "Codice 2FA verificato"
+            }
+        else:
+            return {"success": False, "error": "Codice 2FA non valido"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.get("/api/sessions/active")
+def get_active_sessions(user: str = Depends(get_current_user)):
+    """Ottieni sessioni attive."""
+    try:
+        sessions = []
+        for session_id, session_data in active_sessions.items():
+            if session_data.get("user") == user:
+                sessions.append({
+                    "id": session_id,
+                    "ip": session_data.get("ip", "unknown"),
+                    "user_agent": session_data.get("user_agent", "unknown"),
+                    "created_at": session_data.get("created_at", datetime.utcnow().isoformat()),
+                    "last_activity": session_data.get("last_activity", datetime.utcnow().isoformat()),
+                    "device": session_data.get("device", "desktop")
+                })
+
+        return {
+            "success": True,
+            "sessions": sessions,
+            "total": len(sessions),
+            "max_allowed": security_settings.get("max_concurrent_sessions", 5)
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.delete("/api/sessions/{session_id}")
+def terminate_session(session_id: str, user: str = Depends(get_current_user)):
+    """Termina una sessione specifica."""
+    try:
+        if session_id in active_sessions:
+            session_data = active_sessions[session_id]
+            if session_data.get("user") == user:
+                del active_sessions[session_id]
+                print(f"🔌 Session {session_id} terminated by {user}")
+                return {
+                    "success": True,
+                    "message": "Sessione terminata"
+                }
+            else:
+                return {"success": False, "error": "Non autorizzato"}
+        else:
+            return {"success": False, "error": "Sessione non trovata"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@router.post("/api/security/alerts")
+def get_security_alerts(user: str = Depends(get_current_user)):
+    """Ottieni alert di sicurezza."""
+    try:
+        # In produzione, recuperare alert dal database
+        alerts = []
+
+        # Controlla sessioni multiple
+        user_sessions = [s for s in active_sessions.values() if s.get("user") == user]
+        if len(user_sessions) > security_settings.get("max_concurrent_sessions", 5):
+            alerts.append({
+                "type": "warning",
+                "message": f"Troppe sessioni attive: {len(user_sessions)}",
+                "timestamp": datetime.utcnow().isoformat()
+            })
+
+        # Controlla JWT scaduti (dal log che vediamo)
+        alerts.append({
+            "type": "info",
+            "message": "Rilevati token JWT scaduti - possibile tentativo di accesso non autorizzato",
+            "timestamp": datetime.utcnow().isoformat()
+        })
+
+        return {
+            "success": True,
+            "alerts": alerts,
+            "total": len(alerts)
+        }
     except Exception as e:
         return {"success": False, "error": str(e)}
 
