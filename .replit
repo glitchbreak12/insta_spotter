@@ -8,6 +8,7 @@ command = "pip install -r requirements.txt"
 
 [env]
 PYTHONUNBUFFERED = "1"
+REPLIT_SHORT_NAME = "instaspotter"
 
-[interpreter]
-command = ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+[deployment]
+run = ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
