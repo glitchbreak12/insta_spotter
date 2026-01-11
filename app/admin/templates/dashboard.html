@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InstaSpotter Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1280,7 +1281,21 @@
             <section id="settings" class="content-section">
                 <div class="messages-section">
                     <div class="messages-header">
-                        <h3>Impostazioni Sistema</h3>
+                        <h3><i class="fas fa-cogs"></i> Gestione Sistema Avanzata</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning btn-sm" onclick="showDangerZone()">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Zona Pericolo
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="showSystemLogs()">
+                                <i class="fas fa-file-alt"></i>
+                                Log Sistema
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="showBackupManager()">
+                                <i class="fas fa-shield-alt"></i>
+                                Backup & Sicurezza
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Instagram Settings -->
@@ -1325,6 +1340,63 @@
                             <button class="btn btn-success btn-sm" onclick="testInstagramConnection()">
                                 <i class="fas fa-plug"></i>
                                 Test Connessione
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Analytics -->
+                    <div class="stat-card" style="margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-chart-line" style="color: var(--primary); margin-right: var(--space-sm);"></i>
+                            Analytics Avanzati
+                        </h4>
+                        <div id="advancedAnalytics">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                                <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                    <i class="fas fa-users fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Utenti Attivi</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">24h / 7gg / 30gg</div>
+                                </div>
+                                <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                    <i class="fas fa-chart-bar fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Performance</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">CPU / RAM / DB</div>
+                                </div>
+                                <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                    <i class="fas fa-shield-alt fa-2x" style="color: var(--info); margin-bottom: var(--space-sm);"></i>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Sicurezza</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">Login / Errori / Audit</div>
+                                </div>
+                                <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                    <i class="fas fa-globe fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Traffico</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">IP / Geo / Trends</div>
+                                </div>
+                            </div>
+                            <div id="analyticsCharts" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                                <div class="chart-card">
+                                    <div class="chart-title">Messaggi per Ora</div>
+                                    <div class="chart-container">
+                                        <canvas id="messagesHourlyChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="chart-card">
+                                    <div class="chart-title">Status Messaggi</div>
+                                    <div class="chart-container">
+                                        <canvas id="messagesStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons" style="margin-top: var(--space-md);">
+                            <button class="btn btn-info btn-sm" onclick="generateAnalyticsReport()">
+                                <i class="fas fa-file-chart"></i>
+                                Report Completo
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="exportAnalyticsData()">
+                                <i class="fas fa-download"></i>
+                                Esporta Dati
                             </button>
                         </div>
                     </div>
@@ -1443,6 +1515,249 @@
                             <button class="btn btn-danger btn-sm" onclick="clearCache()">
                                 <i class="fas fa-trash-alt"></i>
                                 Svuota Cache
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Data Management -->
+                    <div class="stat-card" style="margin-bottom: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-database" style="color: var(--info); margin-right: var(--space-sm);"></i>
+                            Gestione Dati Avanzata
+                        </h4>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin-bottom: var(--space-lg);">
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-search fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Ricerca Avanzata</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Filtra e cerca messaggi</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-trash-bulk fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Cancellazione Bulk</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Elimina messaggi multipli</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-user-shield fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Utenti Tecnici</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Gestisci utenti di servizio</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-shield-alt fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Audit Logs</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Log di sicurezza</div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="showAdvancedDataManagement()">
+                                <i class="fas fa-tools"></i>
+                                Gestione Avanzata Dati
+                            </button>
+                            <button class="btn btn-success" onclick="showUserManagement()">
+                                <i class="fas fa-users-cog"></i>
+                                Gestione Utenti
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone (Hidden by default) -->
+                <div id="dangerZone" style="display: none; margin-top: var(--space-3xl);">
+                    <div class="stat-card" style="border: 2px solid var(--error); background: rgba(239, 68, 68, 0.05);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--error);">
+                            <i class="fas fa-radiation" style="margin-right: var(--space-sm);"></i>
+                            🚨 ZONA PERICOLO - OPERAZIONI IRREVERSIBILI 🚨
+                        </h4>
+
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-lg);">
+                            <div style="font-weight: 600; color: var(--error); margin-bottom: var(--space-sm);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ATTENZIONE: Queste operazioni NON possono essere annullate!
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                Prima di procedere, assicurati di avere un backup completo dei dati.
+                                Queste azioni elimineranno definitivamente i dati dal database.
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                            <div>
+                                <h5 style="color: var(--error); margin-bottom: var(--space-md);">
+                                    <i class="fas fa-comments"></i>
+                                    Cancella Messaggi
+                                </h5>
+                                <div class="action-buttons" style="flex-direction: column; gap: var(--space-sm);">
+                                    <button class="btn btn-danger btn-sm" onclick="deleteMessagesByStatus('PENDING')">
+                                        <i class="fas fa-clock"></i>
+                                        Cancella PENDING
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteMessagesByStatus('APPROVED')">
+                                        <i class="fas fa-check"></i>
+                                        Cancella APPROVED
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteMessagesByStatus('REJECTED')">
+                                        <i class="fas fa-times"></i>
+                                        Cancella REJECTED
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteAllMessages()">
+                                        <i class="fas fa-skull-crossbones"></i>
+                                        CANCELLA TUTTI I MESSAGGI
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h5 style="color: var(--error); margin-bottom: var(--space-md);">
+                                    <i class="fas fa-server"></i>
+                                    Sistema Completo
+                                </h5>
+                                <div class="action-buttons" style="flex-direction: column; gap: var(--space-sm);">
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAllInfoCards()">
+                                        <i class="fas fa-id-card"></i>
+                                        Cancella Info Cards
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAllDailyPosts()">
+                                        <i class="fas fa-calendar-times"></i>
+                                        Cancella Daily Posts
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="resetAllSettings()">
+                                        <i class="fas fa-undo-alt"></i>
+                                        Reset Impostazioni
+                                    </button>
+                                    <button class="btn btn-danger" onclick="nuclearOption()" style="background: linear-gradient(45deg, #dc2626, #b91c1c);">
+                                        <i class="fas fa-radiation-alt"></i>
+                                        🗑️ CANCELLA TUTTO (NUCLEAR)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: var(--space-lg); padding: var(--space-lg); background: rgba(239, 68, 68, 0.05); border: 1px solid var(--error); border-radius: var(--radius-lg);">
+                            <div style="font-weight: 600; margin-bottom: var(--space-sm); color: var(--error);">
+                                Backup Automatico
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-md);">
+                                Prima di qualsiasi operazione distruttiva, viene creato automaticamente un backup.
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-success btn-sm" onclick="createManualBackup()">
+                                    <i class="fas fa-save"></i>
+                                    Crea Backup Manuale
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="viewBackups()">
+                                    <i class="fas fa-list"></i>
+                                    Visualizza Backup
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="restoreFromBackup()">
+                                    <i class="fas fa-undo"></i>
+                                    Ripristina da Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Manager (Hidden by default) -->
+                <div id="backupManager" style="display: none; margin-top: var(--space-3xl);">
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-shield-alt" style="color: var(--success); margin-right: var(--space-sm);"></i>
+                            Backup & Sicurezza
+                        </h4>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-database fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Backup Database</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Salva tutto il database</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-images fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Backup Immagini</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Salva tutte le immagini generate</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-file-alt fa-2x" style="color: var(--info); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Backup Config</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Salva configurazione sistema</div>
+                            </div>
+                            <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
+                                <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
+                                <div style="font-weight: 600; margin-bottom: var(--space-xs);">Backup Cloud</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Upload su cloud storage</div>
+                            </div>
+                        </div>
+
+                        <div id="backupStatus" class="loading">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento stato backup...</div>
+                        </div>
+
+                        <div class="action-buttons" style="margin-top: var(--space-lg);">
+                            <button class="btn btn-success" onclick="createFullBackup()">
+                                <i class="fas fa-save"></i>
+                                Crea Backup Completo
+                            </button>
+                            <button class="btn btn-primary" onclick="scheduleAutomaticBackup()">
+                                <i class="fas fa-clock"></i>
+                                Backup Automatico
+                            </button>
+                            <button class="btn btn-info" onclick="downloadBackup()">
+                                <i class="fas fa-download"></i>
+                                Scarica Backup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Logs (Hidden by default) -->
+                <div id="systemLogs" style="display: none; margin-top: var(--space-3xl);">
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-file-alt" style="color: var(--info); margin-right: var(--space-sm);"></i>
+                            Log di Sistema
+                        </h4>
+
+                        <div class="form-group">
+                            <label class="form-label">Tipo di Log</label>
+                            <select id="logType" class="form-select" onchange="loadSystemLogs()">
+                                <option value="all">Tutti i Log</option>
+                                <option value="error">Errori</option>
+                                <option value="warning">Avvertimenti</option>
+                                <option value="info">Informazioni</option>
+                                <option value="security">Sicurezza</option>
+                                <option value="admin">Azioni Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Periodo</label>
+                            <select id="logPeriod" class="form-select" onchange="loadSystemLogs()">
+                                <option value="1h">Ultima ora</option>
+                                <option value="24h">Ultime 24 ore</option>
+                                <option value="7d">Ultimi 7 giorni</option>
+                                <option value="30d">Ultimi 30 giorni</option>
+                            </select>
+                        </div>
+
+                        <div id="logsContainer" class="loading" style="margin-top: var(--space-lg);">
+                            <div class="spinner"></div>
+                            <div class="loading-text">Caricamento log di sistema...</div>
+                        </div>
+
+                        <div class="action-buttons" style="margin-top: var(--space-lg);">
+                            <button class="btn btn-primary" onclick="loadSystemLogs()">
+                                <i class="fas fa-sync-alt"></i>
+                                Aggiorna Log
+                            </button>
+                            <button class="btn btn-success" onclick="exportLogs()">
+                                <i class="fas fa-download"></i>
+                                Esporta Log
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="clearOldLogs()">
+                                <i class="fas fa-trash"></i>
+                                Pulisci Log Vecchi
                             </button>
                         </div>
                     </div>
@@ -2537,6 +2852,1166 @@
                 showNotification('Attenzione', 'Modalità manutenzione abilitata. Il sito potrebbe non essere accessibile.', 'warning');
             }
         }
+
+        // Advanced Management Functions
+
+        function showDangerZone() {
+            const dangerZone = document.getElementById('dangerZone');
+            const backupManager = document.getElementById('backupManager');
+            const systemLogs = document.getElementById('systemLogs');
+
+            // Hide others
+            backupManager.style.display = 'none';
+            systemLogs.style.display = 'none';
+
+            // Toggle danger zone
+            dangerZone.style.display = dangerZone.style.display === 'none' ? 'block' : 'none';
+
+            if (dangerZone.style.display === 'block') {
+                showNotification('Attenzione', 'Sei entrato nella Zona Pericolo. Procedi con estrema cautela!', 'warning');
+            }
+        }
+
+        function showBackupManager() {
+            const dangerZone = document.getElementById('dangerZone');
+            const backupManager = document.getElementById('backupManager');
+            const systemLogs = document.getElementById('systemLogs');
+
+            // Hide others
+            dangerZone.style.display = 'none';
+            systemLogs.style.display = 'none';
+
+            // Show backup manager
+            backupManager.style.display = backupManager.style.display === 'none' ? 'block' : 'none';
+
+            if (backupManager.style.display === 'block') {
+                loadBackupStatus();
+            }
+        }
+
+        function showSystemLogs() {
+            const dangerZone = document.getElementById('dangerZone');
+            const backupManager = document.getElementById('backupManager');
+            const systemLogs = document.getElementById('systemLogs');
+
+            // Hide others
+            dangerZone.style.display = 'none';
+            backupManager.style.display = 'none';
+
+            // Show system logs
+            systemLogs.style.display = systemLogs.style.display === 'none' ? 'block' : 'none';
+
+            if (systemLogs.style.display === 'block') {
+                loadSystemLogs();
+            }
+        }
+
+        // Danger Zone Functions
+        async function deleteMessagesByStatus(status) {
+            const statusText = status === 'PENDING' ? 'in attesa' : status === 'APPROVED' ? 'approvati' : 'rifiutati';
+            const count = allMessages.filter(msg => msg.status === status).length;
+
+            if (count === 0) {
+                showNotification('Info', `Nessun messaggio ${statusText} da cancellare`, 'info');
+                return;
+            }
+
+            const confirmText = `Sei SICURO di voler cancellare tutti i ${count} messaggi ${statusText}?\n\nQuesta azione è IRREVERSIBILE!`;
+            if (!confirm(confirmText)) return;
+
+            const doubleConfirm = `CONFERMA FINALE: Digita "CANCELLA" per procedere:`;
+            const userInput = prompt(doubleConfirm);
+            if (userInput !== 'CANCELLA') {
+                showNotification('Annullato', 'Operazione annullata', 'info');
+                return;
+            }
+
+            try {
+                showNotification('Avviso', 'Creando backup automatico prima della cancellazione...', 'warning');
+
+                // Create automatic backup
+                await createAutomaticBackup();
+
+                showNotification('Info', 'Cancellando messaggi...', 'info');
+
+                const response = await fetch('/admin/api/messages/delete-by-status', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', `Cancellati ${result.deleted_count} messaggi ${statusText}`, 'success');
+                    loadDashboardData();
+                    loadMessages();
+                } else {
+                    throw new Error('Cancellazione fallita');
+                }
+            } catch (error) {
+                console.error('Error deleting messages:', error);
+                showNotification('Errore', 'Impossibile cancellare i messaggi', 'error');
+            }
+        }
+
+        async function deleteAllMessages() {
+            const totalCount = allMessages.length;
+
+            if (totalCount === 0) {
+                showNotification('Info', 'Nessun messaggio da cancellare', 'info');
+                return;
+            }
+
+            const confirmText = `🚨 OPERAZIONE CRITICA 🚨\n\nSei SICURO di voler cancellare TUTTI i ${totalCount} messaggi?\n\nQuesta azione è IRREVERSIBILE e cancellerà tutti i messaggi dal database!`;
+            if (!confirm(confirmText)) return;
+
+            const doubleConfirm = `CONFERMA FINALE: Digita "CANCELLA TUTTO" per procedere:`;
+            const userInput = prompt(doubleConfirm);
+            if (userInput !== 'CANCELLA TUTTO') {
+                showNotification('Annullato', 'Operazione annullata', 'info');
+                return;
+            }
+
+            const tripleConfirm = `ULTIMA CONFERMA: Questa è la tua ultima possibilità.\nDigita il numero totale di messaggi (${totalCount}) per confermare:`;
+            const countInput = prompt(tripleConfirm);
+            if (countInput !== totalCount.toString()) {
+                showNotification('Annullato', 'Operazione annullata - numero non corretto', 'info');
+                return;
+            }
+
+            try {
+                showNotification('Avviso', 'Creando backup completo prima della cancellazione totale...', 'warning');
+
+                // Create full backup
+                await createFullBackup();
+
+                showNotification('Info', 'Cancellando tutti i messaggi...', 'info');
+
+                const response = await fetch('/admin/api/messages/delete-all', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Tutti i messaggi sono stati cancellati', 'success');
+                    loadDashboardData();
+                    loadMessages();
+                } else {
+                    throw new Error('Cancellazione totale fallita');
+                }
+            } catch (error) {
+                console.error('Error deleting all messages:', error);
+                showNotification('Errore', 'Impossibile cancellare tutti i messaggi', 'error');
+            }
+        }
+
+        async function deleteAllInfoCards() {
+            if (!confirm('Cancellare tutte le Info Cards? Questa azione è irreversibile!')) return;
+
+            try {
+                showNotification('Avviso', 'Creando backup prima della cancellazione...', 'warning');
+                await createAutomaticBackup();
+
+                const response = await fetch('/admin/api/info-cards/delete-all', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Tutte le Info Cards cancellate', 'success');
+                    loadInfoCards();
+                } else {
+                    throw new Error('Cancellazione fallita');
+                }
+            } catch (error) {
+                console.error('Error deleting info cards:', error);
+                showNotification('Errore', 'Impossibile cancellare le Info Cards', 'error');
+            }
+        }
+
+        async function deleteAllDailyPosts() {
+            if (!confirm('Cancellare tutti i Daily Posts? Questa azione è irreversibile!')) return;
+
+            try {
+                await createAutomaticBackup();
+
+                const response = await fetch('/admin/api/daily-posts/delete-all', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Tutti i Daily Posts cancellati', 'success');
+                    loadDailyPostSettings();
+                } else {
+                    throw new Error('Cancellazione fallita');
+                }
+            } catch (error) {
+                console.error('Error deleting daily posts:', error);
+                showNotification('Errore', 'Impossibile cancellare i Daily Posts', 'error');
+            }
+        }
+
+        async function resetAllSettings() {
+            if (!confirm('Resettare TUTTE le impostazioni ai valori default?')) return;
+
+            try {
+                await createAutomaticBackup();
+
+                const response = await fetch('/admin/api/settings/reset-all', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Tutte le impostazioni resettate', 'success');
+                    loadSystemSettings();
+                } else {
+                    throw new Error('Reset fallito');
+                }
+            } catch (error) {
+                console.error('Error resetting settings:', error);
+                showNotification('Errore', 'Impossibile resettare le impostazioni', 'error');
+            }
+        }
+
+        async function nuclearOption() {
+            const confirmText = `🚨 🚨 🚨 NUCLEAR OPTION 🚨 🚨 🚨\n\nQuesta è l'opzione più distruttiva possibile!\n\nCancellerà:\n• TUTTI i messaggi\n• TUTTE le Info Cards\n• TUTTI i Daily Posts\n• TUTTE le impostazioni\n• TUTTI i dati del database\n\nIL DATABASE SARÀ COMPLETAMENTE VUOTO!\n\nSei ASSOLUTAMENTE SICURO?`;
+
+            if (!confirm(confirmText)) return;
+
+            const doubleConfirm = `CONFERMA NUCLEARE: Digita "NUCLEARE" per procedere:`;
+            const userInput = prompt(doubleConfirm);
+            if (userInput !== 'NUCLEARE') {
+                showNotification('Annullato', 'Opzione nucleare annullata', 'info');
+                return;
+            }
+
+            const tripleConfirm = `ULTIMA CONFERMA NUCLEARE:\n\nScrivi "CONFERMO LA DISTRUZIONE TOTALE" (tutto maiuscolo):`;
+            const finalInput = prompt(tripleConfirm);
+            if (finalInput !== 'CONFERMO LA DISTRUZIONE TOTALE') {
+                showNotification('Annullato', 'Opzione nucleare annullata', 'info');
+                return;
+            }
+
+            try {
+                showNotification('Avviso', 'Creando backup finale prima della distruzione totale...', 'error');
+
+                // Create final backup
+                await createFullBackup();
+
+                showNotification('Info', 'Avviando distruzione totale...', 'error');
+
+                const response = await fetch('/admin/api/system/nuclear-option', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Completato', 'Distruzione totale completata. Il sistema è stato resettato.', 'success');
+                    setTimeout(() => window.location.reload(), 3000);
+                } else {
+                    throw new Error('Nuclear option failed');
+                }
+            } catch (error) {
+                console.error('Error nuclear option:', error);
+                showNotification('Errore', 'Opzione nucleare fallita', 'error');
+            }
+        }
+
+        // Backup Functions
+        async function loadBackupStatus() {
+            try {
+                const response = await fetch('/admin/api/backup/status', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const status = await response.json();
+                    document.getElementById('backupStatus').innerHTML = `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                            <div>
+                                <strong>Ultimo Backup:</strong> ${status.last_backup ? new Date(status.last_backup).toLocaleString('it-IT') : 'Mai'}
+                            </div>
+                            <div>
+                                <strong>Backup Automatici:</strong> ${status.auto_backup_enabled ? 'Abilitati' : 'Disabilitati'}
+                            </div>
+                            <div>
+                                <strong>Dimensione Backup:</strong> ${status.total_size || 'N/A'}
+                            </div>
+                            <div>
+                                <strong>Backup Disponibili:</strong> ${status.backup_count || 0}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('backupStatus').innerHTML = `
+                        <div style="text-align: center; color: var(--error);">
+                            Errore caricamento stato backup
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading backup status:', error);
+                document.getElementById('backupStatus').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore caricamento stato backup
+                    </div>
+                `;
+            }
+        }
+
+        async function createFullBackup() {
+            try {
+                showNotification('Info', 'Creando backup completo...', 'info');
+
+                const response = await fetch('/admin/api/backup/create-full', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', `Backup creato: ${result.filename}`, 'success');
+                    loadBackupStatus();
+                    return result;
+                } else {
+                    throw new Error('Backup creation failed');
+                }
+            } catch (error) {
+                console.error('Error creating backup:', error);
+                showNotification('Errore', 'Impossibile creare il backup', 'error');
+                throw error;
+            }
+        }
+
+        async function createAutomaticBackup() {
+            try {
+                const response = await fetch('/admin/api/backup/create-auto', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    console.log('Automatic backup created');
+                }
+            } catch (error) {
+                console.error('Error creating automatic backup:', error);
+            }
+        }
+
+        async function createManualBackup() {
+            await createFullBackup();
+        }
+
+        async function viewBackups() {
+            try {
+                const response = await fetch('/admin/api/backup/list', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const backups = await response.json();
+
+                    let html = '<h5 style="margin-bottom: var(--space-lg);">Backup Disponibili</h5>';
+
+                    if (backups.length === 0) {
+                        html += '<div style="text-align: center; color: var(--text-muted);">Nessun backup disponibile</div>';
+                    } else {
+                        backups.forEach(backup => {
+                            html += `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-sm) 0; border-bottom: 1px solid var(--border);">
+                                    <div>
+                                        <div style="font-weight: 600;">${backup.filename}</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                            ${new Date(backup.created_at).toLocaleString('it-IT')} - ${backup.size}
+                                        </div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-success btn-sm" onclick="downloadSpecificBackup('${backup.filename}')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteBackup('${backup.filename}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Show in modal
+                    const modal = document.createElement('div');
+                    modal.className = 'modal active';
+                    modal.innerHTML = `
+                        <div class="modal-content" style="max-width: 600px;">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Gestione Backup</h3>
+                                <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                            </div>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                ${html}
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', function(e) {
+                        if (e.target === modal) {
+                            modal.remove();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading backups:', error);
+                showNotification('Errore', 'Impossibile caricare la lista backup', 'error');
+            }
+        }
+
+        async function downloadBackup() {
+            try {
+                const response = await fetch('/admin/api/backup/download-latest', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `insta_spotter_backup_${new Date().toISOString().split('T')[0]}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showNotification('Successo', 'Backup scaricato', 'success');
+                } else {
+                    throw new Error('Download failed');
+                }
+            } catch (error) {
+                console.error('Error downloading backup:', error);
+                showNotification('Errore', 'Impossibile scaricare il backup', 'error');
+            }
+        }
+
+        async function downloadSpecificBackup(filename) {
+            try {
+                const response = await fetch(`/admin/api/backup/download/${filename}`, {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showNotification('Successo', `Backup ${filename} scaricato`, 'success');
+                } else {
+                    throw new Error('Download failed');
+                }
+            } catch (error) {
+                console.error('Error downloading backup:', error);
+                showNotification('Errore', 'Impossibile scaricare il backup', 'error');
+            }
+        }
+
+        async function deleteBackup(filename) {
+            if (!confirm(`Cancellare il backup ${filename}?`)) return;
+
+            try {
+                const response = await fetch(`/admin/api/backup/delete/${filename}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Backup cancellato', 'success');
+                    loadBackupStatus();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting backup:', error);
+                showNotification('Errore', 'Impossibile cancellare il backup', 'error');
+            }
+        }
+
+        async function restoreFromBackup() {
+            if (!confirm('Questa operazione ripristinerà il database da un backup. I dati attuali verranno persi. Continuare?')) return;
+
+            try {
+                const backups = await (await fetch('/admin/api/backup/list', { credentials: 'same-origin' })).json();
+
+                if (backups.length === 0) {
+                    showNotification('Errore', 'Nessun backup disponibile', 'error');
+                    return;
+                }
+
+                // Show backup selection modal
+                let options = '<select id="backupSelect" class="form-select" style="margin-bottom: var(--space-lg);">';
+                backups.forEach(backup => {
+                    options += `<option value="${backup.filename}">${backup.filename} (${new Date(backup.created_at).toLocaleDateString('it-IT')})</option>`;
+                });
+                options += '</select>';
+
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Ripristina da Backup</h4>
+                            <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong style="color: var(--error);">Attenzione:</strong> Questa operazione sovrascriverà tutti i dati attuali.
+                        </div>
+                        ${options}
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="confirmRestore()">Ripristina</button>
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Annulla</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Add confirm function to window
+                window.confirmRestore = async function() {
+                    const filename = document.getElementById('backupSelect').value;
+
+                    modal.remove();
+
+                    showNotification('Info', 'Avviando ripristino...', 'info');
+
+                    try {
+                        const response = await fetch('/admin/api/backup/restore', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filename: filename })
+                        });
+
+                        if (response.ok) {
+                            showNotification('Successo', 'Ripristino completato. Ricarica la pagina.', 'success');
+                            setTimeout(() => window.location.reload(), 3000);
+                        } else {
+                            throw new Error('Restore failed');
+                        }
+                    } catch (error) {
+                        console.error('Error restoring backup:', error);
+                        showNotification('Errore', 'Impossibile ripristinare il backup', 'error');
+                    }
+                };
+
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading backups for restore:', error);
+                showNotification('Errore', 'Impossibile caricare i backup', 'error');
+            }
+        }
+
+        // System Logs Functions
+        async function loadSystemLogs() {
+            try {
+                const logType = document.getElementById('logType').value;
+                const logPeriod = document.getElementById('logPeriod').value;
+
+                const response = await fetch(`/admin/api/logs?type=${logType}&period=${logPeriod}`, {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const logs = await response.json();
+
+                    let html = '';
+                    if (logs.length === 0) {
+                        html = '<div style="text-align: center; color: var(--text-muted); padding: var(--space-2xl);">Nessun log trovato per i filtri selezionati</div>';
+                    } else {
+                        logs.forEach(log => {
+                            const logClass = log.level.toLowerCase();
+                            const logIcon = log.level === 'ERROR' ? 'exclamation-triangle' :
+                                          log.level === 'WARNING' ? 'exclamation-circle' :
+                                          log.level === 'INFO' ? 'info-circle' : 'check-circle';
+
+                            html += `
+                                <div style="display: flex; gap: var(--space-md); padding: var(--space-md); border-bottom: 1px solid var(--border); align-items: flex-start;">
+                                    <div style="flex-shrink: 0;">
+                                        <i class="fas fa-${logIcon} log-${logClass}" style="color: var(--${logClass === 'error' ? 'error' : logClass === 'warning' ? 'warning' : 'info'});"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: var(--space-xs);">
+                                            ${log.level} - ${log.category || 'Sistema'}
+                                        </div>
+                                        <div style="color: var(--text-primary); margin-bottom: var(--space-xs);">
+                                            ${escapeHtml(log.message)}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                            ${new Date(log.timestamp).toLocaleString('it-IT')} ${log.user ? `- ${log.user}` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('logsContainer').innerHTML = html;
+                } else {
+                    document.getElementById('logsContainer').innerHTML = `
+                        <div style="text-align: center; color: var(--error);">
+                            Errore caricamento log
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsContainer').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore caricamento log
+                    </div>
+                `;
+            }
+        }
+
+        async function exportLogs() {
+            try {
+                const logType = document.getElementById('logType').value;
+                const logPeriod = document.getElementById('logPeriod').value;
+
+                const response = await fetch(`/admin/api/logs/export?type=${logType}&period=${logPeriod}`, {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `system_logs_${logType}_${logPeriod}_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showNotification('Successo', 'Log esportati', 'success');
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                console.error('Error exporting logs:', error);
+                showNotification('Errore', 'Impossibile esportare i log', 'error');
+            }
+        }
+
+        async function clearOldLogs() {
+            if (!confirm('Cancellare i log più vecchi di 30 giorni?')) return;
+
+            try {
+                const response = await fetch('/admin/api/logs/clear-old', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Log vecchi cancellati', 'success');
+                    loadSystemLogs();
+                } else {
+                    throw new Error('Clear failed');
+                }
+            } catch (error) {
+                console.error('Error clearing logs:', error);
+                showNotification('Errore', 'Impossibile cancellare i log vecchi', 'error');
+            }
+        }
+
+        // Advanced Data Management
+        function showAdvancedDataManagement() {
+            // Show advanced search and management modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Gestione Dati Avanzata</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div style="margin-bottom: var(--space-xl);">
+                        <div class="form-group">
+                            <label class="form-label">Ricerca Avanzata</label>
+                            <input type="text" id="searchQuery" class="form-input" placeholder="Cerca nei messaggi...">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-md);">
+                            <select id="searchStatus" class="form-select">
+                                <option value="">Tutti gli stati</option>
+                                <option value="PENDING">In Attesa</option>
+                                <option value="APPROVED">Approvati</option>
+                                <option value="REJECTED">Rifiutati</option>
+                            </select>
+                            <input type="date" id="searchDateFrom" class="form-input">
+                            <input type="date" id="searchDateTo" class="form-input">
+                        </div>
+                        <div class="action-buttons" style="margin-top: var(--space-md);">
+                            <button class="btn btn-primary" onclick="performAdvancedSearch()">Cerca</button>
+                            <button class="btn btn-success" onclick="exportSearchResults()">Esporta Risultati</button>
+                        </div>
+                    </div>
+                    <div id="searchResults" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function showUserManagement() {
+            // Show technical users management modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Gestione Utenti Tecnici</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div id="usersContainer" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento utenti...</div>
+                    </div>
+                    <div class="action-buttons" style="margin-top: var(--space-lg);">
+                        <button class="btn btn-success" onclick="addTechnicalUser()">Aggiungi Utente</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Load users
+            loadTechnicalUsers();
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        async function loadTechnicalUsers() {
+            try {
+                const response = await fetch('/admin/api/users/technical', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const users = await response.json();
+
+                    let html = '<h5 style="margin-bottom: var(--space-lg);">Utenti Tecnici</h5>';
+
+                    if (users.length === 0) {
+                        html += '<div style="text-align: center; color: var(--text-muted);">Nessun utente tecnico</div>';
+                    } else {
+                        users.forEach(user => {
+                            html += `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-md); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-md);">
+                                    <div>
+                                        <div style="font-weight: 600;">${user.username}</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                            Creato: ${new Date(user.created_at).toLocaleDateString('it-IT')}
+                                            ${user.last_login ? ` - Ultimo accesso: ${new Date(user.last_login).toLocaleDateString('it-IT')}` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-warning btn-sm" onclick="resetUserPassword('${user.id}')">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteTechnicalUser('${user.id}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('usersContainer').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading technical users:', error);
+                document.getElementById('usersContainer').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore caricamento utenti
+                    </div>
+                `;
+            }
+        }
+
+        async function addTechnicalUser() {
+            const username = prompt('Nome utente per il nuovo utente tecnico:');
+            if (!username) return;
+
+            const password = prompt('Password per il nuovo utente:');
+            if (!password) return;
+
+            try {
+                const response = await fetch('/admin/api/users/technical', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, password: password })
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Utente tecnico creato', 'success');
+                    loadTechnicalUsers();
+                } else {
+                    throw new Error('Creation failed');
+                }
+            } catch (error) {
+                console.error('Error creating technical user:', error);
+                showNotification('Errore', 'Impossibile creare l\'utente tecnico', 'error');
+            }
+        }
+
+        async function deleteTechnicalUser(userId) {
+            if (!confirm('Cancellare questo utente tecnico?')) return;
+
+            try {
+                const response = await fetch(`/admin/api/users/technical/${userId}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Utente tecnico cancellato', 'success');
+                    loadTechnicalUsers();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting technical user:', error);
+                showNotification('Errore', 'Impossibile cancellare l\'utente tecnico', 'error');
+            }
+        }
+
+        async function resetUserPassword(userId) {
+            const newPassword = prompt('Nuova password:');
+            if (!newPassword) return;
+
+            try {
+                const response = await fetch(`/admin/api/users/technical/${userId}/password`, {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPassword })
+                });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Password resettata', 'success');
+                } else {
+                    throw new Error('Reset failed');
+                }
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showNotification('Errore', 'Impossibile resettare la password', 'error');
+            }
+        }
+
+        async function performAdvancedSearch() {
+            const query = document.getElementById('searchQuery').value;
+            const status = document.getElementById('searchStatus').value;
+            const dateFrom = document.getElementById('searchDateFrom').value;
+            const dateTo = document.getElementById('searchDateTo').value;
+
+            try {
+                const params = new URLSearchParams({
+                    query: query,
+                    status: status,
+                    date_from: dateFrom,
+                    date_to: dateTo
+                });
+
+                const response = await fetch(`/admin/api/messages/search?${params}`, {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const results = await response.json();
+
+                    let html = `<h5>Risultati: ${results.length} messaggi trovati</h5>`;
+
+                    if (results.length === 0) {
+                        html += '<div style="text-align: center; color: var(--text-muted); padding: var(--space-xl);">Nessun risultato trovato</div>';
+                    } else {
+                        results.forEach(msg => {
+                            html += `
+                                <div class="message-card">
+                                    <div class="message-header">
+                                        <span class="message-id">#${msg.id}</span>
+                                        <span class="message-status status-${msg.status.toLowerCase()}">${msg.status}</span>
+                                    </div>
+                                    <div class="message-content">${escapeHtml(msg.text)}</div>
+                                    <div class="message-meta">
+                                        <span>${new Date(msg.created_at).toLocaleString('it-IT')}</span>
+                                        <span>IP: ${msg.ip_address || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('searchResults').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error performing search:', error);
+                document.getElementById('searchResults').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        Errore durante la ricerca
+                    </div>
+                `;
+            }
+        }
+
+        async function exportSearchResults() {
+            // Implement export of search results
+            showNotification('Info', 'Funzione export in sviluppo', 'info');
+        }
+
+        async function generateAnalyticsReport() {
+            try {
+                showNotification('Info', 'Generando report analytics...', 'info');
+
+                const response = await fetch('/admin/api/analytics/generate-report', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    // Download report
+                    const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `analytics_report_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showNotification('Successo', 'Report analytics generato e scaricato', 'success');
+                } else {
+                    throw new Error('Report generation failed');
+                }
+            } catch (error) {
+                console.error('Error generating analytics report:', error);
+                showNotification('Errore', 'Impossibile generare il report analytics', 'error');
+            }
+        }
+
+        async function exportAnalyticsData() {
+            try {
+                const response = await fetch('/admin/api/analytics/export', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `analytics_data_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+
+                    showNotification('Successo', 'Dati analytics esportati', 'success');
+                } else {
+                    throw new Error('Export failed');
+                }
+            } catch (error) {
+                console.error('Error exporting analytics:', error);
+                showNotification('Errore', 'Impossibile esportare i dati analytics', 'error');
+            }
+        }
+
+        async function scheduleAutomaticBackup() {
+            // Toggle automatic backup scheduling
+            showNotification('Info', 'Funzione backup automatico in sviluppo', 'info');
+        }
+
+        // Analytics Functions
+        let messagesHourlyChart = null;
+        let messagesStatusChart = null;
+
+        async function loadAdvancedAnalytics() {
+            try {
+                console.log('Loading advanced analytics...');
+
+                const response = await fetch('/admin/api/analytics/dashboard', {
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const analytics = await response.json();
+                    console.log('Analytics loaded:', analytics);
+
+                    // Update analytics display
+                    updateAnalyticsDisplay(analytics);
+
+                    // Initialize charts
+                    initializeCharts(analytics);
+                } else {
+                    console.error('Failed to load analytics');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        function updateAnalyticsDisplay(analytics) {
+            // Update user activity stats
+            const users24h = analytics.users_24h || 0;
+            const users7d = analytics.users_7d || 0;
+            const users30d = analytics.users_30d || 0;
+
+            // Update performance stats
+            const cpuUsage = analytics.cpu_usage || 0;
+            const ramUsage = analytics.ram_usage || 0;
+            const dbConnections = analytics.db_connections || 0;
+
+            // Update security stats
+            const failedLogins = analytics.failed_logins_24h || 0;
+            const securityAlerts = analytics.security_alerts || 0;
+            const auditEvents = analytics.audit_events_24h || 0;
+
+            // Update traffic stats
+            const uniqueIPs = analytics.unique_ips_24h || 0;
+            const topCountry = analytics.top_country || 'N/A';
+            const trafficTrend = analytics.traffic_trend || 0;
+
+            // For now, just log the analytics - you can expand this to update the UI
+            console.log('Analytics display updated:', {
+                users: { users24h, users7d, users30d },
+                performance: { cpuUsage, ramUsage, dbConnections },
+                security: { failedLogins, securityAlerts, auditEvents },
+                traffic: { uniqueIPs, topCountry, trafficTrend }
+            });
+        }
+
+        function initializeCharts(analytics) {
+            // Destroy existing charts if they exist
+            if (messagesHourlyChart) {
+                messagesHourlyChart.destroy();
+            }
+            if (messagesStatusChart) {
+                messagesStatusChart.destroy();
+            }
+
+            // Messages per hour chart
+            const hourlyCtx = document.getElementById('messagesHourlyChart');
+            if (hourlyCtx) {
+                const hourlyData = analytics.messages_hourly || [];
+                messagesHourlyChart = new Chart(hourlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: hourlyData.map(item => item.hour + ':00'),
+                        datasets: [{
+                            label: 'Messaggi per Ora',
+                            data: hourlyData.map(item => item.count),
+                            borderColor: 'var(--primary)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Messages status chart
+            const statusCtx = document.getElementById('messagesStatusChart');
+            if (statusCtx) {
+                const statusData = analytics.messages_by_status || {};
+                messagesStatusChart = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pending', 'Approved', 'Rejected'],
+                        datasets: [{
+                            data: [
+                                statusData.PENDING || 0,
+                                statusData.APPROVED || 0,
+                                statusData.REJECTED || 0
+                            ],
+                            backgroundColor: [
+                                'var(--warning)',
+                                'var(--success)',
+                                'var(--error)'
+                            ],
+                            borderWidth: 2,
+                            borderColor: 'var(--bg-primary)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize analytics when settings section is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load analytics when settings tab is shown
+            const settingsTab = document.querySelector('[data-section="settings"]');
+            if (settingsTab) {
+                settingsTab.addEventListener('click', function() {
+                    setTimeout(() => {
+                        loadAdvancedAnalytics();
+                    }, 100);
+                });
+            }
+        });
 
         // Utility functions
         function escapeHtml(text) {
