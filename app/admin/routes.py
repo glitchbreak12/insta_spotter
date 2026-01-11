@@ -2,8 +2,11 @@ from fastapi import APIRouter, Request, Depends, HTTPException, Form, Response, 
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from datetime import datetime, timedelta
+import secrets
+import hashlib
+import json
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
@@ -820,13 +823,6 @@ def debug_admin_credentials(user: str = Depends(get_current_user)):
 @router.get("/api/analytics/dashboard")
 def get_analytics_dashboard(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
     """API per analytics della dashboard."""
-from datetime import datetime, timedelta
-from sqlalchemy import func, extract
-from app.database import MessageStatus
-import secrets
-import hashlib
-import json
-
     try:
         now = datetime.utcnow()
         yesterday = now - timedelta(days=1)
