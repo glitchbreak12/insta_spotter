@@ -6,6 +6,8 @@
     <title>InstaSpotter Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- QR Code generation - client-side fallback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
         /* Modern CSS Reset */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -4233,7 +4235,7 @@
                             <img src="${data.qr_data.qr_image_url}"
                                  alt="QR Code"
                                  style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"
-                                 onerror="handleQRImageError('${data.qr_data.url}')">
+                                 onerror="generateClientSideQR('${data.qr_data.url}')">
                         `;
                         console.log('Using server-generated QR image URL:', data.qr_data.qr_image_url);
                     } else if (data.qr_data.qr_image_b64) {
@@ -4241,11 +4243,14 @@
                         document.getElementById('qrCodeContainer').innerHTML = `
                             <img src="${data.qr_data.qr_image_b64}"
                                  alt="QR Code"
-                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);">
+                                 style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"
+                                 onerror="generateClientSideQR('${data.qr_data.url}')">
                         `;
                         console.log('Using server-generated QR base64 image');
                     } else {
-                        // Fallback: show URL for manual entry
+                        // No server image available, generate client-side immediately
+                        generateClientSideQR(data.qr_data.url);
+                    }
                         document.getElementById('qrCodeContainer').innerHTML = `
                             <div style="text-align: center; padding: var(--space-lg);">
                                 <i class="fas fa-link fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
@@ -4339,20 +4344,55 @@
             }
         }
 
-        // Handle QR image loading error
+        // Generate QR code client-side using Qrious
+        function generateClientSideQR(url) {
+            console.log('Generating QR code client-side with Qrious for URL:', url);
+
+            try {
+                const qrContainer = document.getElementById('qrCodeContainer');
+
+                // Create a unique ID for the canvas
+                const canvasId = 'qrious-canvas-' + Date.now();
+
+                // Generate QR code using Qrious
+                qrContainer.innerHTML = `<canvas id="${canvasId}" style="max-width: 256px; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow);"></canvas>`;
+
+                // Create QR code with Qrious
+                const qr = new QRious({
+                    element: document.getElementById(canvasId),
+                    value: url,
+                    size: 256,
+                    level: 'H' // High error correction
+                });
+
+                console.log('QR code generated successfully with Qrious');
+
+            } catch (error) {
+                console.error('Qrious QR generation failed:', error);
+                showQRUrlFallback(url);
+            }
+        }
+
+        // Handle QR image loading error - try client-side generation
         function handleQRImageError(fallbackUrl) {
-            console.log('QR image failed to load, showing fallback URL');
+            console.log('QR image failed to load, trying client-side generation');
+            generateClientSideQR(fallbackUrl);
+        }
+
+        // Show URL fallback when all QR generation methods fail
+        function showQRUrlFallback(url) {
+            console.log('All QR generation methods failed, showing URL fallback');
             const qrContainer = document.getElementById('qrCodeContainer');
             qrContainer.innerHTML = `
                 <div style="text-align: center; padding: var(--space-lg);">
                     <i class="fas fa-link fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
                     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
-                        Immagine QR non disponibile. Usa questo link:
+                        Generazione QR fallita. Usa questo link:
                     </p>
                     <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all; margin-bottom: var(--space-md);">
-                        ${fallbackUrl}
+                        ${url}
                     </div>
-                    <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${fallbackUrl}')">
+                    <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${url}')">
                         <i class="fas fa-copy"></i>
                         Copia Link
                     </button>

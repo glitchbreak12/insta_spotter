@@ -810,8 +810,10 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         # Genera URL per il QR code
         qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token={qr_token}"
 
-        # Prova a generare QR code lato server se qrcode è disponibile
+        # Try server-side QR generation (optional, client-side will always work)
         qr_image_b64 = None
+        qr_image_url = None
+
         try:
             print(f"🔧 Attempting server-side QR generation for user {user}")
             import qrcode
@@ -837,20 +839,22 @@ def generate_qr_code(user: str = Depends(get_current_user)):
 
             print("✅ QR image generated and saved to buffer")
 
-            # Encode to base64
+            # Create direct image URL
+            qr_image_url = f"/admin/api/auth/qr-image/{session_id}"
+
+            # Also create base64 as backup
             image_data = buffer.getvalue()
             qr_image_b64 = f"data:image/png;base64,{base64.b64encode(image_data).decode('utf-8')}"
 
-            print(f"✅ QR image encoded to base64, size: {len(qr_image_b64)} chars")
+            print(f"✅ QR image available at: {qr_image_url}")
 
         except ImportError as e:
-            print(f"❌ QR libraries not available: {e}")
-            pass
+            print(f"⚠️ QR libraries not available on server: {e}")
+            print("📱 Client-side QR generation will be used instead")
         except Exception as qr_error:
             print(f"❌ Server-side QR generation failed: {qr_error}")
             import traceback
             traceback.print_exc()
-            pass
 
         # Crea URL per immagine QR diretta
         qr_image_url = f"/admin/api/auth/qr-image/{session_id}"
@@ -861,8 +865,8 @@ def generate_qr_code(user: str = Depends(get_current_user)):
                 "session_id": session_id,
                 "url": qr_url,
                 "expires_in": 300,  # 5 minuti
-                "qr_image_url": qr_image_url,  # Direct image URL
-                "qr_image_b64": qr_image_b64   # Fallback base64
+                "qr_image_url": qr_image_url,  # Direct image URL (if available)
+                "qr_image_b64": qr_image_b64   # Base64 backup (if available)
             },
             "message": "QR Code generato. Scansiona con il cellulare per accedere automaticamente."
         }
@@ -989,7 +993,9 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
 
         except ImportError as e:
             print(f"❌ QR libraries not available: {e}")
-            raise HTTPException(status_code=500, detail="Libreria QR code non disponibile")
+            # Return a simple placeholder image or redirect to client-side generation
+            # For now, return a 404 to trigger client-side fallback
+            raise HTTPException(status_code=404, detail="QR generation not available on server")
         except Exception as e:
             print(f"❌ QR generation error: {e}")
             import traceback
