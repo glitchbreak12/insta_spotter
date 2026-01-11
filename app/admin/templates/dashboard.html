@@ -4251,22 +4251,6 @@
                         // No server image available, generate client-side immediately
                         generateClientSideQR(data.qr_data.url);
                     }
-                        document.getElementById('qrCodeContainer').innerHTML = `
-                            <div style="text-align: center; padding: var(--space-lg);">
-                                <i class="fas fa-link fa-2x" style="color: var(--primary); margin-bottom: var(--space-md);"></i>
-                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: var(--space-md);">
-                                    QR Code non disponibile. Usa questo link:
-                                </p>
-                                <div style="background: var(--bg); padding: var(--space-sm); border-radius: var(--radius); font-family: monospace; font-size: 0.8rem; word-break: break-all;">
-                                    ${data.qr_data.url}
-                                </div>
-                                <button class="btn btn-sm btn-primary" onclick="copyToClipboard('${data.qr_data.url}')" style="margin-top: var(--space-sm);">
-                                    <i class="fas fa-copy"></i>
-                                    Copia Link
-                                </button>
-                            </div>
-                        `;
-                    }
 
                     // Start countdown
                     let timeLeft = 300;
