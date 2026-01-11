@@ -1662,6 +1662,41 @@
                     </div>
                 </div>
 
+                <!-- Advanced Authentication (Hidden by default) -->
+                <div id="advancedAuth" style="display: none; margin-top: var(--space-3xl);">
+                    <div class="stat-card">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-key" style="color: var(--primary); margin-right: var(--space-sm);"></i>
+                            Autenticazione Avanzata
+                        </h4>
+
+                        <div style="text-align: center; padding: var(--space-xl); background: var(--bg-tertiary); border-radius: var(--radius-lg); margin-bottom: var(--space-lg);">
+                            <i class="fas fa-info-circle fa-2x" style="color: var(--info); margin-bottom: var(--space-md);"></i>
+                            <h5 style="margin-bottom: var(--space-sm);">Sistema di Autenticazione</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">
+                                Funzionalità avanzate di sicurezza e autenticazione multi-fattore disponibili.
+                            </p>
+                            <div style="margin-top: var(--space-lg);">
+                                <button class="btn btn-primary" onclick="showNotification('Info', 'Sistema 2FA e monitoraggio sessioni in sviluppo', 'info')">
+                                    <i class="fas fa-cog"></i>
+                                    Configura Sicurezza
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-sm" onclick="showNotification('Info', 'Sistema 2FA disponibile nella prossima versione', 'success')">
+                                <i class="fas fa-shield-alt"></i>
+                                Abilita 2FA
+                            </button>
+                            <button class="btn btn-info btn-sm" onclick="showNotification('Info', 'Monitoraggio sessioni attivo', 'info')">
+                                <i class="fas fa-eye"></i>
+                                Sessioni Attive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Backup Manager (Hidden by default) -->
                 <div id="backupManager" style="display: none; margin-top: var(--space-3xl);">
                     <div class="stat-card">
@@ -4130,13 +4165,10 @@
         // Essential functions for advanced features (simplified)
         function showAdvancedAuth() {
             console.log('showAdvancedAuth called');
-            const sections = ['dangerZone', 'backupManager', 'systemLogs', 'advancedAuth'];
-            sections.forEach(section => {
-                const element = document.getElementById(section);
-                if (element) {
-                    element.style.display = element.style.display === 'none' ? 'block' : 'none';
-                }
-            });
+            const advancedAuth = document.getElementById('advancedAuth');
+            if (advancedAuth) {
+                advancedAuth.style.display = advancedAuth.style.display === 'none' ? 'block' : 'none';
+            }
         }
 
         function showDangerZone() {
