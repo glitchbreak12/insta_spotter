@@ -809,23 +809,16 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         }
 
         # Genera URL per il QR code - usa URL pubblico accessibile dal cellulare
-        # Costruisci URL basato su REPLIT_DOMAINS o usa URL diretto
+        # Usa direttamente l'URL completo di Replit che conosciamo funzionare
 
-        # Prima prova con REPLIT_DOMAINS (contiene l'URL pubblico)
-        replit_domains = os.getenv("REPLIT_DOMAINS", "").strip()
-        if replit_domains:
-            # REPLIT_DOMAINS contiene l'URL pubblico
-            base_url = f"https://{replit_domains}"
-        else:
-            # Fallback: usa l'URL diretto se disponibile nelle variabili d'ambiente
-            repl_slug = os.getenv("REPL_SLUG")
-            repl_owner = os.getenv("REPL_OWNER")
+        # URL completo pubblico di Replit (funzionante)
+        base_url = "https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev"
 
-            if repl_slug and repl_owner:
-                base_url = f"https://{repl_slug}.{repl_owner}.replit.dev"
-            else:
-                # URL pubblico fisso come ultimo fallback
-                base_url = "https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev"
+        # Debug: mostra tutte le variabili d'ambiente Replit disponibili
+        print(f"🔍 REPLIT_DOMAINS: {os.getenv('REPLIT_DOMAINS')}")
+        print(f"🔍 REPL_SLUG: {os.getenv('REPL_SLUG')}")
+        print(f"🔍 REPL_OWNER: {os.getenv('REPL_OWNER')}")
+        print(f"🔍 REPLIT_APP_URL: {os.getenv('REPLIT_APP_URL')}")
 
         qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
         print(f"🔗 Generated QR URL: {qr_url}")
@@ -894,9 +887,15 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         return {"success": False, "error": str(e)}
 
 @router.post("/api/auth/verify-qr")
-def verify_qr_code(session_id: str, token: str):
+def verify_qr_code(data: dict):
     """Verifica il codice QR scansionato dal mobile."""
     try:
+        session_id = data.get("session_id")
+        token = data.get("token")
+
+        if not session_id or not token:
+            return {"success": False, "error": "Parametri mancanti"}
+
         # Controlla se la sessione QR esiste
         if session_id not in qr_sessions:
             return {"success": False, "error": "Sessione QR non valida"}
@@ -991,8 +990,8 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
         if session["user"] != user:
             raise HTTPException(status_code=403, detail="Non autorizzato")
 
-        # Ricostruisci l'URL
-        qr_url = f"https://instaspotter.app/auth/qr/{session_id}?token=qr_sessions[session_id]['token_hash']"
+        # Ricostruisci l'URL (funzione legacy - non utilizzata)
+        qr_url = f"https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev/auth/qr/{session_id}?token={qr_sessions[session_id]['token_hash']}"
 
         # Genera QR code
         try:
@@ -1189,7 +1188,7 @@ def qr_auth_page(session_id: str):
                 }}
 
                 try {{
-                    const response = await fetch('/admin/api/auth/verify-qr', {{
+                    const response = await fetch('https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev/admin/api/auth/verify-qr', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{
