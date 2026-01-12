@@ -661,22 +661,22 @@ def create_info_card(
 ):
     """API per creare una nuova info card."""
     from app.database import MessageType, MessageStatus
-    from app.tasks import generate_technical_user
 
     try:
         if not title or not text:
             return {"status": "error", "message": "Title and text are required"}
 
-        # Crea utente tecnico admin
-        admin_user = generate_technical_user(db)
+        # Ottieni o crea utente tecnico per l'utente corrente
+        from app.database import get_or_create_technical_user
+        technical_user = get_or_create_technical_user(db, user)
 
-        # Crea la info card
+        # Crea la info card dall'utente corrente
         info_card = SpottedMessage(
             text=text,
             message_type=MessageType.INFO,
             title=title,
             status=MessageStatus.APPROVED,  # Le info cards sono automaticamente approvate
-            technical_user_id=admin_user.id
+            technical_user_id=technical_user.id
         )
 
         db.add(info_card)
