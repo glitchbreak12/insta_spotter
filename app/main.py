@@ -460,9 +460,9 @@ def qr_auth_page(session_id: str, token: str = None):
                     if (response.ok) {{
                         const data = await response.json();
                         if (data.success) {{
-                            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso riuscito! Puoi chiudere questa pagina.';
-                            document.getElementById('statusText').className = 'status success';
-                            console.log('✅ QR authentication successful');
+                            // Ora completa il login chiamando qr-login per ottenere il token mobile
+                            console.log('✅ QR token verified, completing login...');
+                            completeMobileLogin();
                         }} else {{
                             document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.error || 'Autenticazione fallita');
                             document.getElementById('statusText').className = 'status error';
@@ -477,6 +477,44 @@ def qr_auth_page(session_id: str, token: str = None):
                     document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore: ' + error.message;
                     document.getElementById('statusText').className = 'status error';
                     console.error('❌ QR authentication error:', error);
+                }}
+            }}
+
+            async function completeMobileLogin() {{
+                try {{
+                    console.log('🚀 Completing mobile login...');
+                    const response = await fetch('/admin/api/auth/qr-login', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ session_id: sessionId }})
+                    }});
+
+                    if (response.ok) {{
+                        const data = await response.json();
+                        if (data.success && data.access_token) {{
+                            // Salva il token di accesso per il mobile
+                            localStorage.setItem('access_token', data.access_token);
+                            document.cookie = `access_token=${data.access_token}; path=/; max-age=86400`;
+
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso mobile completato! Reindirizzamento...';
+                            console.log('✅ Mobile login completed successfully');
+
+                            // Redirect alla dashboard dopo 2 secondi
+                            setTimeout(() => {{
+                                window.location.href = '/admin/dashboard';
+                            }}, 2000);
+                        }} else {{
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore completamento login';
+                            document.getElementById('statusText').className = 'status error';
+                        }}
+                    }} else {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore connessione login';
+                        document.getElementById('status').className = 'status error';
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore: ' + error.message;
+                    document.getElementById('status').className = 'status error';
+                    console.error('❌ Mobile login completion error:', error);
                 }}
             }}
 
