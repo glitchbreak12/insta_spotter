@@ -7,7 +7,7 @@ import logging
 import secrets
 
 from app.database import get_db, SpottedMessage, MessageStatus
-from app.tasks import moderate_message_task
+# from app.tasks import moderate_message_task  # Temporarily disabled due to import issues
 from app.security import InputValidator, hash_ip, generate_csrf_token, verify_csrf_token
 from config import settings
 
@@ -111,7 +111,7 @@ def handle_submission(
         # ============================================
         # 4. AVVIA MODERAZIONE IN BACKGROUND
         # ============================================
-        background_tasks.add_task(moderate_message_task, new_message.id)
+        # background_tasks.add_task(moderate_message_task, new_message.id)  # Temporarily disabled
         
         # Costruisci l'URL di redirect in modo sicuro
         redirect_url = f"{request.url.scheme}://{request.url.netloc}/spotted/new?success=true"
