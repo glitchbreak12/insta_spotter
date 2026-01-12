@@ -963,6 +963,21 @@ def qr_mobile_login(session_id: str):
 
 # === PAGINA MOBILE PER SCAN QR CODE ===
 
+@router.get("/api/debug/replit-env")
+def debug_replit_env():
+    """Debug endpoint per vedere le variabili d'ambiente Replit."""
+    replit_vars = {k: v for k, v in os.environ.items() if 'REPL' in k.upper() or 'DOMAINS' in k.upper()}
+    return {
+        "replit_vars": replit_vars,
+        "current_url_construction": {
+            "REPLIT_DOMAINS": os.getenv("REPLIT_DOMAINS"),
+            "REPL_SLUG": os.getenv("REPL_SLUG"),
+            "REPL_OWNER": os.getenv("REPL_OWNER"),
+            "REPLIT_APP_URL": os.getenv("REPLIT_APP_URL"),
+            "constructed_url": f"https://{os.getenv('REPLIT_DOMAINS', 'unknown.replit.dev')}"
+        }
+    }
+
 @router.get("/api/auth/qr-image/{session_id}")
 def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
     """Genera e restituisce un'immagine QR code come PNG."""
