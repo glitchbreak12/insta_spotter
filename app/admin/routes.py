@@ -820,7 +820,7 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         print(f"🔍 REPL_OWNER: {os.getenv('REPL_OWNER')}")
         print(f"🔍 REPLIT_APP_URL: {os.getenv('REPLIT_APP_URL')}")
 
-        qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
+        qr_url = f"{base_url}/auth/qr/{session_id}?token={qr_token}"
         print(f"🔗 Generated QR URL: {qr_url}")
         print(f"📱 QR should be accessible from mobile at: {qr_url}")
 
@@ -1040,7 +1040,7 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
         print(f"❌ Unexpected error in QR image generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/admin/auth/qr/{session_id}")
+@router.get("/auth/qr/{session_id}")
 def qr_auth_page(session_id: str):
     """Pagina mobile per autenticazione QR."""
     # Verifica che la sessione esista
@@ -1193,7 +1193,7 @@ def qr_auth_page(session_id: str):
                     const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrToken));
                     const tokenHashHex = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-                    const response = await fetch('https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev/admin/api/auth/verify-qr', {{
+                    const response = await fetch('https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev/api/auth/verify-qr', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{
