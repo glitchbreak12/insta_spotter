@@ -809,24 +809,27 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         }
 
         # Genera URL per il QR code - usa URL pubblico accessibile dal cellulare
-        # Su Replit, usa l'URL pubblico invece di localhost
-        repl_slug = os.getenv("REPL_SLUG")
-        repl_owner = os.getenv("REPL_OWNER")
+        # Costruisci URL basato su REPLIT_DOMAINS o usa URL diretto
 
-        if repl_slug and repl_owner:
-            # Costruisci URL pubblico Replit: https://nome-repl.proprietario.replit.dev
-            base_url = f"https://{repl_slug}.{repl_owner}.replit.dev"
+        # Prima prova con REPLIT_DOMAINS (contiene l'URL pubblico)
+        replit_domains = os.getenv("REPLIT_DOMAINS", "").strip()
+        if replit_domains:
+            # REPLIT_DOMAINS contiene l'URL pubblico
+            base_url = f"https://{replit_domains}"
         else:
-            # Fallback: usa REPLIT_APP_URL se disponibile, altrimenti un URL pubblico
-            replit_app_url = os.getenv("REPLIT_APP_URL", "").strip()
-            if replit_app_url and not replit_app_url.startswith("http://localhost"):
-                base_url = replit_app_url.replace("http://", "https://")
+            # Fallback: usa l'URL diretto se disponibile nelle variabili d'ambiente
+            repl_slug = os.getenv("REPL_SLUG")
+            repl_owner = os.getenv("REPL_OWNER")
+
+            if repl_slug and repl_owner:
+                base_url = f"https://{repl_slug}.{repl_owner}.replit.dev"
             else:
-                # URL pubblico fisso come fallback (modificalo con il tuo URL Replit)
-                base_url = "https://instaspotter.replit.dev"  # MODIFICA QUESTO CON IL TUO URL REPLIT PUBBLICO
+                # URL pubblico fisso come ultimo fallback
+                base_url = "https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev"
 
         qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
         print(f"🔗 Generated QR URL: {qr_url}")
+        print(f"📱 QR should be accessible from mobile at: {qr_url}")
 
         # Try server-side QR generation (optional, client-side will always work)
         qr_image_b64 = None

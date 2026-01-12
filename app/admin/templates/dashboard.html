@@ -4280,17 +4280,26 @@
                     console.log('QR data received:', data.qr_data);
 
                     // Try server-side generated QR image first (most reliable)
+                    console.log('📊 QR Response data:', data);
+                    console.log('🔍 Checking for QR images...');
+
                     if (data.qr_data.qr_image_url) {
                         console.log('🖼️ Using server-side generated QR image:', data.qr_data.qr_image_url);
                         const qrImg = document.getElementById('qrCodeImage');
                         qrImg.src = data.qr_data.qr_image_url;
                         qrImg.style.display = 'block';
+                        qrImg.onload = function() {
+                            console.log('✅ QR image loaded successfully');
+                            showNotification('Success', 'QR Code generato con successo!', 'success');
+                        };
                         qrImg.onerror = function() {
-                            console.log('⚠️ Server-side QR image failed, trying base64');
+                            console.log('⚠️ Server-side QR image failed to load, trying base64');
+                            console.log('❌ Image error details:', qrImg.src, qrImg.naturalWidth, qrImg.naturalHeight);
                             if (data.qr_data.qr_image_b64) {
+                                console.log('🔄 Trying base64 fallback...');
                                 qrImg.src = data.qr_data.qr_image_b64;
                             } else {
-                                console.log('❌ No server-side QR available, using client-side generation');
+                                console.log('❌ No base64 available, using client-side generation');
                                 generateClientSideQR(data.qr_data.url);
                             }
                         };
@@ -4299,6 +4308,10 @@
                         const qrImg = document.getElementById('qrCodeImage');
                         qrImg.src = data.qr_data.qr_image_b64;
                         qrImg.style.display = 'block';
+                        qrImg.onload = function() {
+                            console.log('✅ QR base64 image loaded successfully');
+                            showNotification('Success', 'QR Code generato con successo!', 'success');
+                        };
                         qrImg.onerror = function() {
                             console.log('❌ Base64 QR failed, using client-side generation');
                             generateClientSideQR(data.qr_data.url);
