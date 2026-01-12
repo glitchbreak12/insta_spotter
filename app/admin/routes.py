@@ -931,12 +931,19 @@ def verify_qr_code(data: dict):
 def qr_mobile_login(data: dict):
     """Login tramite QR dal mobile."""
     try:
+        print(f"🔍 QR login called with data: {data}")
         session_id = data.get("session_id")
+        print(f"🔍 Extracted session_id: {session_id}")
+
         if not session_id or session_id not in qr_sessions:
+            print(f"❌ Session {session_id} not found in qr_sessions")
             return {"success": False, "error": "Sessione non trovata"}
 
         session = qr_sessions[session_id]
+        print(f"✅ Found session: {session}")
+
         if not session.get("used", False):
+            print(f"❌ Session not verified yet: used={session.get('used', False)}")
             return {"success": False, "error": "Sessione non verificata"}
 
         # Genera token di sessione per il mobile (durata più lunga per mobile)
@@ -959,6 +966,9 @@ def qr_mobile_login(data: dict):
         }
 
     except Exception as e:
+        print(f"❌ QR login error: {e}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": str(e)}
 
 # === PAGINA MOBILE PER SCAN QR CODE ===
