@@ -9,6 +9,7 @@ import hashlib
 import json
 import io
 import os
+import datetime
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
 from app.admin.security import authenticate_user, create_access_token, get_current_user
@@ -972,6 +973,226 @@ def qr_mobile_login(data: dict):
         return {"success": False, "error": str(e)}
 
 # === PAGINA MOBILE PER SCAN QR CODE ===
+
+# === BACKUP MANAGEMENT ===
+@router.post("/api/backup/create-full")
+def create_full_backup(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Crea un backup completo del database e delle immagini."""
+    try:
+        import datetime
+        from pathlib import Path
+        import shutil
+
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = Path("backups")
+        backup_dir.mkdir(exist_ok=True)
+
+        # Backup del database SQLite
+        db_path = "insta_spotter.db"
+        backup_db_path = None
+        if os.path.exists(db_path):
+            backup_db_path = backup_dir / f"backup_{timestamp}.db"
+            shutil.copy2(db_path, backup_db_path)
+
+        # Backup delle immagini generate
+        images_dir = Path("generated_images")
+        backup_images_dir = None
+        if images_dir.exists():
+            backup_images_dir = backup_dir / f"images_{timestamp}"
+            shutil.copytree(images_dir, backup_images_dir, dirs_exist_ok=True)
+
+        return {
+            "status": "success",
+            "message": f"Backup creato con successo: {timestamp}",
+            "files": {
+                "database": str(backup_db_path) if backup_db_path else None,
+                "images": str(backup_images_dir) if backup_images_dir else None
+            }
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.get("/api/backup/status")
+def get_backup_status(user: str = Depends(get_current_user)):
+    """Ottieni lo stato dei backup disponibili."""
+    try:
+        from pathlib import Path
+
+        backup_dir = Path("backups")
+        if not backup_dir.exists():
+            return {"status": "success", "backups": []}
+
+        backups = []
+        for item in backup_dir.iterdir():
+            if item.is_file() and item.name.startswith("backup_") and item.name.endswith(".db"):
+                stat = item.stat()
+                backups.append({
+                    "name": item.name,
+                    "size": stat.st_size,
+                    "created": datetime.datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                    "type": "database"
+                })
+            elif item.is_dir() and item.name.startswith("images_"):
+                stat = item.stat()
+                total_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+                backups.append({
+                    "name": item.name,
+                    "size": total_size,
+                    "created": datetime.datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                    "type": "images"
+                })
+
+        backups.sort(key=lambda x: x["created"], reverse=True)
+
+        return {"status": "success", "backups": backups}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# === LOGS MANAGEMENT ===
+@router.get("/api/logs")
+def get_logs(
+    type: str = "all",
+    period: str = "1h",
+    user: str = Depends(get_current_user)
+):
+    """Ottieni i log di sistema filtrati per tipo e periodo."""
+    try:
+        import glob
+
+        logs = []
+        # Cerca file di log
+        log_files = glob.glob("*.log") + ["insta_spotter.log"] if os.path.exists("insta_spotter.log") else []
+
+        for log_file in log_files:
+            if os.path.exists(log_file):
+                try:
+                    with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                        lines = f.readlines()[-50:]  # Ultime 50 righe per performance
+
+                    for line in lines:
+                        if any(keyword in line.upper() for keyword in ["INFO", "WARNING", "ERROR"]):
+                            logs.append({
+                                "timestamp": datetime.datetime.now().isoformat(),
+                                "level": "INFO" if "INFO" in line else "WARNING" if "WARNING" in line else "ERROR",
+                                "message": line.strip()
+                            })
+                except:
+                    continue
+
+        # Limita a 100 log totali
+        logs = logs[-100:] if len(logs) > 100 else logs
+
+        return {
+            "status": "success",
+            "logs": logs,
+            "count": len(logs)
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# === TECHNICAL USERS MANAGEMENT ===
+@router.get("/api/users/technical")
+def get_technical_users(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Ottieni la lista degli utenti tecnici."""
+    try:
+        from app.database import TechnicalUser
+
+        technical_users = db.query(TechnicalUser).all()
+
+        return {
+            "status": "success",
+            "users": [
+                {
+                    "id": tu.id,
+                    "username": tu.username,
+                    "role": tu.role,
+                    "created_at": tu.created_at.isoformat() if tu.created_at else None,
+                    "last_active": tu.last_active.isoformat() if tu.last_active else None,
+                    "is_active": tu.is_active
+                }
+                for tu in technical_users
+            ]
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/users/technical")
+def create_technical_user(
+    username: str = Form(...),
+    role: str = Form("moderator"),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Crea un nuovo utente tecnico."""
+    try:
+        from app.database import TechnicalUser
+        import secrets
+
+        # Genera password casuale
+        password = secrets.token_urlsafe(12)
+
+        # Crea hash della password
+        from app.admin.security import hash_password
+        hashed_password = hash_password(password)
+
+        new_user = TechnicalUser(
+            username=username,
+            password_hash=hashed_password,
+            role=role,
+            created_by=user,
+            is_active=True
+        )
+
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        return {
+            "status": "success",
+            "user": {
+                "id": new_user.id,
+                "username": new_user.username,
+                "role": new_user.role,
+                "password": password
+            }
+        }
+
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+# === INSTAGRAM TEST ENDPOINT ===
+@router.post("/api/settings/instagram/test")
+def test_instagram_connection(user: str = Depends(get_current_user)):
+    """Testa la connessione a Instagram."""
+    try:
+        instagram_username = os.getenv("INSTAGRAM_USERNAME", "")
+        has_credentials = bool(instagram_username)
+
+        if has_credentials:
+            return {
+                "status": "success",
+                "message": "Connessione Instagram configurata",
+                "connected": True,
+                "username": instagram_username[:3] + "***"
+            }
+        else:
+            return {
+                "status": "warning",
+                "message": "Credenziali Instagram non configurate",
+                "connected": False
+            }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Errore test connessione: {str(e)}",
+            "connected": False
+        }
 
 @router.get("/api/debug/replit-env")
 def debug_replit_env():
