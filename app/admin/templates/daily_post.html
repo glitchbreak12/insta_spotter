@@ -357,6 +357,70 @@ Ecco tutti gli spotted della giornata! 💫
             </div>
         </div>
 
+        <!-- Preview Section -->
+        <div class="settings-section">
+            <h2>🖼️ Preview Daily Post</h2>
+            <p>Genera un'anteprima di come apparirà il tuo daily post su Instagram</p>
+
+            <div class="actions" style="margin-bottom: 1rem;">
+                <button type="button" class="btn btn-success" id="generate-preview">
+                    <i class="fas fa-eye"></i>
+                    Genera Preview
+                </button>
+                <button type="button" class="btn btn-warning" id="publish-now">
+                    <i class="fas fa-paper-plane"></i>
+                    Pubblica Ora
+                </button>
+            </div>
+
+            <div id="preview-container" style="display: none;">
+                <div class="preview-image-container" style="text-align: center; margin-bottom: 1rem;">
+                    <img id="preview-image" src="" alt="Daily Post Preview" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px var(--shadow);">
+                </div>
+                <div class="preview-info" style="background: var(--bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span><strong>Titolo:</strong> <span id="preview-title">-</span></span>
+                        <span><strong>Messaggi:</strong> <span id="preview-count">-</span></span>
+                    </div>
+                    <div><strong>Immagini:</strong> <span id="preview-images">-</span></div>
+                </div>
+            </div>
+
+            <div id="preview-loading" style="display: none; text-align: center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                <p style="margin-top: 1rem; color: var(--text-muted);">Generazione preview in corso...</p>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="settings-section">
+            <h2>📚 Cronologia Daily Post</h2>
+            <p>Visualizza tutti i daily post pubblicati in passato</p>
+
+            <div class="actions" style="margin-bottom: 1rem;">
+                <button type="button" class="btn btn-info" id="load-history">
+                    <i class="fas fa-history"></i>
+                    Carica Cronologia
+                </button>
+            </div>
+
+            <div id="history-container">
+                <div id="history-loading" style="display: none; text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Caricamento cronologia...</p>
+                </div>
+
+                <div id="history-list" style="display: none;">
+                    <!-- History items will be loaded here -->
+                </div>
+
+                <div id="no-history" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Nessun daily post pubblicato trovato</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Actions -->
         <div class="settings-section">
             <h2>🚀 Azioni</h2>
@@ -492,6 +556,131 @@ Ecco tutti gli spotted della giornata! 💫
             setTimeout(() => {
                 alert.style.display = 'none';
             }, 5000);
+        }
+
+        // Generate preview
+        document.getElementById('generate-preview').addEventListener('click', async function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generazione...';
+
+            const previewContainer = document.getElementById('preview-container');
+            const previewLoading = document.getElementById('preview-loading');
+
+            previewContainer.style.display = 'none';
+            previewLoading.style.display = 'block';
+
+            try {
+                // Get current settings
+                const titleTemplate = document.getElementById('title_template').value;
+                const hashtagTemplate = document.getElementById('hashtag_template').value;
+                const maxMessages = document.getElementById('max_messages').value;
+
+                const formData = new FormData();
+                formData.append('title_template', titleTemplate);
+                formData.append('hashtag_template', hashtagTemplate);
+                formData.append('max_messages', maxMessages);
+
+                const response = await fetch('/admin/api/daily-post/preview', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    document.getElementById('preview-image').src = result.image_url;
+                    document.getElementById('preview-title').textContent = result.title;
+                    document.getElementById('preview-count').textContent = result.messages_count;
+                    document.getElementById('preview-images').textContent = result.image_count;
+
+                    previewLoading.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                showAlert('Errore preview: ' + error.message, 'error');
+                previewLoading.style.display = 'none';
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-eye"></i> Genera Preview';
+            }
+        });
+
+        // Publish now
+        document.getElementById('publish-now').addEventListener('click', async function() {
+            if (!confirm('Sei sicuro di voler pubblicare il daily post ora?')) {
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pubblicazione...';
+
+            try {
+                const response = await fetch('/admin/api/daily-post/publish', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Daily post pubblicato con successo!', 'success');
+                    loadStats(); // Refresh stats
+                    loadHistory(); // Refresh history
+                } else {
+                    showAlert('Errore pubblicazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore pubblicazione: ' + error.message, 'error');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane"></i> Pubblica Ora';
+            }
+        });
+
+        // Load history
+        document.getElementById('load-history').addEventListener('click', loadHistory);
+
+        async function loadHistory() {
+            const historyContainer = document.getElementById('history-container');
+            const historyLoading = document.getElementById('history-loading');
+            const historyList = document.getElementById('history-list');
+            const noHistory = document.getElementById('no-history');
+
+            historyLoading.style.display = 'block';
+            historyList.style.display = 'none';
+            noHistory.style.display = 'none';
+
+            try {
+                const response = await fetch('/admin/api/daily-post/history');
+                const result = await response.json();
+
+                if (result.status === 'success' && result.history.length > 0) {
+                    const historyHtml = result.history.map(item => `
+                        <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h3 style="margin: 0; color: var(--text);">${item.title}</h3>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">
+                                    ${new Date(item.posted_at).toLocaleDateString('it-IT')}
+                                </span>
+                            </div>
+                            <div style="color: var(--text-muted);">
+                                <i class="fas fa-images"></i> ${item.messages_count} messaggi pubblicati
+                            </div>
+                        </div>
+                    `).join('');
+
+                    historyList.innerHTML = historyHtml;
+                    historyList.style.display = 'block';
+                } else {
+                    noHistory.style.display = 'block';
+                }
+            } catch (error) {
+                showAlert('Errore caricamento cronologia: ' + error.message, 'error');
+                noHistory.style.display = 'block';
+            } finally {
+                historyLoading.style.display = 'none';
+            }
         }
 
         // Auto-refresh stats every 30 seconds

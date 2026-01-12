@@ -156,7 +156,14 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
     """Aggiorna le impostazioni del post giornaliero."""
     settings = get_daily_post_settings(db)
     if not settings:
-        settings = DailyPostSettings()
+        settings = DailyPostSettings(
+            enabled=True,  # Abilita di default
+            post_time="20:00",
+            style="carousel",
+            max_messages=20,
+            title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
+            hashtag_template="#spotted #instaspotter #dailyrecap"
+        )
         db.add(settings)
 
     for key, value in kwargs.items():

@@ -593,6 +593,122 @@ def get_daily_post_stats(user: str = Depends(get_current_user), db: Session = De
     except Exception as e:
         return {"error": str(e)}
 
+@router.post("/api/daily-post/preview")
+def preview_daily_post(
+    title_template: str = Form("Riepilogo Spotted {date}"),
+    hashtag_template: str = Form("#spotted #instaspotter"),
+    max_messages: int = Form(10),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere una preview del daily post."""
+    try:
+        from app.database import get_todays_messages
+        from datetime import datetime
+        import time
+
+        # Recupera messaggi di oggi (o ultimi disponibili)
+        messages = get_todays_messages(db, max_messages)
+        if not messages:
+            return {"status": "error", "message": "Nessun messaggio disponibile per il daily post"}
+
+        today = datetime.utcnow().strftime("%d/%m/%Y")
+        title = title_template.format(date=today)
+
+        # Usa il generatore di immagini per creare una preview
+        from app.image.generator import ImageGenerator
+        generator = ImageGenerator()
+
+        # Genera carousel preview
+        base_filename = f"preview_daily_{int(time.time())}"
+        image_paths = generator.create_daily_carousel(messages, base_filename, title)
+
+        if image_paths and len(image_paths) > 0:
+            # Restituisci l'URL della prima immagine come preview
+            image_url = f"/generated_images/{image_paths[0].split('/')[-1]}"
+            return {
+                "status": "success",
+                "image_url": image_url,
+                "title": title,
+                "messages_count": len(messages),
+                "image_count": len(image_paths)
+            }
+        else:
+            return {"status": "error", "message": "Errore nella generazione della preview"}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-post/publish")
+def publish_daily_post_now(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per pubblicare manualmente un daily post ora."""
+    try:
+        from app.tasks import daily_post_task
+        import asyncio
+
+        # Esegui il task in background
+        result = asyncio.run(daily_post_task())
+
+        return {
+            "status": result.get("status", "error"),
+            "message": result.get("message", "Errore sconosciuto"),
+            "media_pk": result.get("media_pk")
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.get("/api/daily-post/history")
+def get_daily_post_history(
+    limit: int = 20,
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere la cronologia dei daily post pubblicati."""
+    try:
+        from app.database import DailyPostSettings
+
+        # Trova tutti i messaggi pubblicati come daily post
+        # I daily post sono identificati da media_pk che inizia con numero (Instagram media PK)
+        daily_posts = db.query(SpottedMessage).filter(
+            SpottedMessage.media_pk.isnot(None),
+            SpottedMessage.posted_at.isnot(None),
+            SpottedMessage.status == MessageStatus.POSTED
+        ).order_by(SpottedMessage.posted_at.desc()).limit(limit * 2).all()  # Moltiplica per avere più messaggi
+
+        # Raggruppa per data di pubblicazione (stesso giorno = stesso daily post)
+        daily_posts_grouped = {}
+        for msg in daily_posts:
+            if msg.posted_at:
+                date_key = msg.posted_at.date()
+                if date_key not in daily_posts_grouped:
+                    daily_posts_grouped[date_key] = []
+                daily_posts_grouped[date_key].append(msg)
+
+        # Crea la lista dei daily post
+        history = []
+        for date_key, messages in list(daily_posts_grouped.items())[:limit]:
+            # Trova il messaggio con media_pk numerico (post principale)
+            main_post = None
+            for msg in messages:
+                if msg.media_pk and str(msg.media_pk).isdigit():
+                    main_post = msg
+                    break
+
+            if main_post:
+                history.append({
+                    "date": date_key.isoformat(),
+                    "posted_at": main_post.posted_at.isoformat() if main_post.posted_at else None,
+                    "messages_count": len(messages),
+                    "media_pk": main_post.media_pk,
+                    "title": f"Riepilogo Spotted {date_key.strftime('%d/%m/%Y')}"
+                })
+
+        return {"status": "success", "history": history}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @router.get("/api/admin/debug")
 def debug_admin_credentials():
     """Endpoint di debug per vedere le credenziali configurate (SENZA password)."""
