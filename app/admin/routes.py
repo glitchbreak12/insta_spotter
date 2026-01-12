@@ -1040,16 +1040,7 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
         print(f"❌ Unexpected error in QR image generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Endpoint alternativo senza prefisso per compatibilità
 @router.get("/auth/qr/{session_id}")
-def qr_auth_page_alt(session_id: str, token: str = None):
-    """Endpoint alternativo per QR senza prefisso /admin."""
-    print(f"🔄 ALT QR endpoint called - redirecting to /admin/auth/qr/{session_id}")
-    from fastapi.responses import RedirectResponse
-    # Redirect all'endpoint corretto
-    return RedirectResponse(url=f"/admin/auth/qr/{session_id}?token={token}" if token else f"/admin/auth/qr/{session_id}")
-
-@router.get("/admin/auth/qr/{session_id}")
 def qr_auth_page(session_id: str, token: str = None):
     """Pagina mobile per autenticazione QR."""
     print(f"🔍 QR page accessed - session: {session_id}, token: {token}")
