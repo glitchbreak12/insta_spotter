@@ -331,6 +331,10 @@ def qr_auth_page(session_id: str, token: str = None):
             """)
         print(f"✅ Token valid - received: {token}, matches session hash")
 
+        # Marca la sessione come verificata
+        session["used"] = True
+        print(f"✅ Session marked as used: {session_id}")
+
     # Pagina mobile per il login
     html_content = f"""
     <!DOCTYPE html>
