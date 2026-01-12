@@ -1040,7 +1040,7 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
         print(f"❌ Unexpected error in QR image generation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/auth/qr/{session_id}")
+@router.get("/admin/auth/qr/{session_id}")
 def qr_auth_page(session_id: str):
     """Pagina mobile per autenticazione QR."""
     # Verifica che la sessione esista
