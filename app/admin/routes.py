@@ -688,8 +688,8 @@ def create_info_card(
             from app.tasks import publish_info_card_task
             import asyncio
 
-            # Pubblica in background
-            asyncio.create_task(publish_info_card_task(info_card.id, db))
+            # Pubblica in background (usa la propria sessione DB)
+            asyncio.create_task(publish_info_card_task(info_card.id))
             logger.info(f"Auto-publishing info card {info_card.id}")
 
         except Exception as publish_error:
@@ -751,10 +751,12 @@ def preview_info_card(
 
         # Usa il generatore di immagini per creare una preview
         from app.image.generator import ImageGenerator
+        import time
         generator = ImageGenerator()
 
-        # Genera l'immagine con message_type="INFO"
-        image_path = generator.from_text(text, f"preview_{hash(title+text)}", message_type="INFO", title=title)
+        # Genera l'immagine con message_type="info"
+        preview_filename = f"preview_info_{int(time.time())}.png"
+        image_path = generator.from_text(text, preview_filename, message_id=0, message_type="info", title=title)
 
         if image_path:
             # Restituisci l'URL relativa dell'immagine

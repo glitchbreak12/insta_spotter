@@ -6,7 +6,7 @@ from app.image.generator import ImageGenerator
 
 # Import InstagramBot come condizionale
 try:
-    from app.bot.poster import InstagramBot
+from app.bot.poster import InstagramBot
     INSTAGRAM_BOT_AVAILABLE = True
 except ImportError:
     INSTAGRAM_BOT_AVAILABLE = False
@@ -26,7 +26,7 @@ def moderate_message_task(message_id: int):
     try:
         print(f"--- [TASK] [{time.time()}] Query messaggio ID: {message_id} ---")
         message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
-
+        
         if not message:
             print(f"--- [TASK] [{time.time()}] ERRORE: Messaggio ID {message_id} non trovato nel database ---")
             return
@@ -36,8 +36,8 @@ def moderate_message_task(message_id: int):
 
         # Esegui l'analisi con il nuovo moderatore
         try:
-            moderator = GeminiModerator()
-            result: ModerationResult = moderator.moderate_message(message.text)
+        moderator = GeminiModerator()
+        result: ModerationResult = moderator.moderate_message(message.text)
         except (ValueError, ImportError) as e:
             # GEMINI_API_KEY non configurata, pacchetto non installato, o modelli non disponibili
             error_msg = str(e)
@@ -115,7 +115,7 @@ def moderate_message_task(message_id: int):
         import time
         print(f"--- [TASK] [{time.time()}] ERRORE CRITICO durante la moderazione per ID {message_id}: {e} ---")
         try:
-            db.rollback()
+        db.rollback()
             # In caso di errore critico, approva comunque il messaggio per sicurezza
             message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
             if message and message.status == MessageStatus.PENDING:
@@ -182,7 +182,7 @@ def post_daily_compilation(db: Session):
         insta_bot = InstagramBot()
         caption = f"Spotted del giorno {datetime.now().strftime('%d/%m/%Y')}! ✨\n\n#spotted #instaspotter #confessioni"
         media_pk = insta_bot.post_album(image_paths, caption)
-
+        
         if not media_pk:
             raise Exception("InstagramBot.post_album ha restituito False o None.")
 
@@ -300,14 +300,17 @@ def test_daily_post():
 
 # --- Info Card Tasks ---
 
-def publish_info_card_task(card_id: int):
+def publish_info_card_task(card_id: int, db_session=None):
     """
     Pubblica una info card come storia su Instagram.
     """
     try:
         print(f"--- DEBUG [INFO CARD]: Pubblicazione info card ID {card_id} ---")
 
-        db = SessionLocal()
+        # Usa la sessione passata o creane una nuova
+        db = db_session or SessionLocal()
+        should_close = db_session is None
+
         try:
             # Trova la info card
             from app.database import MessageType
@@ -334,6 +337,9 @@ def publish_info_card_task(card_id: int):
 
             if not image_path:
                 print("--- DEBUG [INFO CARD]: ERRORE generazione immagine ---")
+                info_card.error_message = "Errore generazione immagine"
+                if should_close:
+                    db.commit()
                 return {"status": "error", "message": "Errore generazione immagine"}
 
             print(f"--- DEBUG [INFO CARD]: Immagine generata: {image_path} ---")
@@ -341,6 +347,12 @@ def publish_info_card_task(card_id: int):
             # Pubblica come storia
             if not INSTAGRAM_BOT_AVAILABLE:
                 print("--- DEBUG [INFO CARD]: ⚠️ Instagram bot non disponibile (simulazione) ---")
+                # Aggiorna il database anche in simulazione
+                from datetime import datetime
+                info_card.posted_at = datetime.utcnow()
+                info_card.media_pk = f"simulated_{card_id}"
+                if should_close:
+                    db.commit()
                 return {"status": "simulated", "message": f"Info card '{info_card.title}' simulata come pubblicata"}
 
             try:
@@ -349,17 +361,30 @@ def publish_info_card_task(card_id: int):
 
                 if media_pk:
                     print(f"--- DEBUG [INFO CARD]: Info card pubblicata con successo! Media PK: {media_pk} ---")
+                    # Aggiorna il database con successo
+                    from datetime import datetime
+                    info_card.posted_at = datetime.utcnow()
+                    info_card.media_pk = str(media_pk)
+                    if should_close:
+                        db.commit()
                     return {"status": "success", "message": f"Info card '{info_card.title}' pubblicata", "media_pk": media_pk}
                 else:
                     print("--- DEBUG [INFO CARD]: ERRORE pubblicazione ---")
+                    info_card.error_message = "Errore pubblicazione Instagram"
+                    if should_close:
+                        db.commit()
                     return {"status": "error", "message": "Errore pubblicazione Instagram"}
 
             except Exception as e:
                 print(f"--- DEBUG [INFO CARD]: ERRORE Instagram: {e} ---")
+                info_card.error_message = f"Errore Instagram: {str(e)}"
+                if should_close:
+                    db.commit()
                 return {"status": "error", "message": f"Errore Instagram: {str(e)}"}
 
         finally:
-            db.close()
+            if should_close:
+                db.close()
 
     except Exception as e:
         print(f"--- DEBUG [INFO CARD]: ERRORE CRITICO: {e} ---")
