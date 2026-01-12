@@ -55,7 +55,7 @@ admin_pwd = (
 
     if admin_pwd:
         ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
-    logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
+        logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
 
 # Priorità 2: ADMIN_PASSWORD_HASH (solo se non abbiamo già una password da plaintext)
 elif not ADMIN_PASSWORD_HASH:
