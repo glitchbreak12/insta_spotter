@@ -64,10 +64,10 @@ else
             else
                 PIP_CMD="$PYTHON_CMD -m pip"
             fi
-            echo "✅ Found Python: $PYTHON_CMD"
-            break
-        fi
-    done
+        echo "✅ Found Python: $PYTHON_CMD"
+        break
+    fi
+done
 
     # If still not found, try a faster find with timeout
     if [ -z "$PYTHON_CMD" ]; then
@@ -89,7 +89,7 @@ else
     fi
 
     # Emergency fallback - try direct python3 command again
-    if [ -z "$PYTHON_CMD" ]; then
+if [ -z "$PYTHON_CMD" ]; then
         echo "🔍 Emergency fallback..."
         if test_python python3 2>/dev/null; then
             PYTHON_CMD="python3"
