@@ -1041,11 +1041,50 @@ def get_qr_image(session_id: str, user: str = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/admin/auth/qr/{session_id}")
-def qr_auth_page(session_id: str):
+def qr_auth_page(session_id: str, token: str = None):
     """Pagina mobile per autenticazione QR."""
+    print(f"🔍 QR page accessed - session: {session_id}, token: {token}")
+
     # Verifica che la sessione esista
     if session_id not in qr_sessions:
-        return HTMLResponse(content="""
+        print(f"❌ Session {session_id} not found in qr_sessions")
+        print(f"📋 Available sessions: {list(qr_sessions.keys())}")
+        return HTMLResponse(content=f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>Errore</title></head>
+        <body style="text-align: center; padding: 50px;">
+        <h1>Sessione QR non valida</h1>
+        <p>Session ID: {session_id}</p>
+        <p>Token: {token}</p>
+        <p>Il codice QR potrebbe essere scaduto. Torna al dashboard e genera un nuovo QR code.</p>
+        </body>
+        </html>
+        """)
+
+    session = qr_sessions[session_id]
+    print(f"✅ Session found - user: {session['user']}, expires: {session['expires_at']}")
+
+    # Verifica token se fornito
+    if token:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        if token_hash != session["token_hash"]:
+            print(f"❌ Token mismatch - received: {token}, expected hash: {session['token_hash']}, computed hash: {token_hash}")
+            return HTMLResponse(content=f"""
+            <!DOCTYPE html>
+            <html>
+            <head><title>Token Non Valido</title></head>
+            <body style="text-align: center; padding: 50px;">
+            <h1>Token QR non valido</h1>
+            <p>Received token: {token[:20]}...</p>
+            <p>Expected hash: {session['token_hash'][:20]}...</p>
+            <p>Il codice QR potrebbe essere vecchio. Torna al dashboard e genera un nuovo QR code.</p>
+            </body>
+            </html>
+            """)
+        print(f"✅ Token valid - received: {token}, hash matches")
+
+    return HTMLResponse(content=f"""
         <!DOCTYPE html>
         <html>
         <head><title>Errore</title></head>
