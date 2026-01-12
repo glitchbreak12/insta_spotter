@@ -452,12 +452,14 @@ def qr_auth_page(session_id: str, token: str = None):
 
                     if (response.ok) {{
                         const data = await response.json();
+                        console.log('📋 QR login response:', data);
                         if (data.success && data.access_token) {{
                             // Save token for automatic login
                             localStorage.setItem('access_token', data.access_token);
                             document.cookie = `access_token=${{data.access_token}}; path=/; max-age=86400; SameSite=Lax`;
 
-                            console.log('✅ Mobile login token saved, redirecting to dashboard...');
+                            console.log('✅ Mobile login token saved, length:', data.access_token.length);
+                            console.log('🔄 Redirecting to dashboard...');
                             // Redirect to dashboard - should be automatically logged in
                             window.location.href = '/admin/dashboard';
                         }} else {{

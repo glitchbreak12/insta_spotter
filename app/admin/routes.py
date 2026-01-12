@@ -945,7 +945,7 @@ def qr_mobile_login(data: dict):
         mobile_token = create_access_token({"sub": session["user"], "device": "mobile"}, expires_delta=timedelta(hours=2))
 
         # Log dell'accesso
-        print(f"🔐 Mobile login via QR: {session['user']}")
+        print(f"🔐 Mobile login via QR: {session['user']} - Token length: {len(mobile_token)}")
 
         # Pulisci la sessione QR dopo uso
         del qr_sessions[session_id]

@@ -131,7 +131,9 @@ def authenticate_user(username: str, password: str) -> Optional[str]:
 def get_current_user(request: Request) -> Optional[str]:
     """Ottiene l'utente corrente dal JWT token nel cookie."""
     token = request.cookies.get("access_token")
-    logger.debug(f"🔍 Checking JWT token in cookies: {'present' if token else 'not found'}")
+    logger.info(f"🔍 Checking JWT token in cookies: {'present' if token else 'not found'}")
+    if token:
+        logger.info(f"🔍 Token length: {len(token)} chars")
     if not token:
         return None
 
@@ -141,18 +143,18 @@ def get_current_user(request: Request) -> Optional[str]:
         username: str = payload.get("sub")
         device: str = payload.get("device", "desktop")
 
-        logger.debug(f"🔍 JWT payload - username: {username}, device: {device}")
+        logger.info(f"🔍 JWT payload - username: {username}, device: {device}")
 
         if username is None:
-            logger.debug("❌ No username in token")
+            logger.info("❌ No username in token")
             return None
 
         # Verifica che l'utente sia quello corretto
         if not secrets.compare_digest(username, ADMIN_USERNAME):
-            logger.debug(f"❌ Username mismatch: {username} != {ADMIN_USERNAME}")
+            logger.info(f"❌ Username mismatch: {username} != {ADMIN_USERNAME}")
             return None
 
-        logger.debug(f"✅ JWT token valid for user: {username}")
+        logger.info(f"✅ JWT token valid for user: {username}")
         return username
     except JWTError as e:
         logger.warning(f"Invalid JWT token: {e}")
