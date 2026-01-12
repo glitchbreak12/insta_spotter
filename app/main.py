@@ -439,19 +439,16 @@ def qr_auth_page(session_id: str, token: str = None):
         </div>
 
         <script>
-            let sessionId = '{session_id}';
-            let qrToken = '{token}' || null;
+            console.log('📱 QR mobile page loaded - validation completed server-side');
 
-            // Estrai token dall'URL se presente (ha priorità)
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlToken = urlParams.get('token');
-            if (urlToken) {{
-                qrToken = urlToken;
-            }}
+            // Show success message immediately
+            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso autorizzato! Reindirizzamento...';
 
-            console.log('📱 Mobile QR page loaded for session:', sessionId);
-            console.log('🔑 QR token extracted:', qrToken);
-            console.log('🔗 URL token:', urlToken);
+            // Auto-redirect after 2 seconds
+            setTimeout(() => {{
+                console.log('🔄 Auto-redirecting to dashboard...');
+                window.location.href = '/admin/dashboard';
+            }}, 2000);
 
             async function checkSession() {{
                 console.log('🔍 Checking QR session...');
@@ -545,9 +542,11 @@ def qr_auth_page(session_id: str, token: str = None):
                 checkSession();
             }}
 
-            // Token validation is handled server-side
-            // No client-side API calls needed
-            console.log('✅ QR token validated server-side - ready for redirect');
+            // Auto-redirect after 2 seconds
+            setTimeout(() => {{
+                console.log('🔄 Auto-redirecting to dashboard...');
+                window.location.href = '/admin/dashboard';
+            }}, 2000);
         </script>
     </body>
     </html>
