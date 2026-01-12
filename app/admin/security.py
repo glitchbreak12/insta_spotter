@@ -53,9 +53,9 @@ admin_pwd = (
     os.getenv("REPLIT_DB_ADMIN_PASSWORD")
 )
 
-    if admin_pwd:
-        ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
-        logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
+if admin_pwd:
+    ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
+    logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
 
 # Priorità 2: ADMIN_PASSWORD_HASH (solo se non abbiamo già una password da plaintext)
 elif not ADMIN_PASSWORD_HASH:
@@ -67,21 +67,20 @@ elif not ADMIN_PASSWORD_HASH:
     if ADMIN_PASSWORD_HASH:
         logger.info(f"✅ Password hash configurata direttamente (len={len(ADMIN_PASSWORD_HASH)})")
 
-# Terza priorità: fallback temporaneo per test
+    # Terza priorità: fallback temporaneo per test
     else:
-    logger.warning("🔧 USING TEMPORARY ADMIN CREDENTIALS FOR TESTING!")
-    logger.warning("🔧 Username: admin, Password: admin123")
-    logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
+        logger.warning("🔧 USING TEMPORARY ADMIN CREDENTIALS FOR TESTING!")
+        logger.warning("🔧 Username: admin, Password: admin123")
+        logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
 
-    # Usa direttamente SHA256 per semplicità
-    import hashlib
-    ADMIN_USERNAME = "admin"
-    ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
-    logger.warning("🔧 Using SHA256 hash for temporary credentials")
+        # Usa direttamente SHA256 per semplicità
+        ADMIN_USERNAME = "admin"
+        ADMIN_PASSWORD_HASH = hashlib.sha256("admin123".encode()).hexdigest()
+        logger.warning("🔧 Using SHA256 hash for temporary credentials")
 
-    # Debug: mostra quali env vars sono disponibili
-    logger.info(f"🔍 Available env vars with ADMIN: {[k for k in os.environ.keys() if 'ADMIN' in k.upper()]}")
-    logger.info(f"🔍 Sample env vars: {list(os.environ.keys())[:5]}...")
+# Debug: mostra quali env vars sono disponibili
+logger.info(f"🔍 Available env vars with ADMIN: {[k for k in os.environ.keys() if 'ADMIN' in k.upper()]}")
+logger.info(f"🔍 Sample env vars: {list(os.environ.keys())[:5]}...")
 
 # --- Funzioni di Utility Sicure ---
 
@@ -92,7 +91,6 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una password usando SHA256 (semplificato per evitare problemi bcrypt)."""
     try:
-        import hashlib
         expected_hash = hashlib.sha256(plain_password.encode()).hexdigest()
         return expected_hash == hashed_password
     except Exception as error:
