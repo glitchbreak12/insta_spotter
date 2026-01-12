@@ -128,6 +128,31 @@ def run_migration():
             except:
                 pass
 
+        # Create AI Config table
+        try:
+            connection.execute(text('''
+                CREATE TABLE ai_config (
+                    id INTEGER PRIMARY KEY,
+                    enabled INTEGER DEFAULT 1,
+                    selected_model VARCHAR DEFAULT 'gemini',
+                    gemini_api_key VARCHAR,
+                    grok_api_key VARCHAR,
+                    local_model_path VARCHAR,
+                    moderation_enabled INTEGER DEFAULT 1,
+                    auto_approve_threshold REAL DEFAULT 0.8,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            '''))
+            connection.commit()
+            print("✅ Tabella 'ai_config' creata con successo.")
+        except Exception as e:
+            if "already exists" in str(e):
+                print("ℹ️  Tabella 'ai_config' già esistente.")
+            else:
+                print(f"❌ Errore tabella 'ai_config': {e}")
+            connection.rollback()
+
     print("\n🎉 Migrazione database completata con successo!")
 
 if __name__ == "__main__":
