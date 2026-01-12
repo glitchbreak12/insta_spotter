@@ -32,8 +32,13 @@ app = FastAPI(
 )
 
 # --- Mount directory statiche ---
-# Servi le immagini generate dal generatore
-app.mount("/generated_images", StaticFiles(directory="generated_images", html=True), name="generated_images")
+# Servi le immagini generate dal generatore (solo se la directory esiste)
+import os
+if os.path.exists("generated_images"):
+    app.mount("/generated_images", StaticFiles(directory="generated_images", html=True), name="generated_images")
+    logger.info("✅ Directory generated_images montata")
+else:
+    logger.warning("⚠️ Directory generated_images non trovata - verrà creata al primo uso")
 
 # --- MIDDLEWARE DI SICUREZZA ---
 
