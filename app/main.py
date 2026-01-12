@@ -305,9 +305,20 @@ def qr_auth_page(session_id: str, token: str = None):
 
     # Verifica token se fornito
     if token:
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        if token_hash != session["token_hash"]:
-            print(f"❌ Token mismatch - received: {token}, expected hash: {session['token_hash']}, computed hash: {token_hash}")
+        # Determina se il token è già hashato (64 caratteri hex)
+        is_already_hashed = len(token) == 64 and all(c in '0123456789abcdef' for c in token)
+
+        if is_already_hashed:
+            # Token già hashato, confronta direttamente
+            token_to_compare = token
+            print(f"🔍 Comparing pre-hashed token directly")
+        else:
+            # Token originale, hasha prima di confrontare
+            token_to_compare = hashlib.sha256(token.encode()).hexdigest()
+            print(f"🔐 Hashing original token before comparison")
+
+        if token_to_compare != session["token_hash"]:
+            print(f"❌ Token mismatch - received: {token}, expected hash: {session['token_hash']}, computed/used: {token_to_compare}")
             return HTMLResponse(content=f"""
             <!DOCTYPE html>
             <html>
@@ -318,7 +329,7 @@ def qr_auth_page(session_id: str, token: str = None):
             </body>
             </html>
             """)
-        print(f"✅ Token valid - received: {token}, hash matches")
+        print(f"✅ Token valid - received: {token}, matches session hash")
 
     # Pagina mobile per il login
     html_content = f"""
@@ -509,10 +520,16 @@ def qr_auth_page(session_id: str, token: str = None):
                         body: JSON.stringify({{ session_id: sessionId }})
                     }});
 
-                    const loginData = await response.json();
-                    console.log('📋 Login response data:', loginData);
+                    let loginData;
+                    try {{
+                        loginData = await response.json();
+                        console.log('📋 Login response data:', loginData);
+                    }} catch (e) {{
+                        console.error('❌ Failed to parse login response:', e);
+                        loginData = {{ error: 'Risposta non valida dal server' }};
+                    }}
 
-                    if (response.ok && loginData.success && loginData.access_token) {{
+                    if (response.ok && loginData && loginData.success && loginData.access_token) {{
                         // Salva il token di accesso per il mobile
                         localStorage.setItem('access_token', loginData.access_token);
                         document.cookie = `access_token=${loginData.access_token}; path=/; max-age=86400`;
@@ -525,8 +542,10 @@ def qr_auth_page(session_id: str, token: str = None):
                             window.location.href = '/admin/dashboard';
                         }}, 2000);
                     }} else {{
-                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + (loginData.error || 'Errore completamento login');
+                        const errorMsg = loginData && loginData.error ? loginData.error : 'Errore completamento login';
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + errorMsg;
                         document.getElementById('status').className = 'status error';
+                        console.error('❌ Mobile login failed:', errorMsg);
                     }}
                 }} catch (error) {{
                     document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore: ' + error.message;
