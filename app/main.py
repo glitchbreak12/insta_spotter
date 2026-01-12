@@ -493,7 +493,9 @@ def qr_auth_page(session_id: str, token: str = None):
                         if (data.success) {{
                             // Ora completa il login chiamando qr-login per ottenere il token mobile
                             console.log('✅ QR token verified, completing login...');
-                            completeMobileLogin();
+                            setTimeout(() => {{
+                                completeMobileLogin();
+                            }}, 500); // Piccola pausa per assicurarsi che tutto sia pronto
                         }} else {{
                             document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.error || 'Autenticazione fallita');
                             document.getElementById('statusText').className = 'status error';
