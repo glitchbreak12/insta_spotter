@@ -1176,7 +1176,9 @@ def qr_auth_page(session_id: str):
             const urlParams = new URLSearchParams(window.location.search);
             qrToken = urlParams.get('token');
 
-            console.log('🔑 QR token extracted:', qrToken ? 'present' : 'missing');
+            console.log('🔑 QR token extracted from URL:', qrToken);
+            console.log('🔗 Current URL:', window.location.href);
+            console.log('🔗 URL search params:', window.location.search);
 
             async function checkSession() {{
                 console.log('🔍 Checking QR session...');
