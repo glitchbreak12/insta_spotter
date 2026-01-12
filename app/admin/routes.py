@@ -808,9 +808,25 @@ def generate_qr_code(user: str = Depends(get_current_user)):
             "used": False
         }
 
-        # Genera URL per il QR code - usa URL dinamico per Replit
-        base_url = os.getenv("REPLIT_APP_URL", "http://localhost:8000").replace("https://", "http://")
+        # Genera URL per il QR code - usa URL pubblico accessibile dal cellulare
+        # Su Replit, usa l'URL pubblico invece di localhost
+        repl_slug = os.getenv("REPL_SLUG")
+        repl_owner = os.getenv("REPL_OWNER")
+
+        if repl_slug and repl_owner:
+            # Costruisci URL pubblico Replit: https://nome-repl.proprietario.replit.dev
+            base_url = f"https://{repl_slug}.{repl_owner}.replit.dev"
+        else:
+            # Fallback: usa REPLIT_APP_URL se disponibile, altrimenti un URL pubblico
+            replit_app_url = os.getenv("REPLIT_APP_URL", "").strip()
+            if replit_app_url and not replit_app_url.startswith("http://localhost"):
+                base_url = replit_app_url.replace("http://", "https://")
+            else:
+                # URL pubblico fisso come fallback (modificalo con il tuo URL Replit)
+                base_url = "https://instaspotter.replit.dev"  # MODIFICA QUESTO CON IL TUO URL REPLIT PUBBLICO
+
         qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
+        print(f"🔗 Generated QR URL: {qr_url}")
 
         # Try server-side QR generation (optional, client-side will always work)
         qr_image_b64 = None
