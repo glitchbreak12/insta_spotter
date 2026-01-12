@@ -911,9 +911,8 @@ def verify_qr_code(data: dict):
         if session["used"]:
             return {"success": False, "error": "Sessione QR già utilizzata"}
 
-        # Verifica token
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
-        if token_hash != session["token_hash"]:
+        # Verifica token (il token ricevuto è già hashato dal frontend)
+        if token != session["token_hash"]:
             return {"success": False, "error": "Token QR non valido"}
 
         # Marca come usata
@@ -1188,12 +1187,16 @@ def qr_auth_page(session_id: str):
                 }}
 
                 try {{
+                    // Hash the token before sending (matches server-side validation)
+                    const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrToken));
+                    const tokenHashHex = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+
                     const response = await fetch('https://26c5b2a6-ace4-48ce-882f-4e9127f40551-00-18mhz2vlxvr3b.kirk.replit.dev/admin/api/auth/verify-qr', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{
                             session_id: sessionId,
-                            token: qrToken
+                            token: tokenHashHex
                         }})
                     }});
 
