@@ -1420,30 +1420,87 @@
                         </div>
 
                         <!-- AI Settings Form -->
-                        <div id="geminiSettingsForm" style="display: none; margin-top: var(--space-lg);">
-                            <div class="form-group">
-                                <label class="form-label">API Key Gemini</label>
-                                <input type="password" id="geminiApiKey" class="form-input" placeholder="API Key">
-                                <div class="form-hint">Chiave API di Google Gemini per la moderazione automatica</div>
-                            </div>
+                        <div id="aiSettingsForm" style="display: none; margin-top: var(--space-lg);">
                             <div class="form-group">
                                 <label class="form-label">
-                                    <input type="checkbox" id="aiModerationEnabled" onchange="toggleAIModeration(this.checked)">
-                                    Abilita Moderazione AI Automatica
+                                    <input type="checkbox" id="aiEnabled" checked>
+                                    Abilita Sistema AI
                                 </label>
+                                <div class="form-hint">Attiva/disattiva completamente il sistema AI</div>
                             </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <input type="checkbox" id="aiModerationEnabled" checked onchange="toggleAIModeration(this.checked)">
+                                    Abilita Moderazione Automatica
+                                </label>
+                                <div class="form-hint">I messaggi verranno moderati automaticamente dall'AI selezionata</div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label">Modello AI</label>
-                                <select id="aiModel" class="form-select">
-                                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
-                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                <select id="selectedModel" class="form-select" onchange="onModelChange(this.value)">
+                                    <option value="gemini">Google Gemini</option>
+                                    <option value="grok">Grok (xAI)</option>
+                                    <option value="local">Modello Locale</option>
+                                    <option value="disabled">Disabilitato</option>
                                 </select>
+                                <div class="form-hint">Scegli il modello AI per la moderazione</div>
+                            </div>
+
+                            <!-- Gemini Settings -->
+                            <div id="geminiSettings" class="model-settings" style="display: block;">
+                                <div class="form-group">
+                                    <label class="form-label">API Key Gemini</label>
+                                    <input type="password" id="geminiApiKey" class="form-input" placeholder="Inserisci API Key Gemini">
+                                    <div class="form-hint">Chiave API di Google Gemini (ottieni da <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>)</div>
+                                </div>
+                            </div>
+
+                            <!-- Grok Settings -->
+                            <div id="grokSettings" class="model-settings" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">API Key Grok</label>
+                                    <input type="password" id="grokApiKey" class="form-input" placeholder="Inserisci API Key Grok">
+                                    <div class="form-hint">Chiave API di xAI Grok (ottieni da <a href="https://console.x.ai" target="_blank">xAI Console</a>)</div>
+                                </div>
+                            </div>
+
+                            <!-- Local Model Settings -->
+                            <div id="localSettings" class="model-settings" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">Percorso Modello Locale</label>
+                                    <input type="text" id="localModelPath" class="form-input" placeholder="/path/to/model">
+                                    <div class="form-hint">Percorso al modello scaricato localmente (es. BERT, DistilBERT)</div>
+                                </div>
+                            </div>
+
+                            <!-- Disabled Settings -->
+                            <div id="disabledSettings" class="model-settings" style="display: none;">
+                                <div class="form-hint" style="color: var(--warning);">
+                                    <i class="fas fa-info-circle"></i>
+                                    Moderazione AI disabilitata - tutti i messaggi richiederanno approvazione manuale
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Soglia Approvazione Automatica</label>
+                                <input type="range" id="autoApproveThreshold" class="form-range" min="0.1" max="1.0" step="0.1" value="0.8">
+                                <div class="form-hint">Valore da 0.1 a 1.0 - più alto = più selettivo</div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                                    <span>Permissivo</span>
+                                    <span id="thresholdValue">0.8</span>
+                                    <span>Selettivo</span>
+                                </div>
                             </div>
                             <div class="action-buttons">
                                 <button class="btn btn-success" onclick="saveAISettings()">
                                     <i class="fas fa-save"></i>
                                     Salva Impostazioni
+                                </button>
+                                <button class="btn btn-info" onclick="testAIModel()">
+                                    <i class="fas fa-flask"></i>
+                                    Test AI
                                 </button>
                                 <button class="btn btn-secondary" onclick="hideAISettings()">
                                     <i class="fas fa-times"></i>
@@ -1455,7 +1512,7 @@
                         <div class="action-buttons" style="margin-top: var(--space-md);">
                             <button class="btn btn-primary btn-sm" onclick="showAISettings()">
                                 <i class="fas fa-edit"></i>
-                                Modifica
+                                Gestisci AI
                             </button>
                             <button class="btn btn-success btn-sm" onclick="testAIConnection()">
                                 <i class="fas fa-vial"></i>
@@ -2590,29 +2647,36 @@
                     `;
                 }
 
-                // Load Gemini settings
-                const geminiResponse = await fetch('/admin/api/settings/gemini', {
+                // Load AI settings
+                const aiResponse = await fetch('/admin/api/ai/config', {
                     credentials: 'same-origin'
                 });
 
-                if (geminiResponse.ok) {
-                    const geminiData = await geminiResponse.json();
+                if (aiResponse.ok) {
+                    const aiData = await aiResponse.json();
+
+                    // Trova il modello selezionato
+                    const selectedModelInfo = aiData.available_models.find(m => m.value === aiData.selected_model) || aiData.available_models[0];
+
                     document.getElementById('geminiSettings').innerHTML = `
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                             <div>
-                                <strong>Status:</strong>
-                                <span style="color: ${geminiData.configured ? 'var(--success)' : 'var(--error)'}; font-weight: 600;">
-                                    ${geminiData.configured ? 'Configurato' : 'Non Configurato'}
+                                <strong>Status Sistema:</strong>
+                                <span style="color: ${aiData.enabled ? 'var(--success)' : 'var(--error)'}; font-weight: 600;">
+                                    ${aiData.enabled ? 'Attivo' : 'Disabilitato'}
                                 </span>
                             </div>
                             <div>
-                                <strong>Modello:</strong> ${geminiData.model || 'N/A'}
+                                <strong>Moderazione:</strong>
+                                <span style="color: ${aiData.moderation_enabled ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">
+                                    ${aiData.moderation_enabled ? 'Automatica' : 'Manuale'}
+                                </span>
                             </div>
                             <div>
-                                <strong>Messaggi Moderati:</strong> ${geminiData.moderated_count || 0}
+                                <strong>Modello:</strong> ${selectedModelInfo.label}
                             </div>
                             <div>
-                                <strong>Quota Utilizzata:</strong> ${geminiData.quota_used || 0}%
+                                <strong>Soglia:</strong> ${(aiData.auto_approve_threshold * 100).toFixed(0)}%
                             </div>
                         </div>
                     `;
@@ -2768,71 +2832,123 @@
 
         // AI Settings Management
         function showAISettings() {
-            document.getElementById('geminiSettingsForm').style.display = 'block';
+            document.getElementById('aiSettingsForm').style.display = 'block';
+            loadAISettings();
         }
 
         function hideAISettings() {
-            document.getElementById('geminiSettingsForm').style.display = 'none';
+            document.getElementById('aiSettingsForm').style.display = 'none';
         }
 
-        async function saveAISettings() {
-            const apiKey = document.getElementById('geminiApiKey').value.trim();
-            const enabled = document.getElementById('aiModerationEnabled').checked;
-            const model = document.getElementById('aiModel').value;
-
+        async function loadAISettings() {
             try {
-                const response = await fetch('/admin/api/settings/gemini', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        api_key: apiKey,
-                        enabled: enabled,
-                        model: model
-                    })
+                const response = await fetch('/admin/api/ai/config');
+                const config = await response.json();
+
+                if (config.error) {
+                    console.error('Error loading AI config:', config.error);
+                    return;
+                }
+
+                // Popola i campi
+                document.getElementById('aiEnabled').checked = config.enabled;
+                document.getElementById('aiModerationEnabled').checked = config.moderation_enabled;
+                document.getElementById('selectedModel').value = config.selected_model;
+                document.getElementById('autoApproveThreshold').value = config.auto_approve_threshold;
+                document.getElementById('thresholdValue').textContent = config.auto_approve_threshold;
+
+                // Aggiorna la soglia quando cambia il range
+                document.getElementById('autoApproveThreshold').addEventListener('input', function() {
+                    document.getElementById('thresholdValue').textContent = this.value;
                 });
 
-                if (response.ok) {
-                    showNotification('Successo', 'Impostazioni AI salvate', 'success');
-                    hideAISettings();
-                    loadSystemSettings();
-                } else {
-                    throw new Error('Save failed');
-                }
+                // Mostra le impostazioni del modello selezionato
+                onModelChange(config.selected_model);
+
             } catch (error) {
-                console.error('Error saving AI settings:', error);
-                showNotification('Errore', 'Impossibile salvare le impostazioni AI', 'error');
+                console.error('Error loading AI settings:', error);
             }
         }
 
-        async function testAIConnection() {
+        function onModelChange(model) {
+            // Nasconde tutti i settings dei modelli
+            document.querySelectorAll('.model-settings').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Mostra solo quello selezionato
+            const selectedSettings = document.getElementById(model + 'Settings');
+            if (selectedSettings) {
+                selectedSettings.style.display = 'block';
+            }
+        }
+
+        async function saveAISettings() {
+            const formData = new FormData();
+
+            formData.append('enabled', document.getElementById('aiEnabled').checked);
+            formData.append('moderation_enabled', document.getElementById('aiModerationEnabled').checked);
+            formData.append('selected_model', document.getElementById('selectedModel').value);
+            formData.append('auto_approve_threshold', document.getElementById('autoApproveThreshold').value);
+
+            // Aggiungi le API keys solo se inserite
+            const geminiKey = document.getElementById('geminiApiKey').value.trim();
+            const grokKey = document.getElementById('grokApiKey').value.trim();
+            const localPath = document.getElementById('localModelPath').value.trim();
+
+            if (geminiKey) formData.append('gemini_api_key', geminiKey);
+            if (grokKey) formData.append('grok_api_key', grokKey);
+            if (localPath) formData.append('local_model_path', localPath);
+
             try {
-                showNotification('Info', 'Testando connessione AI...', 'info');
-                const response = await fetch('/admin/api/settings/gemini/test', {
+                const response = await fetch('/admin/api/ai/config', {
                     method: 'POST',
-                    credentials: 'same-origin'
+                    body: formData
                 });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        showNotification('Successo', 'Connessione AI riuscita!', 'success');
-                    } else {
-                        showNotification('Errore', 'Connessione AI fallita: ' + result.message, 'error');
-                    }
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showNotification('Successo', 'Impostazioni AI salvate correttamente', 'success');
+                    hideAISettings();
                 } else {
-                    throw new Error('Test failed');
+                    throw new Error(result.message || 'Errore sconosciuto');
+                }
+            } catch (error) {
+                console.error('Error saving AI settings:', error);
+                showNotification('Errore', 'Impossibile salvare le impostazioni AI: ' + error.message, 'error');
+            }
+        }
+
+        async function testAIModel() {
+            try {
+                showNotification('Info', 'Testando il modello AI selezionato...', 'info');
+
+                const response = await fetch('/admin/api/ai/test', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showNotification('Successo',
+                        `Test riuscito! Modello: ${result.model}<br>Decisione: ${result.result.decision}<br>Confidence: ${result.result.confidence}`,
+                        'success');
+                } else {
+                    showNotification('Errore', 'Test fallito: ' + result.message, 'error');
                 }
             } catch (error) {
                 console.error('Error testing AI:', error);
-                showNotification('Errore', 'Errore durante il test della connessione AI', 'error');
+                showNotification('Errore', 'Errore durante il test AI: ' + error.message, 'error');
             }
         }
 
         function toggleAIModeration(enabled) {
             console.log('AI Moderation toggled:', enabled);
+            const thresholdInput = document.getElementById('autoApproveThreshold');
+            if (thresholdInput) {
+                thresholdInput.disabled = !enabled;
+            }
         }
 
         // System Settings Management

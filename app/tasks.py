@@ -13,6 +13,111 @@ except ImportError:
 
 # --- Tasks semplificati ---
 
+def moderate_message_task(message_id: int):
+    """
+    Task in background per analizzare un messaggio con l'AI selezionata,
+    salvare il risultato e aggiornare lo stato del messaggio.
+    """
+    import time
+    print(f"--- [TASK] [{time.time()}] Avvio moderazione AI per messaggio ID: {message_id} ---")
+
+    db = SessionLocal()
+    try:
+        print(f"--- [TASK] [{time.time()}] Query messaggio ID: {message_id} ---")
+        message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
+
+        if not message:
+            print(f"--- [TASK] [{time.time()}] ERRORE: Messaggio ID {message_id} non trovato nel database ---")
+            return
+
+        print(f"--- [TASK] [{time.time()}] Messaggio ID {message_id} trovato. Stato attuale: {message.status.name} ---")
+        print(f"--- [TASK] [{time.time()}] Testo messaggio: '{message.text[:50]}...' ---")
+
+        # Recupera configurazione AI
+        from app.database import get_ai_config
+        ai_config = get_ai_config(db)
+
+        if not ai_config or not ai_config.moderation_enabled or ai_config.selected_model == "disabled":
+            print(f"--- [TASK] [{time.time()}] Moderazione AI disabilitata per ID {message_id} ---")
+            message.gemini_analysis = "Moderazione AI disabilitata - approvato automaticamente"
+            message.status = MessageStatus.APPROVED
+            db.commit()
+            return
+
+        # Crea il moderatore appropriato
+        from app.ai.moderator import AIModeratorFactory
+        kwargs = {}
+
+        if ai_config.selected_model == "gemini":
+            kwargs['api_key'] = ai_config.gemini_api_key
+        elif ai_config.selected_model == "grok":
+            kwargs['api_key'] = ai_config.grok_api_key
+        elif ai_config.selected_model == "local":
+            kwargs['model_path'] = ai_config.local_model_path
+
+        moderator = AIModeratorFactory.create_moderator(ai_config.selected_model.value, **kwargs)
+
+        if not moderator or not moderator.is_available():
+            print(f"--- [TASK] [{time.time()}] Moderatore {ai_config.selected_model.value} non disponibile per ID {message_id} ---")
+            message.gemini_analysis = f"Moderatore {ai_config.selected_model.value} non disponibile - approvato automaticamente"
+            message.status = MessageStatus.APPROVED
+            db.commit()
+            return
+
+        print(f"--- [TASK] [{time.time()}] Usando moderatore: {ai_config.selected_model.value} ---")
+
+        # Esegui la moderazione
+        try:
+            result = moderator.moderate_message(message.text)
+
+            print(f"--- [TASK] Risultato moderazione AI per ID {message_id}: {result} ---")
+
+            # Salva la motivazione dell'AI nel campo di analisi
+            message.gemini_analysis = result.reason
+
+            # Aggiorna lo stato del messaggio in base alla decisione
+            if result.decision == "APPROVE":
+                message.status = MessageStatus.APPROVED
+            elif result.decision == "REJECT":
+                message.status = MessageStatus.REJECTED
+            else: # "PENDING" o in caso di errore
+                message.status = MessageStatus.PENDING
+
+            db.commit()
+            print(f"--- [TASK] Moderazione AI per ID {message_id} completata. Decisione: {result.decision}, Stato: {message.status.name} ---")
+
+        except Exception as e:
+            import time
+            error_msg = str(e)
+            print(f"--- [TASK] [{time.time()}] ECCEZIONE in moderazione ID {message_id}: {error_msg[:300]} ---")
+
+            # In caso di errore, approva comunque per sicurezza
+            message.gemini_analysis = f"Errore AI ({error_msg[:100]}) - approvato automaticamente per sicurezza"
+            message.status = MessageStatus.APPROVED
+            try:
+                db.commit()
+                print(f"--- [TASK] [{time.time()}] Database commit riuscito per ID {message_id} ---")
+            except Exception as db_error:
+                print(f"--- [TASK] [{time.time()}] ERRORE database commit: {db_error} ---")
+                db.rollback()
+
+    except Exception as e:
+        import time
+        print(f"--- [TASK] [{time.time()}] ERRORE CRITICO durante la moderazione per ID {message_id}: {e} ---")
+        try:
+            db.rollback()
+            # In caso di errore critico, approva comunque il messaggio per sicurezza
+            message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
+            if message and message.status == MessageStatus.PENDING:
+                message.status = MessageStatus.APPROVED
+                message.gemini_analysis = "Errore critico - approvato automaticamente per sicurezza"
+                db.commit()
+                print(f"--- [TASK] [{time.time()}] Messaggio ID {message_id} approvato automaticamente dopo errore critico ---")
+        except Exception as rollback_error:
+            print(f"--- [TASK] [{time.time()}] Anche il rollback è fallito: {rollback_error} ---")
+    finally:
+        db.close()
+
 # --- Info Card Tasks ---
 
 def publish_info_card_task(card_id: int, db_session=None):

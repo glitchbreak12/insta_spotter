@@ -69,6 +69,28 @@ class SpottedMessage(Base):
     technical_user_id = Column(String, ForeignKey("technical_users.id"))
     author = relationship("TechnicalUser", back_populates="messages")
 
+class AIModel(str, enum.Enum):
+    """Modelli AI disponibili per la moderazione."""
+    GEMINI = "gemini"
+    GROK = "grok"
+    LOCAL = "local"
+    DISABLED = "disabled"
+
+class AIConfig(Base):
+    """Configurazione per l'AI e moderazione."""
+    __tablename__ = "ai_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    enabled = Column(Integer, default=1)  # 1=abilitato, 0=disabilitato
+    selected_model = Column(Enum(AIModel), default=AIModel.GEMINI, nullable=False)
+    gemini_api_key = Column(String, nullable=True)
+    grok_api_key = Column(String, nullable=True)
+    local_model_path = Column(String, nullable=True)
+    moderation_enabled = Column(Integer, default=1)  # 1=abilitato, 0=disabilitato
+    auto_approve_threshold = Column(Float, default=0.8)  # Soglia per approvazione automatica
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class DailyPostSettings(Base):
     """Impostazioni per il post giornaliero di riepilogo."""
     __tablename__ = "daily_post_settings"
@@ -194,3 +216,25 @@ def mark_daily_post_run(db: Session):
     if settings:
         settings.last_run = datetime.utcnow()
         db.commit()
+
+# --- Funzioni per l'AI Config ---
+
+def get_ai_config(db: Session) -> Optional[AIConfig]:
+    """Recupera la configurazione AI."""
+    return db.query(AIConfig).first()
+
+def update_ai_config(db: Session, **kwargs) -> AIConfig:
+    """Aggiorna la configurazione AI."""
+    config = get_ai_config(db)
+    if not config:
+        config = AIConfig()
+        db.add(config)
+
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+
+    config.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(config)
+    return config

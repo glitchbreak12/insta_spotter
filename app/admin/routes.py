@@ -10,8 +10,9 @@ import json
 import io
 import os
 
-from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal
+from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal, get_ai_config, update_ai_config, AIModel
 from app.admin.security import authenticate_user, create_access_token, get_current_user
+from app.tasks import post_daily_compilation
 from config import settings # Import settings
 
 # --- Configurazione ---
@@ -706,6 +707,139 @@ def get_daily_post_history(
 
         return {"status": "success", "history": history}
 
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# --- AI Configuration Endpoints ---
+
+@router.get("/api/ai/config")
+def get_ai_config_api(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per recuperare la configurazione AI."""
+    try:
+        config = get_ai_config(db)
+        if not config:
+            return {
+                "enabled": True,
+                "selected_model": "gemini",
+                "moderation_enabled": True,
+                "auto_approve_threshold": 0.8,
+                "available_models": [
+                    {"value": "gemini", "label": "Google Gemini", "description": "AI di Google, richiede API key"},
+                    {"value": "grok", "label": "Grok (xAI)", "description": "AI di xAI, richiede API key"},
+                    {"value": "local", "label": "Modello Locale", "description": "Modello scaricato localmente"},
+                    {"value": "disabled", "label": "Disabilitato", "description": "Nessuna moderazione AI"}
+                ]
+            }
+
+        return {
+            "enabled": bool(config.enabled),
+            "selected_model": config.selected_model.value if config.selected_model else "gemini",
+            "moderation_enabled": bool(config.moderation_enabled),
+            "auto_approve_threshold": config.auto_approve_threshold,
+            "gemini_api_key": bool(config.gemini_api_key),  # Non restituiamo la chiave per sicurezza
+            "grok_api_key": bool(config.grok_api_key),
+            "local_model_path": config.local_model_path,
+            "available_models": [
+                {"value": "gemini", "label": "Google Gemini", "description": "AI di Google, richiede API key"},
+                {"value": "grok", "label": "Grok (xAI)", "description": "AI di xAI, richiede API key"},
+                {"value": "local", "label": "Modello Locale", "description": "Modello scaricato localmente"},
+                {"value": "disabled", "label": "Disabilitato", "description": "Nessuna moderazione AI"}
+            ]
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/api/ai/config")
+def update_ai_config_api(
+    enabled: bool = Form(True),
+    selected_model: str = Form("gemini"),
+    moderation_enabled: bool = Form(True),
+    auto_approve_threshold: float = Form(0.8),
+    gemini_api_key: str = Form(""),
+    grok_api_key: str = Form(""),
+    local_model_path: str = Form(""),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per aggiornare la configurazione AI."""
+    try:
+        # Valida il modello selezionato
+        try:
+            model_enum = AIModel(selected_model)
+        except ValueError:
+            return {"status": "error", "message": f"Modello '{selected_model}' non valido"}
+
+        # Prepara i dati per l'aggiornamento
+        update_data = {
+            "enabled": enabled,
+            "selected_model": model_enum,
+            "moderation_enabled": moderation_enabled,
+            "auto_approve_threshold": auto_approve_threshold,
+            "local_model_path": local_model_path
+        }
+
+        # Gestisci le API keys (solo se fornite)
+        if gemini_api_key.strip():
+            update_data["gemini_api_key"] = gemini_api_key.strip()
+        if grok_api_key.strip():
+            update_data["grok_api_key"] = grok_api_key.strip()
+
+        config = update_ai_config(db, **update_data)
+
+        return {
+            "status": "success",
+            "message": "Configurazione AI aggiornata",
+            "config": {
+                "enabled": bool(config.enabled),
+                "selected_model": config.selected_model.value,
+                "moderation_enabled": bool(config.moderation_enabled),
+                "auto_approve_threshold": config.auto_approve_threshold
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/ai/test")
+def test_ai_config(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per testare la configurazione AI corrente."""
+    try:
+        config = get_ai_config(db)
+        if not config or not config.enabled:
+            return {"status": "error", "message": "AI disabilitata"}
+
+        # Crea il moderatore per il test
+        from app.ai.moderator import AIModeratorFactory
+        kwargs = {}
+
+        if config.selected_model == AIModel.GEMINI:
+            kwargs['api_key'] = config.gemini_api_key
+        elif config.selected_model == AIModel.GROK:
+            kwargs['api_key'] = config.grok_api_key
+        elif config.selected_model == AIModel.LOCAL:
+            kwargs['model_path'] = config.local_model_path
+
+        moderator = AIModeratorFactory.create_moderator(config.selected_model.value, **kwargs)
+
+        if not moderator:
+            return {"status": "error", "message": f"Impossibile creare moderatore {config.selected_model.value}"}
+
+        if not moderator.is_available():
+            return {"status": "error", "message": f"Moderatore {config.selected_model.value} non disponibile"}
+
+        # Test con un messaggio di esempio
+        test_message = "Questo è un messaggio di test per verificare la moderazione AI."
+        result = moderator.moderate_message(test_message)
+
+        return {
+            "status": "success",
+            "message": f"Test riuscito con {config.selected_model.value}",
+            "model": config.selected_model.value,
+            "result": {
+                "decision": result.decision,
+                "reason": result.reason,
+                "confidence": result.confidence
+            }
+        }
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
