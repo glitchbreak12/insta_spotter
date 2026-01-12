@@ -274,6 +274,226 @@ async def on_startup():
 app.include_router(web_routes.router)
 app.include_router(admin_routes.router)
 
+# --- Endpoint QR Mobile (fuori dal router admin per evitare conflitti) ---
+
+@app.get("/auth/qr/{session_id}")
+def qr_auth_page(session_id: str, token: str = None):
+    """Pagina mobile per autenticazione QR."""
+    from app.admin.routes import qr_sessions
+    import hashlib
+
+    print(f"🔍 QR page accessed - session: {session_id}, token: {token}")
+
+    # Verifica che la sessione esista
+    if session_id not in qr_sessions:
+        print(f"❌ Session {session_id} not found in qr_sessions")
+        return HTMLResponse(content=f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>Errore</title></head>
+        <body style="text-align: center; padding: 50px;">
+        <h1>Sessione QR non valida</h1>
+        <p>Session ID: {session_id}</p>
+        <p>Il codice QR potrebbe essere scaduto. Torna al dashboard e genera un nuovo QR code.</p>
+        </body>
+        </html>
+        """)
+
+    session = qr_sessions[session_id]
+    print(f"✅ Session found - user: {session['user']}, expires: {session['expires_at']}")
+
+    # Verifica token se fornito
+    if token:
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        if token_hash != session["token_hash"]:
+            print(f"❌ Token mismatch - received: {token}, expected hash: {session['token_hash']}, computed hash: {token_hash}")
+            return HTMLResponse(content=f"""
+            <!DOCTYPE html>
+            <html>
+            <head><title>Token Non Valido</title></head>
+            <body style="text-align: center; padding: 50px;">
+            <h1>Token QR non valido</h1>
+            <p>Il codice QR potrebbe essere vecchio. Torna al dashboard e genera un nuovo QR code.</p>
+            </body>
+            </html>
+            """)
+        print(f"✅ Token valid - received: {token}, hash matches")
+
+    # Pagina mobile per il login
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>InstaSpotter - Accesso Mobile</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }}
+            .container {{
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 20px;
+                padding: 40px;
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }}
+            .logo {{
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: #fff;
+            }}
+            h1 {{
+                font-size: 1.5rem;
+                margin-bottom: 10px;
+            }}
+            .status {{
+                font-size: 1rem;
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.1);
+            }}
+            .success {{
+                background: rgba(46, 204, 113, 0.2);
+                border: 1px solid #2ecc71;
+            }}
+            .error {{
+                background: rgba(231, 76, 60, 0.2);
+                border: 1px solid #e74c3c;
+            }}
+            .btn {{
+                background: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                text-decoration: none;
+                display: inline-block;
+                margin-top: 20px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }}
+            .btn:hover {{
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+            }}
+            .spinner {{
+                border: 3px solid rgba(255, 255, 255, 0.3);
+                border-top: 3px solid white;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                animation: spin 1s linear infinite;
+                display: inline-block;
+                margin-right: 10px;
+            }}
+            @keyframes spin {{
+                0% {{ transform: rotate(0deg); }}
+                100% {{ transform: rotate(360deg); }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo">
+                <i class="fab fa-instagram"></i>
+            </div>
+            <h1>InstaSpotter</h1>
+            <p>Accesso Mobile QR</p>
+
+            <div id="statusText" class="status">
+                <div class="spinner"></div>
+                Verifica in corso...
+            </div>
+
+            <button class="btn" onclick="retryAuth()">
+                <i class="fas fa-redo"></i>
+                Riprova
+            </button>
+        </div>
+
+        <script>
+            let sessionId = '{session_id}';
+            let qrToken = '{token}' || null;
+
+            console.log('📱 Mobile QR page loaded for session:', sessionId);
+            console.log('🔑 QR token extracted:', qrToken);
+
+            async function checkSession() {{
+                console.log('🔍 Checking QR session...');
+
+                if (!qrToken) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Token QR mancante';
+                    document.getElementById('statusText').className = 'status error';
+                    return;
+                }}
+
+                try {{
+                    // Hash the token before sending (matches server-side validation)
+                    const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrToken));
+                    const tokenHashHex = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    const response = await fetch('/admin/api/auth/verify-qr', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{
+                            session_id: sessionId,
+                            token: tokenHashHex
+                        }})
+                    }});
+
+                    if (response.ok) {{
+                        const data = await response.json();
+                        if (data.success) {{
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso riuscito! Puoi chiudere questa pagina.';
+                            document.getElementById('statusText').className = 'status success';
+                            console.log('✅ QR authentication successful');
+                        }} else {{
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + (data.error || 'Autenticazione fallita');
+                            document.getElementById('statusText').className = 'status error';
+                            console.log('❌ QR authentication failed:', data.error);
+                        }}
+                    }} else {{
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore di connessione';
+                        document.getElementById('statusText').className = 'status error';
+                        console.log('❌ QR verification request failed:', response.status);
+                    }}
+                }} catch (error) {{
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore: ' + error.message;
+                    document.getElementById('statusText').className = 'status error';
+                    console.error('❌ QR authentication error:', error);
+                }}
+            }}
+
+            function retryAuth() {{
+                document.getElementById('statusText').innerHTML = '<div class="spinner"></div> Verifica in corso...';
+                document.getElementById('statusText').className = 'status';
+                checkSession();
+            }}
+
+            // Start authentication check
+            checkSession();
+        </script>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content)
+
 # --- Rotta di Benvenuto ---
 
 @app.get("/", tags=["Root"])
