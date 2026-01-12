@@ -820,7 +820,7 @@ def generate_qr_code(user: str = Depends(get_current_user)):
         print(f"🔍 REPL_OWNER: {os.getenv('REPL_OWNER')}")
         print(f"🔍 REPLIT_APP_URL: {os.getenv('REPLIT_APP_URL')}")
 
-        qr_url = f"{base_url}/admin/auth/qr/{session_id}?token={qr_token}"
+        qr_url = f"{base_url}/auth/qr/{session_id}?token={qr_token}"
         print(f"🔗 Generated QR URL: {qr_url}")
         print(f"📱 QR should be accessible from mobile at: {qr_url}")
 
