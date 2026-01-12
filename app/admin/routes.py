@@ -683,7 +683,19 @@ def create_info_card(
         db.commit()
         db.refresh(info_card)
 
-        return {"status": "success", "message": "Info card creata con successo", "id": info_card.id}
+        # Pubblica automaticamente la card appena creata
+        try:
+            from app.tasks import publish_info_card_task
+            import asyncio
+
+            # Pubblica in background
+            asyncio.create_task(publish_info_card_task(info_card.id, db))
+            logger.info(f"Auto-publishing info card {info_card.id}")
+
+        except Exception as publish_error:
+            logger.warning(f"Auto-publish failed for card {info_card.id}: {publish_error}")
+
+        return {"status": "success", "message": "Info card creata e pubblicata con successo", "id": info_card.id}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}

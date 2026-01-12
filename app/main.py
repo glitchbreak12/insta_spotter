@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from urllib.parse import urlparse
 from slowapi import Limiter
@@ -29,6 +30,10 @@ app = FastAPI(
     redoc_url=None,  # Disabilita ReDoc in produzione
     openapi_url=None,  # Disabilita OpenAPI schema
 )
+
+# --- Mount directory statiche ---
+# Servi le immagini generate dal generatore
+app.mount("/generated_images", StaticFiles(directory="generated_images", html=True), name="generated_images")
 
 # --- MIDDLEWARE DI SICUREZZA ---
 
