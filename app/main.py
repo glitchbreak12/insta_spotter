@@ -432,9 +432,9 @@ def qr_auth_page(session_id: str, token: str = None):
                 Accesso autorizzato! Reindirizzamento automatico...
             </div>
 
-            <button class="btn" onclick="retryAuth()">
-                <i class="fas fa-redo"></i>
-                Riprova
+            <button class="btn" onclick="manualRedirect()">
+                <i class="fas fa-arrow-right"></i>
+                Vai alla Dashboard
             </button>
         </div>
 
@@ -442,13 +442,66 @@ def qr_auth_page(session_id: str, token: str = None):
             console.log('📱 QR mobile page loaded - validation completed server-side');
 
             // Show success message immediately
-            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso autorizzato! Reindirizzamento...';
+            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso autorizzato! Completando login...';
 
-            // Auto-redirect after 2 seconds
-            setTimeout(() => {{
-                console.log('🔄 Auto-redirecting to dashboard...');
-                window.location.href = '/admin/dashboard';
-            }}, 2000);
+            // Complete mobile login to get access token
+            async function completeMobileLogin() {{
+                try {{
+                    console.log('🚀 Completing mobile login...');
+                    const response = await fetch('/admin/api/auth/qr-login', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ session_id: '{session_id}' }})
+                    }});
+
+                    if (response.ok) {{
+                        const data = await response.json();
+                        console.log('📋 Login response:', data);
+
+                        if (data.success && data.access_token) {{
+                            // Save token for mobile authentication
+                            localStorage.setItem('access_token', data.access_token);
+                            document.cookie = `access_token=${{data.access_token}}; path=/; max-age=86400`;
+
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Login mobile completato! Reindirizzamento...';
+
+                            // Redirect after token is saved
+                            setTimeout(() => {{
+                                console.log('🔄 Redirecting to dashboard with token...');
+                                window.location.href = '/admin/dashboard';
+                            }}, 1000);
+                        }} else {{
+                            console.error('❌ Login failed:', data.error);
+                            document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore login: ' + (data.error || 'Sconosciuto');
+                            document.getElementById('statusText').className = 'status error';
+
+                            // Still redirect after 3 seconds even if login failed
+                            setTimeout(() => {{
+                                window.location.href = '/admin/dashboard';
+                            }}, 3000);
+                        }}
+                    }} else {{
+                        console.error('❌ Login request failed:', response.status);
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore connessione login';
+
+                        // Redirect anyway
+                        setTimeout(() => {{
+                            window.location.href = '/admin/dashboard';
+                        }}, 2000);
+                    }}
+                }} catch (error) {{
+                    console.error('❌ Login completion error:', error);
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore: ' + error.message;
+
+                    // Redirect anyway
+                    setTimeout(() => {{
+                        window.location.href = '/admin/dashboard';
+                    }}, 2000);
+                }}
+            }}
+
+            // Start mobile login completion
+            completeMobileLogin();
 
             async function checkSession() {{
                 console.log('🔍 Checking QR session...');
