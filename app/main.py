@@ -431,8 +431,16 @@ def qr_auth_page(session_id: str, token: str = None):
             let sessionId = '{session_id}';
             let qrToken = '{token}' || null;
 
+            // Estrai token dall'URL se presente (ha priorità)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            if (urlToken) {{
+                qrToken = urlToken;
+            }}
+
             console.log('📱 Mobile QR page loaded for session:', sessionId);
             console.log('🔑 QR token extracted:', qrToken);
+            console.log('🔗 URL token:', urlToken);
 
             async function checkSession() {{
                 console.log('🔍 Checking QR session...');
@@ -444,16 +452,28 @@ def qr_auth_page(session_id: str, token: str = None):
                 }}
 
                 try {{
-                    // Hash the token before sending (matches server-side validation)
-                    const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrToken));
-                    const tokenHashHex = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+                    // Determina se il token è già hashato (64 caratteri hex) o originale
+                    const isAlreadyHashed = qrToken && qrToken.length === 64 && /^[a-f0-9]+$/.test(qrToken);
+                    console.log('🔍 Token already hashed?', isAlreadyHashed);
+
+                    let tokenToSend;
+                    if (isAlreadyHashed) {{
+                        // Token già hashato, usalo direttamente
+                        tokenToSend = qrToken;
+                        console.log('✅ Using pre-hashed token');
+                    }} else {{
+                        // Token originale, hasha prima di inviare
+                        const tokenHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(qrToken));
+                        tokenToSend = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('');
+                        console.log('🔐 Hashed token for sending');
+                    }}
 
                     const response = await fetch('/admin/api/auth/verify-qr', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{
                             session_id: sessionId,
-                            token: tokenHashHex
+                            token: tokenToSend
                         }})
                     }});
 
@@ -489,26 +509,23 @@ def qr_auth_page(session_id: str, token: str = None):
                         body: JSON.stringify({{ session_id: sessionId }})
                     }});
 
-                    if (response.ok) {{
-                        const data = await response.json();
-                        if (data.success && data.access_token) {{
-                            // Salva il token di accesso per il mobile
-                            localStorage.setItem('access_token', data.access_token);
-                            document.cookie = `access_token=${data.access_token}; path=/; max-age=86400`;
+                    const loginData = await response.json();
+                    console.log('📋 Login response data:', loginData);
 
-                            document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso mobile completato! Reindirizzamento...';
-                            console.log('✅ Mobile login completed successfully');
+                    if (response.ok && loginData.success && loginData.access_token) {{
+                        // Salva il token di accesso per il mobile
+                        localStorage.setItem('access_token', loginData.access_token);
+                        document.cookie = `access_token=${loginData.access_token}; path=/; max-age=86400`;
 
-                            // Redirect alla dashboard dopo 2 secondi
-                            setTimeout(() => {{
-                                window.location.href = '/admin/dashboard';
-                            }}, 2000);
-                        }} else {{
-                            document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore completamento login';
-                            document.getElementById('statusText').className = 'status error';
-                        }}
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-check-circle"></i> Accesso mobile completato! Reindirizzamento...';
+                        console.log('✅ Mobile login completed successfully');
+
+                        // Redirect alla dashboard dopo 2 secondi
+                        setTimeout(() => {{
+                            window.location.href = '/admin/dashboard';
+                        }}, 2000);
                     }} else {{
-                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> Errore connessione login';
+                        document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle"></i> ' + (loginData.error || 'Errore completamento login');
                         document.getElementById('status').className = 'status error';
                     }}
                 }} catch (error) {{
