@@ -427,9 +427,9 @@ def qr_auth_page(session_id: str, token: str = None):
             <h1>InstaSpotter</h1>
             <p>Accesso Mobile QR</p>
 
-            <div id="statusText" class="status">
-                <div class="spinner"></div>
-                Verifica in corso...
+            <div id="statusText" class="status success">
+                <i class="fas fa-check-circle"></i>
+                Accesso autorizzato! Reindirizzamento automatico...
             </div>
 
             <button class="btn" onclick="retryAuth()">
@@ -545,8 +545,9 @@ def qr_auth_page(session_id: str, token: str = None):
                 checkSession();
             }}
 
-            // Start authentication check
-            checkSession();
+            // Token validation is handled server-side
+            // No client-side API calls needed
+            console.log('✅ QR token validated server-side - ready for redirect');
         </script>
     </body>
     </html>
