@@ -938,9 +938,10 @@ def qr_mobile_login(session_id: str):
         if not session.get("used", False):
             return {"success": False, "error": "Sessione non verificata"}
 
-        # Genera token di sessione per il mobile
+        # Genera token di sessione per il mobile (durata più lunga per mobile)
         from app.admin.security import create_access_token
-        mobile_token = create_access_token({"sub": session["user"], "device": "mobile"})
+        from datetime import timedelta
+        mobile_token = create_access_token({"sub": session["user"], "device": "mobile"}, expires_delta=timedelta(hours=2))
 
         # Log dell'accesso
         print(f"🔐 Mobile login via QR: {session['user']}")

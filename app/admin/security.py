@@ -53,7 +53,7 @@ admin_pwd = (
     os.getenv("REPLIT_DB_ADMIN_PASSWORD")
 )
 
-if admin_pwd:
+    if admin_pwd:
     import hashlib
     ADMIN_PASSWORD_HASH = hashlib.sha256(admin_pwd.encode()).hexdigest()
     logger.info(f"✅ Password configurata da ADMIN_PASSWORD (len={len(admin_pwd)}) - SHA256")
@@ -69,7 +69,7 @@ elif not ADMIN_PASSWORD_HASH:
         logger.info(f"✅ Password hash configurata direttamente (len={len(ADMIN_PASSWORD_HASH)})")
 
 # Terza priorità: fallback temporaneo per test
-else:
+    else:
     logger.warning("🔧 USING TEMPORARY ADMIN CREDENTIALS FOR TESTING!")
     logger.warning("🔧 Username: admin, Password: admin123")
     logger.warning("🔧 Configure ADMIN_PASSWORD in Secrets for production!")
@@ -134,22 +134,28 @@ def authenticate_user(username: str, password: str) -> Optional[str]:
 def get_current_user(request: Request) -> Optional[str]:
     """Ottiene l'utente corrente dal JWT token nel cookie."""
     token = request.cookies.get("access_token")
+    logger.debug(f"🔍 Checking JWT token in cookies: {'present' if token else 'not found'}")
     if not token:
         return None
 
     try:
+        logger.debug(f"🔍 Decoding JWT token...")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
+        device: str = payload.get("device", "desktop")
+
+        logger.debug(f"🔍 JWT payload - username: {username}, device: {device}")
 
         if username is None:
+            logger.debug("❌ No username in token")
             return None
 
         # Verifica che l'utente sia quello corretto
         if not secrets.compare_digest(username, ADMIN_USERNAME):
+            logger.debug(f"❌ Username mismatch: {username} != {ADMIN_USERNAME}")
             return None
 
-        # Session tracking temporaneamente disabilitato per stabilità
-
+        logger.debug(f"✅ JWT token valid for user: {username}")
         return username
     except JWTError as e:
         logger.warning(f"Invalid JWT token: {e}")

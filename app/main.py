@@ -439,12 +439,43 @@ def qr_auth_page(session_id: str, token: str = None):
         </div>
 
         <script>
-            console.log('📱 QR verification successful - redirecting...');
+            console.log('📱 QR verification successful - completing login...');
 
-            // Simple auto-redirect - no API calls
-            setTimeout(() => {{
-                window.location.href = '/admin/login';
-            }}, 1500);
+            // Complete mobile login automatically
+            async function completeMobileLogin() {{
+                try {{
+                    const response = await fetch('/admin/api/auth/qr-login', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ session_id: '{session_id}' }})
+                    }});
+
+                    if (response.ok) {{
+                        const data = await response.json();
+                        if (data.success && data.access_token) {{
+                            // Save token for automatic login
+                            localStorage.setItem('access_token', data.access_token);
+                            document.cookie = `access_token=${{data.access_token}}; path=/; max-age=86400; SameSite=Lax`;
+
+                            console.log('✅ Mobile login token saved, redirecting to dashboard...');
+                            // Redirect to dashboard - should be automatically logged in
+                            window.location.href = '/admin/dashboard';
+                        }} else {{
+                            console.error('❌ Login failed:', data.error);
+                            window.location.href = '/admin/login';
+                        }}
+                    }} else {{
+                        console.error('❌ Login request failed');
+                        window.location.href = '/admin/login';
+                    }}
+                }} catch (error) {{
+                    console.error('❌ Login error:', error);
+                    window.location.href = '/admin/login';
+                }}
+            }}
+
+            // Start automatic login
+            completeMobileLogin();
         </script>
     </body>
     </html>
