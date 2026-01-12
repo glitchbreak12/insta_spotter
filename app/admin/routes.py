@@ -928,10 +928,11 @@ def verify_qr_code(data: dict):
         return {"success": False, "error": str(e)}
 
 @router.post("/api/auth/qr-login")
-def qr_mobile_login(session_id: str):
+def qr_mobile_login(data: dict):
     """Login tramite QR dal mobile."""
     try:
-        if session_id not in qr_sessions:
+        session_id = data.get("session_id")
+        if not session_id or session_id not in qr_sessions:
             return {"success": False, "error": "Sessione non trovata"}
 
         session = qr_sessions[session_id]
