@@ -89,6 +89,7 @@ def run_migration():
                     max_messages INTEGER DEFAULT 20,
                     title_template VARCHAR DEFAULT '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫',
                     hashtag_template VARCHAR DEFAULT '#spotted #instaspotter #dailyrecap',
+                    ai_model VARCHAR DEFAULT 'gemini',
                     last_run TIMESTAMP,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -99,16 +100,57 @@ def run_migration():
 
             # Insert default settings
             connection.execute(text('''
-                INSERT INTO daily_post_settings (enabled, post_time, style, max_messages, title_template, hashtag_template)
-                VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap')
+                INSERT INTO daily_post_settings (enabled, post_time, style, max_messages, title_template, hashtag_template, ai_model)
+                VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap', 'gemini')
             '''))
             connection.commit()
             print("✅ Impostazioni predefinite per il post giornaliero inserite.")
         except Exception as e:
             if "already exists" in str(e):
                 print("ℹ️  Tabella 'daily_post_settings' già esistente.")
+                # Try to add ai_model column if it doesn't exist
+                try:
+                    connection.execute(text('ALTER TABLE daily_post_settings ADD COLUMN ai_model VARCHAR DEFAULT \'gemini\''))
+                    connection.commit()
+                    print("✅ Colonna 'ai_model' aggiunta alla tabella 'daily_post_settings'.")
+                except Exception as col_e:
+                    if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
+                        print("ℹ️  Colonna 'ai_model' già esistente.")
+                    else:
+                        print(f"ℹ️  Colonna 'ai_model' non aggiunta: {col_e}")
+                    connection.rollback()
             else:
                 print(f"❌ Errore tabella 'daily_post_settings': {e}")
+            connection.rollback()
+
+        # Create daily_posts table
+        try:
+            connection.execute(text('''
+                CREATE TABLE daily_posts (
+                    id INTEGER PRIMARY KEY,
+                    title VARCHAR NOT NULL,
+                    content VARCHAR NOT NULL,
+                    hashtags VARCHAR DEFAULT '',
+                    ai_model_used VARCHAR,
+                    status VARCHAR DEFAULT 'draft',
+                    scheduled_for TIMESTAMP,
+                    published_at TIMESTAMP,
+                    image_count INTEGER DEFAULT 0,
+                    messages_count INTEGER DEFAULT 0,
+                    error_message VARCHAR,
+                    created_by VARCHAR,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    message_ids VARCHAR
+                )
+            '''))
+            connection.commit()
+            print("✅ Tabella 'daily_posts' creata con successo.")
+        except Exception as e:
+            if "already exists" in str(e):
+                print("ℹ️  Tabella 'daily_posts' già esistente.")
+            else:
+                print(f"❌ Errore tabella 'daily_posts': {e}")
             connection.rollback()
 
         # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)

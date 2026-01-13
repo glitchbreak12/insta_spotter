@@ -716,7 +716,7 @@
         /* Loading States */
         .loading {
             display: flex;
-            flex-direction: column;
+                flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: var(--space-3xl) var(--space-xl);
@@ -884,7 +884,7 @@
                 gap: var(--space-md);
             }
 
-            .action-buttons {
+        .action-buttons {
                 justify-content: center;
             }
 
@@ -993,8 +993,8 @@
                 <div class="logo">
                     <i class="fas fa-shield-alt"></i>
                     InstaSpotter
-                </div>
             </div>
+                </div>
             <div class="user-menu">
                 <div class="user-info">
                     <span class="user-name">{{ username or 'Admin' }}</span>
@@ -1005,7 +1005,7 @@
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </button>
-            </div>
+                </div>
         </header>
 
         <!-- Main Content -->
@@ -1047,47 +1047,47 @@
                         <i class="fas fa-download"></i>
                         Esporta Report
                     </button>
-                </div>
+                    </div>
 
                 <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <div class="stat-icon primary">
+                        <div class="stat-icon primary">
                                 <i class="fas fa-comments"></i>
                             </div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
                                 +12%
                             </div>
-                        </div>
+                            </div>
                         <div class="stat-value" id="totalPosts">0</div>
                         <div class="stat-label">Messaggi Totali</div>
-                    </div>
+                        </div>
 
                     <div class="stat-card">
                         <div class="stat-header">
-                            <div class="stat-icon warning">
-                                <i class="fas fa-clock"></i>
+                        <div class="stat-icon warning">
+                            <i class="fas fa-clock"></i>
                             </div>
                             <div class="stat-change">
                                 <i class="fas fa-minus"></i>
                                 In Attesa
                             </div>
-                        </div>
+                    </div>
                         <div class="stat-value" id="pendingModeration">0</div>
                         <div class="stat-label">Da Moderare</div>
-                    </div>
+                            </div>
 
                     <div class="stat-card">
                         <div class="stat-header">
-                            <div class="stat-icon success">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
+                        <div class="stat-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
                                 +8%
-                            </div>
+                    </div>
                         </div>
                         <div class="stat-value" id="approvedToday">0</div>
                         <div class="stat-label">Approvati Oggi</div>
@@ -1139,11 +1139,11 @@
                                 Approva Tutto
                             </button>
                             <button class="btn btn-danger" onclick="bulkReject()">
-                                <i class="fas fa-times-circle"></i>
+                            <i class="fas fa-times-circle"></i>
                                 Rifiuta Tutto
                             </button>
+                            </div>
                         </div>
-                    </div>
 
                     <!-- Filters -->
                     <div class="action-buttons" style="margin-bottom: var(--space-lg);">
@@ -1157,9 +1157,9 @@
                         <div class="loading">
                             <div class="spinner"></div>
                             <div class="loading-text">Caricamento messaggi...</div>
+                            </div>
                         </div>
                     </div>
-                </div>
             </section>
 
             <!-- Daily Post Section -->
@@ -1171,7 +1171,7 @@
                             <i class="fas fa-sync-alt"></i>
                             Ricarica
                         </button>
-                    </div>
+                            </div>
 
                     <!-- Settings Card -->
                     <div class="stat-card" style="margin-bottom: var(--space-xl);">
@@ -1187,7 +1187,7 @@
                         <div class="form-group">
                             <label class="form-label">Orario Pubblicazione</label>
                             <input type="time" id="dailyPostTime" class="form-input" onchange="updateDailyPostSetting('post_time', this.value)">
-                        </div>
+                    </div>
 
                         <div class="form-group">
                             <label class="form-label">Max Messaggi per Post</label>
@@ -1264,11 +1264,11 @@
                             <button class="btn btn-success" onclick="createInfoCard()">
                                 <i class="fas fa-save"></i>
                                 Crea Card
-                            </button>
+                        </button>
                             <button class="btn btn-secondary" onclick="hideCreateCardForm()">
                                 <i class="fas fa-times"></i>
                                 Annulla
-                            </button>
+                        </button>
                         </div>
                     </div>
 
@@ -1301,9 +1301,9 @@
                             <button class="btn btn-success btn-sm" onclick="showBackupManager()">
                                 <i class="fas fa-shield-alt"></i>
                                 Backup & Sicurezza
-                            </button>
-                        </div>
+                        </button>
                     </div>
+                </div>
 
                     <!-- Instagram Settings -->
                     <div class="stat-card" style="margin-bottom: var(--space-xl);">
@@ -1321,12 +1321,12 @@
                             <div class="form-group">
                                 <label class="form-label">Username Instagram</label>
                                 <input type="text" id="instagramUsername" class="form-input" placeholder="username">
-                            </div>
+                    </div>
                             <div class="form-group">
                                 <label class="form-label">Password</label>
                                 <input type="password" id="instagramPassword" class="form-input" placeholder="password">
                                 <div class="form-hint">La password viene salvata in modo sicuro</div>
-                            </div>
+                    </div>
                             <div class="action-buttons">
                                 <button class="btn btn-success" onclick="saveInstagramSettings()">
                                     <i class="fas fa-save"></i>
@@ -1336,8 +1336,8 @@
                                     <i class="fas fa-times"></i>
                                     Annulla
                                 </button>
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
                         <div class="action-buttons" style="margin-top: var(--space-md);">
                             <button class="btn btn-primary btn-sm" onclick="showInstagramSettings()">
@@ -1349,7 +1349,7 @@
                                 Test Connessione
                             </button>
                         </div>
-                    </div>
+                </div>
 
                     <!-- Advanced Analytics -->
                     <div class="stat-card" style="margin-bottom: var(--space-xl);">
@@ -1363,38 +1363,38 @@
                                     <i class="fas fa-users fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
                                     <div style="font-weight: 600; margin-bottom: var(--space-xs);">Utenti Attivi</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">24h / 7gg / 30gg</div>
-                                </div>
+                        </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-chart-bar fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
                                     <div style="font-weight: 600; margin-bottom: var(--space-xs);">Performance</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">CPU / RAM / DB</div>
-                                </div>
+                    </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-shield-alt fa-2x" style="color: var(--info); margin-bottom: var(--space-sm);"></i>
                                     <div style="font-weight: 600; margin-bottom: var(--space-xs);">Sicurezza</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">Login / Errori / Audit</div>
-                                </div>
+                        </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-globe fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
                                     <div style="font-weight: 600; margin-bottom: var(--space-xs);">Traffico</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">IP / Geo / Trends</div>
-                                </div>
-                            </div>
+                    </div>
+                        </div>
                             <div id="analyticsCharts" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
                                 <div class="chart-card">
                                     <div class="chart-title">Messaggi per Ora</div>
                                     <div class="chart-container">
                                         <canvas id="messagesHourlyChart"></canvas>
-                                    </div>
+                    </div>
                                 </div>
                                 <div class="chart-card">
                                     <div class="chart-title">Status Messaggi</div>
                                     <div class="chart-container">
                                         <canvas id="messagesStatusChart"></canvas>
                                     </div>
-                                </div>
-                            </div>
                         </div>
+                    </div>
+                </div>
 
                         <div class="action-buttons" style="margin-top: var(--space-md);">
                             <button class="btn btn-info btn-sm" onclick="generateAnalyticsReport()">
@@ -1415,9 +1415,9 @@
                             AI Moderation
                         </h4>
                         <div id="geminiSettings" class="loading">
-                            <div class="spinner"></div>
+                                            <div class="spinner"></div>
                             <div class="loading-text">Caricamento impostazioni AI...</div>
-                        </div>
+                                        </div>
 
                         <!-- AI Settings Form -->
                         <div id="aiSettingsForm" style="display: none; margin-top: var(--space-lg);">
@@ -1427,7 +1427,7 @@
                                     Abilita Sistema AI
                                 </label>
                                 <div class="form-hint">Attiva/disattiva completamente il sistema AI</div>
-                            </div>
+                        </div>
 
                             <div class="form-group">
                                 <label class="form-label">
@@ -1435,7 +1435,7 @@
                                     Abilita Moderazione Automatica
                                 </label>
                                 <div class="form-hint">I messaggi verranno moderati automaticamente dall'AI selezionata</div>
-                            </div>
+                </div>
 
                             <div class="form-group">
                                 <label class="form-label">Modello AI</label>
@@ -1542,9 +1542,9 @@
                             Sistema
                         </h4>
                         <div id="systemSettings" class="loading">
-                            <div class="spinner"></div>
+                        <div class="spinner"></div>
                             <div class="loading-text">Caricamento informazioni sistema...</div>
-                        </div>
+                    </div>
 
                         <!-- System Settings Form -->
                         <div id="systemSettingsForm" style="display: none; margin-top: var(--space-lg);">
@@ -1554,7 +1554,7 @@
                                     Modalità Manutenzione
                                 </label>
                                 <div class="form-hint">Quando abilitata, il sito mostra una pagina di manutenzione</div>
-                            </div>
+                </div>
                             <div class="form-group">
                                 <label class="form-label">Max Messaggi per Ora</label>
                                 <input type="number" id="maxMessagesPerHour" class="form-input" min="1" max="100" placeholder="10">
@@ -1594,8 +1594,8 @@
                                 <i class="fas fa-trash-alt"></i>
                                 Svuota Cache
                             </button>
-                        </div>
-                    </div>
+                            </div>
+                                </div>
 
                     <!-- Advanced Data Management -->
                     <div class="stat-card" style="margin-bottom: var(--space-xl);">
@@ -1614,18 +1614,18 @@
                                 <i class="fas fa-trash-bulk fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
                                 <div style="font-weight: 600; margin-bottom: var(--space-xs);">Cancellazione Bulk</div>
                                 <div style="font-size: 0.8rem; color: var(--text-muted);">Elimina messaggi multipli</div>
-                            </div>
+                        </div>
                             <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                 <i class="fas fa-user-shield fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
                                 <div style="font-weight: 600; margin-bottom: var(--space-xs);">Utenti Tecnici</div>
                                 <div style="font-size: 0.8rem; color: var(--text-muted);">Gestisci utenti di servizio</div>
-                            </div>
+                    </div>
                             <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                 <i class="fas fa-shield-alt fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
                                 <div style="font-weight: 600; margin-bottom: var(--space-xs);">Audit Logs</div>
                                 <div style="font-size: 0.8rem; color: var(--text-muted);">Log di sicurezza</div>
                             </div>
-                        </div>
+                                </div>
 
                         <div class="action-buttons">
                             <button class="btn btn-primary" onclick="showAdvancedDataManagement()">
@@ -1636,9 +1636,9 @@
                                 <i class="fas fa-users-cog"></i>
                                 Gestione Utenti
                             </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- Danger Zone (Hidden by default) -->
                 <div id="dangerZone" style="display: none; margin-top: var(--space-3xl);">
@@ -1652,7 +1652,7 @@
                             <div style="font-weight: 600; color: var(--error); margin-bottom: var(--space-sm);">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 ATTENZIONE: Queste operazioni NON possono essere annullate!
-                            </div>
+                </div>
                             <div style="color: var(--text-secondary); font-size: 0.9rem;">
                                 Prima di procedere, assicurati di avere un backup completo dei dati.
                                 Queste azioni elimineranno definitivamente i dati dal database.
@@ -1706,10 +1706,10 @@
                                     <button class="btn btn-danger" onclick="nuclearOption()" style="background: linear-gradient(45deg, #dc2626, #b91c1c);">
                                         <i class="fas fa-radiation-alt"></i>
                                         🗑️ CANCELLA TUTTO (NUCLEAR)
-                                    </button>
-                                </div>
+                                </button>
                             </div>
                         </div>
+                    </div>
 
                         <div style="margin-top: var(--space-lg); padding: var(--space-lg); background: rgba(239, 68, 68, 0.05); border: 1px solid var(--error); border-radius: var(--radius-lg);">
                             <div style="font-weight: 600; margin-bottom: var(--space-sm); color: var(--error);">
@@ -1784,14 +1784,14 @@
                             <h5 style="margin-bottom: var(--space-md); color: var(--success);">
                                 <i class="fas fa-info-circle" style="margin-right: var(--space-sm);"></i>
                                 Come Funziona
-                            </h5>
+                                </h5>
                             <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
                                 <ol style="padding-left: var(--space-lg);">
                                     <li style="margin-bottom: var(--space-xs);">1. Clicca "Genera QR Code" mentre sei loggato</li>
                                     <li style="margin-bottom: var(--space-xs);">2. Scansiona il QR con il tuo cellulare</li>
                                     <li style="margin-bottom: var(--space-xs);">3. Verrai automaticamente loggato sul mobile</li>
                                 </ol>
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -1844,10 +1844,10 @@
                             <button class="btn btn-info" onclick="downloadBackup()">
                                 <i class="fas fa-download"></i>
                                 Scarica Backup
-                            </button>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- System Logs (Hidden by default) -->
                 <div id="systemLogs" style="display: none; margin-top: var(--space-3xl);">
@@ -1867,7 +1867,7 @@
                                 <option value="security">Sicurezza</option>
                                 <option value="admin">Azioni Admin</option>
                             </select>
-                        </div>
+                </div>
 
                         <div class="form-group">
                             <label class="form-label">Periodo</label>
@@ -1998,7 +1998,7 @@
                 window.location.href = '/admin/login';
                 throw new Error('Not authenticated');
             }
-            if (!response.ok) {
+                if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
             return response;
@@ -2427,8 +2427,8 @@
                 <div style="text-align: center; padding: 20px;">
                     <div class="spinner" style="width: 30px; height: 30px; margin: 0 auto 10px;"></div>
                     <div style="font-size: 0.9rem; color: var(--text-muted);">Generando anteprima...</div>
-                </div>
-            `;
+                    </div>
+                `;
 
             // Debounce preview generation
             clearTimeout(window.previewTimeout);
@@ -2818,7 +2818,7 @@
                     const result = await response.json();
                     if (result.success) {
                         showNotification('Successo', 'Connessione Instagram riuscita!', 'success');
-                    } else {
+            } else {
                         showNotification('Errore', 'Connessione Instagram fallita: ' + result.message, 'error');
                     }
                 } else {
@@ -3299,7 +3299,7 @@
                 showNotification('Annullato', 'Opzione nucleare annullata', 'info');
                 return;
             }
-
+            
             const tripleConfirm = `ULTIMA CONFERMA NUCLEARE:\n\nScrivi "CONFERMO LA DISTRUZIONE TOTALE" (tutto maiuscolo):`;
             const finalInput = prompt(tripleConfirm);
             if (finalInput !== 'CONFERMO LA DISTRUZIONE TOTALE') {
@@ -3345,7 +3345,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                             <div>
                                 <strong>Ultimo Backup:</strong> ${status.last_backup ? new Date(status.last_backup).toLocaleString('it-IT') : 'Mai'}
-                            </div>
+            </div>
                             <div>
                                 <strong>Backup Automatici:</strong> ${status.auto_backup_enabled ? 'Abilitati' : 'Disabilitati'}
                             </div>
@@ -3440,14 +3440,14 @@
                                             ${new Date(backup.created_at).toLocaleString('it-IT')} - ${backup.size}
                                         </div>
                                     </div>
-                                    <div class="action-buttons">
+                        <div class="action-buttons">
                                         <button class="btn btn-success btn-sm" onclick="downloadSpecificBackup('${backup.filename}')">
                                             <i class="fas fa-download"></i>
-                                        </button>
+                            </button>
                                         <button class="btn btn-danger btn-sm" onclick="deleteBackup('${backup.filename}')">
                                             <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                            </button>
+                        </div>
                                 </div>
                             `;
                         });
@@ -3754,15 +3754,15 @@
             modal.className = 'modal active';
             modal.innerHTML = `
                 <div class="modal-content" style="max-width: 800px;">
-                    <div class="modal-header">
+                        <div class="modal-header">
                         <h3 class="modal-title">Gestione Dati Avanzata</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
+                        </div>
                     <div style="margin-bottom: var(--space-xl);">
                         <div class="form-group">
                             <label class="form-label">Ricerca Avanzata</label>
                             <input type="text" id="searchQuery" class="form-input" placeholder="Cerca nei messaggi...">
-                        </div>
+                                </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-md);">
                             <select id="searchStatus" class="form-select">
                                 <option value="">Tutti gli stati</option>
@@ -3772,14 +3772,14 @@
                             </select>
                             <input type="date" id="searchDateFrom" class="form-input">
                             <input type="date" id="searchDateTo" class="form-input">
-                        </div>
+                                </div>
                         <div class="action-buttons" style="margin-top: var(--space-md);">
                             <button class="btn btn-primary" onclick="performAdvancedSearch()">Cerca</button>
                             <button class="btn btn-success" onclick="exportSearchResults()">Esporta Risultati</button>
-                        </div>
-                    </div>
+                            </div>
+                                </div>
                     <div id="searchResults" style="max-height: 400px; overflow-y: auto;"></div>
-                </div>
+                        </div>
             `;
 
             document.body.appendChild(modal);
@@ -3799,7 +3799,7 @@
                     <div class="modal-header">
                         <h3 class="modal-title">Gestione Utenti Tecnici</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
+                        </div>
                     <div id="usersContainer" class="loading">
                         <div class="spinner"></div>
                         <div class="loading-text">Caricamento utenti...</div>
@@ -3809,7 +3809,7 @@
                     </div>
                 </div>
             `;
-
+            
             document.body.appendChild(modal);
 
             // Load users
@@ -3817,7 +3817,7 @@
 
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
-                    modal.remove();
+                modal.remove();
                 }
             });
         }
@@ -3889,7 +3889,7 @@
                 if (response.ok) {
                     showNotification('Successo', 'Utente tecnico creato', 'success');
                     loadTechnicalUsers();
-                } else {
+                    } else {
                     throw new Error('Creation failed');
                 }
             } catch (error) {
@@ -4018,14 +4018,14 @@
 
                     // Download report
                     const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
                     a.download = `analytics_report_${new Date().toISOString().split('T')[0]}.json`;
                     document.body.appendChild(a);
-                    a.click();
+            a.click();
                     document.body.removeChild(a);
-                    window.URL.revokeObjectURL(url);
+            window.URL.revokeObjectURL(url);
 
                     showNotification('Successo', 'Report analytics generato e scaricato', 'success');
                 } else {
@@ -4098,10 +4098,10 @@
 
                     // Initialize charts
                     initializeCharts(analytics);
-                } else {
+                    } else {
                     console.error('Failed to load analytics');
-                }
-            } catch (error) {
+                    }
+                } catch (error) {
                 console.error('Error loading analytics:', error);
             }
         }

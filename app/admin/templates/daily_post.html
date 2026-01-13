@@ -112,6 +112,9 @@
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .form-group {
@@ -341,6 +344,100 @@ Ecco tutti gli spotted della giornata! 💫</textarea>
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Daily Posts Management -->
+        <div class="settings-section">
+            <h2><i class="fas fa-robot"></i> Genera con AI</h2>
+            <p>Crea automaticamente un daily post usando l'intelligenza artificiale</p>
+
+            <div class="form-group">
+                <label for="ai_model">Modello AI</label>
+                <select id="ai_model" class="form-control">
+                    <option value="gemini">Google Gemini</option>
+                    <option value="grok">Grok (xAI)</option>
+                    <option value="local">Modello Locale</option>
+                </select>
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-success" id="generate-with-ai">
+                    <i class="fas fa-magic"></i>
+                    Genera con AI
+                </button>
+            </div>
+        </div>
+
+        <!-- Create Custom Daily Post -->
+        <div class="settings-section">
+            <h2><i class="fas fa-edit"></i> Crea Daily Post Manuale</h2>
+            <p>Crea un daily post personalizzato</p>
+
+            <form id="create-post-form">
+                <div class="form-group">
+                    <label for="post-title">Titolo del Post</label>
+                    <input type="text" id="post-title" class="form-control"
+                           placeholder="es. 🌟 Spotted del giorno 13/01/2026 🌟" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="post-content">Contenuto del Post</label>
+                    <textarea id="post-content" class="form-control" rows="8"
+                              placeholder="Scrivi qui il contenuto del tuo daily post..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="post-hashtags">Hashtag</label>
+                    <input type="text" id="post-hashtags" class="form-control"
+                           placeholder="#spotted #instaspotter #dailyrecap" value="#spotted #instaspotter #dailyrecap">
+                </div>
+
+                <div class="form-group">
+                    <label for="post-ai-model">Modello AI utilizzato</label>
+                    <select id="post-ai-model" class="form-control">
+                        <option value="">Nessuno (creato manualmente)</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="grok">Grok (xAI)</option>
+                        <option value="local">Modello Locale</option>
+                    </select>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Crea Daily Post
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Daily Posts List -->
+        <div class="settings-section">
+            <h2><i class="fas fa-list"></i> I Tuoi Daily Post</h2>
+            <p>Gestisci tutti i daily post creati</p>
+
+            <div class="actions" style="margin-bottom: 1rem;">
+                <button type="button" class="btn btn-info" id="load-posts">
+                    <i class="fas fa-refresh"></i>
+                    Carica Daily Post
+                </button>
+            </div>
+
+            <div id="posts-container">
+                <div id="posts-loading" style="display: none; text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Caricamento daily post...</p>
+                </div>
+
+                <div id="posts-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+                    <!-- Posts will be loaded here -->
+                </div>
+
+                <div id="no-posts" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Nessun daily post creato</p>
+                </div>
+            </div>
         </div>
 
         <!-- Preview -->
@@ -682,6 +779,234 @@ Ecco tutti gli spotted della giornata! 💫
                 historyLoading.style.display = 'none';
             }
         }
+
+        // Generate with AI
+        document.getElementById('generate-with-ai').addEventListener('click', async function() {
+            const aiModel = document.getElementById('ai_model').value;
+
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generazione con AI...';
+
+            try {
+                const response = await fetch('/admin/api/daily-posts/generate-with-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        ai_model: aiModel,
+                        max_messages: document.getElementById('max_messages').value,
+                        title_template: document.getElementById('title_template').value,
+                        hashtag_template: document.getElementById('hashtag_template').value
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Daily post generato con successo usando AI!', 'success');
+                    loadPosts(); // Refresh the posts list
+                } else {
+                    showAlert('Errore generazione AI: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore connessione AI: ' + error.message, 'error');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-magic"></i> Genera con AI';
+            }
+        });
+
+        // Create manual daily post
+        document.getElementById('create-post-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/admin/api/daily-posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(data)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Daily post creato con successo!', 'success');
+                    this.reset();
+                    loadPosts(); // Refresh the posts list
+                } else {
+                    showAlert('Errore creazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore connessione: ' + error.message, 'error');
+            }
+        });
+
+        // Load posts
+        document.getElementById('load-posts').addEventListener('click', loadPosts);
+
+        async function loadPosts() {
+            const postsContainer = document.getElementById('posts-container');
+            const postsLoading = document.getElementById('posts-loading');
+            const postsGrid = document.getElementById('posts-grid');
+            const noPosts = document.getElementById('no-posts');
+
+            postsLoading.style.display = 'block';
+            postsGrid.style.display = 'none';
+            noPosts.style.display = 'none';
+
+            try {
+                const response = await fetch('/admin/api/daily-posts');
+                const result = await response.json();
+
+                if (result.status === 'success' && result.posts.length > 0) {
+                    const postsHtml = result.posts.map(post => {
+                        const aiIcon = post.ai_model_used ? `<i class="fas fa-robot" title="Generato con ${post.ai_model_used}"></i>` : '';
+                        const statusColor = {
+                            'draft': 'var(--warning)',
+                            'scheduled': 'var(--info)',
+                            'published': 'var(--success)',
+                            'failed': 'var(--error)'
+                        }[post.status] || 'var(--text-muted)';
+
+                        return `
+                            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                    <h3 style="margin: 0; color: var(--text); font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                        ${post.title} ${aiIcon}
+                                    </h3>
+                                    <span style="background: ${statusColor}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.8rem; text-transform: capitalize;">
+                                        ${post.status}
+                                    </span>
+                                </div>
+
+                                <div style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.4; max-height: 80px; overflow: hidden;">
+                                    ${post.content.replace(/\n/g, '<br>')}
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <small style="color: var(--text-muted);">
+                                        <i class="fas fa-calendar"></i> ${new Date(post.created_at).toLocaleDateString('it-IT')}
+                                    </small>
+                                    <small style="color: var(--text-muted);">
+                                        <i class="fas fa-hashtag"></i> ${post.hashtags.split(' ').length} hashtag
+                                    </small>
+                                </div>
+
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    ${post.status === 'draft' ? `
+                                        <button class="btn btn-success btn-sm" onclick="generatePostPreview(${post.id})" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </button>
+                                        <button class="btn btn-warning btn-sm" onclick="publishPost(${post.id})" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                            <i class="fas fa-paper-plane"></i> Pubblica
+                                        </button>
+                                    ` : ''}
+                                    ${post.status === 'published' ? `
+                                        <span class="btn btn-success btn-sm" style="padding: 0.5rem 1rem; font-size: 0.9rem; cursor: default;">
+                                            <i class="fas fa-check"></i> Pubblicato ${post.published_at ? new Date(post.published_at).toLocaleDateString('it-IT') : ''}
+                                        </span>
+                                    ` : ''}
+                                    <button class="btn btn-danger btn-sm" onclick="deletePost(${post.id})" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                        <i class="fas fa-trash"></i> Elimina
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    postsGrid.innerHTML = postsHtml;
+                    postsGrid.style.display = 'grid';
+                } else {
+                    noPosts.style.display = 'block';
+                }
+            } catch (error) {
+                showAlert('Errore caricamento daily post: ' + error.message, 'error');
+                noPosts.style.display = 'block';
+            } finally {
+                postsLoading.style.display = 'none';
+            }
+        }
+
+        // Global functions for post actions
+        async function generatePostPreview(postId) {
+            try {
+                const response = await fetch('/admin/api/daily-posts/' + postId + '/generate-preview', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Open preview in new window or show modal
+                    window.open(result.image_url, '_blank');
+                } else {
+                    showAlert('Errore preview: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore generazione preview: ' + error.message, 'error');
+            }
+        }
+
+        async function publishPost(postId) {
+            if (!confirm('Sei sicuro di voler pubblicare questo daily post?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/daily-posts/' + postId + '/publish', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Daily post pubblicato con successo!', 'success');
+                    loadPosts(); // Refresh posts
+                    loadStats(); // Refresh stats
+                } else {
+                    showAlert('Errore pubblicazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore pubblicazione: ' + error.message, 'error');
+            }
+        }
+
+        async function deletePost(postId) {
+            if (!confirm('Sei sicuro di voler eliminare questo daily post?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/daily-posts/' + postId, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Daily post eliminato con successo!', 'success');
+                    loadPosts(); // Refresh posts
+                } else {
+                    showAlert('Errore eliminazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore eliminazione: ' + error.message, 'error');
+            }
+        }
+
+        // Load posts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadStats();
+            updatePreview();
+            loadPosts(); // Load posts on page load
+        });
 
         // Auto-refresh stats every 30 seconds
         setInterval(loadStats, 30000);

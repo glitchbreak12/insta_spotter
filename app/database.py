@@ -102,9 +102,32 @@ class DailyPostSettings(Base):
     max_messages = Column(Integer, default=20)  # Max messaggi nel post giornaliero
     title_template = Column(String, default="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫")
     hashtag_template = Column(String, default="#spotted #instaspotter #dailyrecap")
+    ai_model = Column(Enum(AIModel), default=AIModel.GEMINI, nullable=False)  # AI model per generare contenuti
     last_run = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class DailyPost(Base):
+    """Singoli post giornalieri creati."""
+    __tablename__ = "daily_posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    hashtags = Column(String, default="")
+    ai_model_used = Column(Enum(AIModel), nullable=True)  # AI model utilizzato per generare il contenuto
+    status = Column(String, default="draft")  # draft, scheduled, published, failed
+    scheduled_for = Column(DateTime, nullable=True)
+    published_at = Column(DateTime, nullable=True)
+    image_count = Column(Integer, default=0)
+    messages_count = Column(Integer, default=0)
+    error_message = Column(String, nullable=True)
+    created_by = Column(String, nullable=True)  # Username dell'utente che ha creato il post
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relazione con i messaggi inclusi (opzionale)
+    message_ids = Column(String, nullable=True)  # JSON string di ID messaggi inclusi
 
 # --- Configurazione del Database ---
 
@@ -184,7 +207,8 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
             style="carousel",
             max_messages=20,
             title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
-            hashtag_template="#spotted #instaspotter #dailyrecap"
+            hashtag_template="#spotted #instaspotter #dailyrecap",
+            ai_model=AIModel.GEMINI
         )
         db.add(settings)
 
@@ -238,3 +262,64 @@ def update_ai_config(db: Session, **kwargs) -> AIConfig:
     db.commit()
     db.refresh(config)
     return config
+
+# --- Funzioni per Daily Posts Management ---
+
+def create_daily_post(db: Session, title: str, content: str, hashtags: str = "", ai_model_used: AIModel = None, created_by: str = None) -> DailyPost:
+    """Crea un nuovo daily post."""
+    daily_post = DailyPost(
+        title=title,
+        content=content,
+        hashtags=hashtags,
+        ai_model_used=ai_model_used,
+        created_by=created_by,
+        status="draft"
+    )
+    db.add(daily_post)
+    db.commit()
+    db.refresh(daily_post)
+    return daily_post
+
+def get_daily_posts(db: Session, limit: int = 50, status: str = None) -> list:
+    """Recupera tutti i daily posts con filtri opzionali."""
+    query = db.query(DailyPost).order_by(DailyPost.created_at.desc())
+
+    if status:
+        query = query.filter(DailyPost.status == status)
+
+    return query.limit(limit).all()
+
+def get_daily_post_by_id(db: Session, post_id: int) -> Optional[DailyPost]:
+    """Recupera un daily post per ID."""
+    return db.query(DailyPost).filter(DailyPost.id == post_id).first()
+
+def update_daily_post(db: Session, post_id: int, **kwargs) -> Optional[DailyPost]:
+    """Aggiorna un daily post."""
+    post = get_daily_post_by_id(db, post_id)
+    if not post:
+        return None
+
+    for key, value in kwargs.items():
+        if hasattr(post, key):
+            setattr(post, key, value)
+
+    post.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(post)
+    return post
+
+def delete_daily_post(db: Session, post_id: int) -> bool:
+    """Elimina un daily post."""
+    post = get_daily_post_by_id(db, post_id)
+    if not post:
+        return False
+
+    db.delete(post)
+    db.commit()
+    return True
+
+def get_published_daily_posts(db: Session, limit: int = 20) -> list:
+    """Recupera i daily posts pubblicati."""
+    return db.query(DailyPost).filter(
+        DailyPost.status == "published"
+    ).order_by(DailyPost.published_at.desc()).limit(limit).all()

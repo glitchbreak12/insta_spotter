@@ -91,7 +91,7 @@ def get_dashboard_data(db: Session = Depends(get_db), user: str = Depends(get_au
         for msg in messages_query:
             try:
                 messages_data.append({
-                    "id": msg.id,
+                "id": msg.id,
                     "text": msg.text or "",
                     "status": msg.status.value if msg.status else "pending", # Safely get enum value
                     "created_at": msg.created_at.isoformat() if msg.created_at else datetime.utcnow().isoformat(), # Use ISO format for JS
@@ -501,6 +501,7 @@ def get_daily_post_settings_api(user: str = Depends(get_current_user), db: Sessi
         "max_messages": settings.max_messages,
         "title_template": settings.title_template,
         "hashtag_template": settings.hashtag_template,
+        "ai_model": settings.ai_model.value if settings.ai_model else "gemini",
         "last_run": settings.last_run.isoformat() if settings.last_run else None
     }
 
@@ -512,13 +513,20 @@ def update_daily_post_settings(
     max_messages: int = Form(20),
     title_template: str = Form("🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫"),
     hashtag_template: str = Form("#spotted #instaspotter #dailyrecap"),
+    ai_model: str = Form("gemini"),
     user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """API per aggiornare le impostazioni del post giornaliero."""
-    from app.database import update_daily_post_settings
+    from app.database import update_daily_post_settings, AIModel
 
     try:
+        # Valida il modello AI
+        try:
+            ai_model_enum = AIModel(ai_model)
+        except ValueError:
+            return {"status": "error", "message": f"Modello AI '{ai_model}' non valido"}
+
         settings = update_daily_post_settings(
             db=db,
             enabled=enabled,
@@ -526,7 +534,8 @@ def update_daily_post_settings(
             style=style,
             max_messages=max_messages,
             title_template=title_template,
-            hashtag_template=hashtag_template
+            hashtag_template=hashtag_template,
+            ai_model=ai_model_enum
         )
         return {"status": "success", "message": "Impostazioni aggiornate"}
     except Exception as e:
@@ -708,6 +717,325 @@ def get_daily_post_history(
         return {"status": "success", "history": history}
 
     except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# --- Daily Posts Management ---
+
+@router.get("/api/daily-posts")
+def get_daily_posts(
+    status: str = None,
+    limit: int = 50,
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere tutti i daily posts con filtri."""
+    from app.database import get_daily_posts
+    try:
+        posts = get_daily_posts(db, limit=limit, status=status)
+        return {
+            "status": "success",
+            "posts": [{
+                "id": post.id,
+                "title": post.title,
+                "content": post.content[:200] + "..." if len(post.content) > 200 else post.content,
+                "hashtags": post.hashtags,
+                "ai_model_used": post.ai_model_used.value if post.ai_model_used else None,
+                "status": post.status,
+                "scheduled_for": post.scheduled_for.isoformat() if post.scheduled_for else None,
+                "published_at": post.published_at.isoformat() if post.published_at else None,
+                "image_count": post.image_count,
+                "messages_count": post.messages_count,
+                "created_at": post.created_at.isoformat(),
+                "created_by": post.created_by
+            } for post in posts]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-posts")
+def create_daily_post(
+    title: str = Form(...),
+    content: str = Form(...),
+    hashtags: str = Form(""),
+    ai_model: str = Form("gemini"),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per creare un nuovo daily post."""
+    from app.database import create_daily_post, AIModel
+
+    try:
+        # Valida il modello AI
+        try:
+            ai_model_enum = AIModel(ai_model) if ai_model else AIModel.GEMINI
+        except ValueError:
+            return {"status": "error", "message": f"Modello AI '{ai_model}' non valido"}
+
+        post = create_daily_post(
+            db=db,
+            title=title,
+            content=content,
+            hashtags=hashtags,
+            ai_model_used=ai_model_enum,
+            created_by=user
+        )
+
+        return {
+            "status": "success",
+            "message": "Daily post creato con successo",
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "status": post.status,
+                "created_at": post.created_at.isoformat()
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.get("/api/daily-posts/{post_id}")
+def get_daily_post(post_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per ottenere un daily post specifico."""
+    from app.database import get_daily_post_by_id
+
+    try:
+        post = get_daily_post_by_id(db, post_id)
+        if not post:
+            return {"status": "error", "message": "Daily post non trovato"}
+
+        return {
+            "status": "success",
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "content": post.content,
+                "hashtags": post.hashtags,
+                "ai_model_used": post.ai_model_used.value if post.ai_model_used else None,
+                "status": post.status,
+                "scheduled_for": post.scheduled_for.isoformat() if post.scheduled_for else None,
+                "published_at": post.published_at.isoformat() if post.published_at else None,
+                "image_count": post.image_count,
+                "messages_count": post.messages_count,
+                "error_message": post.error_message,
+                "created_at": post.created_at.isoformat(),
+                "updated_at": post.updated_at.isoformat(),
+                "created_by": post.created_by
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.put("/api/daily-posts/{post_id}")
+def update_daily_post(
+    post_id: int,
+    title: str = Form(None),
+    content: str = Form(None),
+    hashtags: str = Form(None),
+    status: str = Form(None),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per aggiornare un daily post."""
+    from app.database import update_daily_post
+
+    try:
+        update_data = {}
+        if title is not None:
+            update_data["title"] = title
+        if content is not None:
+            update_data["content"] = content
+        if hashtags is not None:
+            update_data["hashtags"] = hashtags
+        if status is not None:
+            update_data["status"] = status
+
+        post = update_daily_post(db, post_id, **update_data)
+        if not post:
+            return {"status": "error", "message": "Daily post non trovato"}
+
+        return {
+            "status": "success",
+            "message": "Daily post aggiornato con successo",
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "status": post.status,
+                "updated_at": post.updated_at.isoformat()
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.delete("/api/daily-posts/{post_id}")
+def delete_daily_post(post_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per eliminare un daily post."""
+    from app.database import delete_daily_post
+
+    try:
+        success = delete_daily_post(db, post_id)
+        if not success:
+            return {"status": "error", "message": "Daily post non trovato"}
+
+        return {"status": "success", "message": "Daily post eliminato con successo"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-posts/{post_id}/generate-preview")
+def generate_daily_post_preview(
+    post_id: int,
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per generare una preview di un daily post."""
+    from app.database import get_daily_post_by_id
+    from app.image.generator import ImageGenerator
+    import time
+
+    try:
+        post = get_daily_post_by_id(db, post_id)
+        if not post:
+            return {"status": "error", "message": "Daily post non trovato"}
+
+        # Usa il generatore di immagini per creare una preview
+        generator = ImageGenerator()
+        base_filename = f"preview_daily_{post_id}_{int(time.time())}"
+        image_paths = generator.create_daily_carousel_from_content(
+            post.content,
+            base_filename,
+            title=post.title
+        )
+
+        if image_paths and len(image_paths) > 0:
+            image_url = f"/generated_images/{image_paths[0].split('/')[-1]}"
+            return {
+                "status": "success",
+                "image_url": image_url,
+                "title": post.title,
+                "hashtags": post.hashtags,
+                "image_count": len(image_paths)
+            }
+        else:
+            return {"status": "error", "message": "Errore nella generazione della preview"}
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-posts/{post_id}/publish")
+def publish_daily_post(post_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per pubblicare un daily post."""
+    from app.database import get_daily_post_by_id, update_daily_post
+    from app.tasks import publish_daily_post_task
+
+    try:
+        post = get_daily_post_by_id(db, post_id)
+        if not post:
+            return {"status": "error", "message": "Daily post non trovato"}
+
+        if post.status == "published":
+            return {"status": "error", "message": "Daily post già pubblicato"}
+
+        # Pubblica il post
+        result = publish_daily_post_task(post_id)
+
+        if result.get("status") == "success":
+            # Aggiorna lo stato
+            update_daily_post(db, post_id, status="published", published_at=datetime.utcnow())
+            return {
+                "status": "success",
+                "message": "Daily post pubblicato con successo",
+                "media_pk": result.get("media_pk")
+            }
+        else:
+            # Aggiorna con errore
+            update_daily_post(db, post_id, status="failed", error_message=result.get("message"))
+            return {"status": "error", "message": result.get("message", "Errore pubblicazione")}
+
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/daily-posts/generate-with-ai")
+def generate_daily_post_with_ai(
+    ai_model: str = Form("gemini"),
+    max_messages: int = Form(20),
+    title_template: str = Form("🌟 Spotted del giorno {date} 🌟"),
+    hashtag_template: str = Form("#spotted #instaspotter #dailyrecap"),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per generare un daily post usando AI."""
+    try:
+        from app.database import get_todays_messages, AIModel, create_daily_post
+        from app.ai.moderator import AIModeratorFactory
+
+        # Valida il modello AI
+        try:
+            ai_model_enum = AIModel(ai_model)
+        except ValueError:
+            return {"status": "error", "message": f"Modello AI '{ai_model}' non valido"}
+
+        # Recupera messaggi di oggi
+        messages = get_todays_messages(db, max_messages)
+        if not messages:
+            return {"status": "error", "message": "Nessun messaggio disponibile per generare il daily post"}
+
+        # Crea contenuto usando AI
+        moderator = AIModeratorFactory.create_moderator(ai_model, **{})
+        if not moderator:
+            return {"status": "error", "message": f"Impossibile creare moderatore {ai_model}"}
+
+        # Genera contenuto riassuntivo
+        messages_text = "\n".join([f"- {msg.text}" for msg in messages])
+        prompt = f"""
+        Crea un post accattivante per Instagram basato sui seguenti messaggi spotted della giornata.
+        Il post dovrebbe essere divertente, coinvolgente e adatto a un pubblico giovane.
+
+        Messaggi della giornata:
+        {messages_text}
+
+        Crea un titolo accattivante e un contenuto che riassuma i momenti salienti della giornata.
+        Usa emoji appropriati e mantieni un tono positivo e divertente.
+        """
+
+        # Qui dovremmo usare l'AI per generare il contenuto, ma per ora creiamo un contenuto di esempio
+        today = datetime.utcnow().strftime("%d/%m/%Y")
+        title = title_template.format(date=today)
+
+        content = f"""{title}
+
+Ecco i momenti più divertenti e interessanti della giornata! 💫
+
+{messages_text[:500]}{"..." if len(messages_text) > 500 else ""}
+
+{hashtag_template}"""
+
+        # Crea il daily post
+        post = create_daily_post(
+            db=db,
+            title=title,
+            content=content,
+            hashtags=hashtag_template,
+            ai_model_used=ai_model_enum,
+            created_by=user
+        )
+
+        return {
+            "status": "success",
+            "message": "Daily post generato con successo usando AI",
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "content": post.content[:200] + "...",
+                "ai_model_used": post.ai_model_used.value,
+                "created_at": post.created_at.isoformat()
+            }
+        }
+
+    except Exception as e:
+        db.rollback()
         return {"status": "error", "message": str(e)}
 
 # --- AI Configuration Endpoints ---
