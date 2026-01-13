@@ -80,13 +80,13 @@ class ImageGenerator:
 
         # Scegli il template basato sul tipo di messaggio
         if message_type == "info":
-            template_path = "app/image/templates/card_info.html"
-            print(f"🎨 [DEBUG] Usando template INFO: {template_path}")
+            template_name = "card_info.html"
+            print(f"🎨 [DEBUG] Usando template INFO: {template_name}")
         else:
-            template_path = settings.image.template_path
-            print(f"🎨 [DEBUG] Usando template SPOTTED: {template_path}")
+            template_name = os.path.basename(settings.image.template_path)
+            print(f"🎨 [DEBUG] Usando template SPOTTED: {template_name}")
 
-        template = self.template_env.get_template(os.path.basename(template_path))
+        template = self.template_env.get_template(template_name)
         
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
