@@ -92,7 +92,11 @@ class ImageGenerator:
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
 
-        return template.render(message=message_text, id=message_id, font_url=font_url, title=title)
+        # Genera la data corrente per le card info
+        from datetime import datetime
+        current_date = datetime.now().strftime("%d/%m/%Y")
+
+        return template.render(message=message_text, id=message_id, font_url=font_url, title=title, publish_date=current_date)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
         """Fallback PIL che replica esattamente lo stile card_v5.html con glow 3D."""
