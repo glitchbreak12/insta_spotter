@@ -220,9 +220,9 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
     settings = get_daily_post_settings(db)
     if not settings:
         settings = DailyPostSettings(
-            enabled=True,  # Abilita di default
+            enabled=1,  # Abilita di default (1 per integer)
             post_time="20:00",
-            style="carousel",
+            style=DailyPostStyle.CAROUSEL,
             max_messages=20,
             title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
             hashtag_template="#spotted #instaspotter #dailyrecap",
@@ -232,12 +232,25 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
 
     for key, value in kwargs.items():
         if hasattr(settings, key):
-            setattr(settings, key, value)
-
-    settings.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(settings)
-    return settings
+            # Converti boolean a integer per il campo enabled
+            if key == "enabled" and isinstance(value, bool):
+                setattr(settings, key, 1 if value else 0)
+            # Converti stringa a enum per ai_model
+            elif key == "ai_model" and isinstance(value, str):
+                try:
+                    ai_model_enum = AIModel(value)
+                    setattr(settings, key, ai_model_enum)
+                except ValueError:
+                    print(f"⚠️ Modello AI '{value}' non valido, uso GEMINI come default")
+                    setattr(settings, key, AIModel.GEMINI)
+            # Converti stringa a enum per style
+            elif key == "style" and isinstance(value, str):
+                try:
+                    style_enum = DailyPostStyle(value)
+                    setattr(settings, key, style_enum)
+                except ValueError:
+                    print(f"⚠️ Stile '{value}' non valido, uso CAROUSEL come default")
+                    setattr(settings, key, DailyPostStyle.CAROUSEL)
 
 def get_todays_messages(db: Session, limit: int = 20) -> list:
     """Recupera tutti i messaggi APPROVED di oggi."""

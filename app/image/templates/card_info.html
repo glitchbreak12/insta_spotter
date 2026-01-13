@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Info Card - Stories Style</title>
+    <title>Info Card V5 - 3D Glow</title>
     <style>
         @font-face {
             font-family: 'Komika Axis';
@@ -16,11 +16,10 @@
             box-sizing: border-box;
         }
 
-        /* NEW: Define a robust font stack for body and message */
         body {
             width: 1080px;
             height: 1920px;
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
             background: #000000;
             overflow: hidden;
             position: relative;
@@ -29,6 +28,7 @@
             align-items: center;
         }
 
+        /* Sfondo stile Apple - mantiene v3 */
         .bg-container {
             position: absolute;
             width: 100%;
@@ -49,6 +49,7 @@
             padding: 90px;
         }
 
+        /* Card con Glow 3D */
         .card {
             position: relative;
             width: 100%;
@@ -56,20 +57,23 @@
             background: rgba(20, 20, 20, 0.8);
             border-radius: 45px;
             border: 1px solid rgba(255, 255, 255, 0.08);
+            /* NEW: Enhanced 3D Box Shadow */
             box-shadow:
-                0 0 10px rgba(0, 122, 255, 0.3),
-                0 0 40px rgba(0, 122, 255, 0.2),
-                0 0 80px rgba(0, 122, 255, 0.15),
-                0 20px 60px rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(55px) saturate(190%);
+                0 0 10px rgba(0, 122, 255, 0.3), /* Inner light glow */
+                0 0 40px rgba(0, 122, 255, 0.2), /* Medium glow */
+                0 0 80px rgba(0, 122, 255, 0.15), /* Outer subtle glow */
+                0 20px 60px rgba(0, 0, 0, 0.7); /* Deep dark shadow for depth */
+            backdrop-filter: blur(55px) saturate(190%); /* Slightly stronger blur/saturate */
             -webkit-backdrop-filter: blur(55px) saturate(190%);
             display: flex;
             flex-direction: column;
-            align-items: center;
             padding: 100px 90px;
             overflow: hidden;
+            /* Optional: slight transform for subtle 3D tilt */
+            /* transform: perspective(1000px) rotateX(2deg) rotateY(-2deg); */
         }
 
+        /* Glow sottile - mantiene v3 */
         .card::before {
             content: '';
             position: absolute;
@@ -82,6 +86,7 @@
             pointer-events: none;
         }
 
+        /* Highlight superiore - mantiene v3 */
         .highlight {
             position: absolute;
             top: 0;
@@ -93,34 +98,32 @@
             pointer-events: none;
         }
 
-        .header, .footer {
-            width: 100%;
+        /* Header */
+        .header {
             text-align: center;
+            margin-bottom: 80px;
             position: relative;
             z-index: 2;
-        }
-
-        .header {
-            margin-bottom: 80px;
             padding-top: 50px;
         }
 
         .brand {
-            /* NEW: Define a specific font stack for the brand */
             font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 95px;
             font-weight: 700;
             color: #ffffff;
             letter-spacing: 4px;
             margin-bottom: 35px;
+            /* NEW: Enhanced 3D Text Shadow */
             text-shadow:
-                0 0 10px rgba(0, 122, 255, 0.5),
-                0 0 25px rgba(0, 122, 255, 0.3),
-                0 0 40px rgba(0, 122, 255, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.8);
+                0 0 10px rgba(0, 122, 255, 0.5), /* Inner glow */
+                0 0 20px rgba(0, 122, 255, 0.3), /* Medium glow */
+                0 0 30px rgba(0, 122, 255, 0.1), /* Outer glow */
+                0 2px 5px rgba(0, 0, 0, 0.8); /* Stronger dark shadow for lift */
             line-height: 1.1;
         }
 
+        /* Badge - mantiene v3 */
         .badge {
             display: inline-block;
             padding: 12px 30px;
@@ -134,28 +137,36 @@
             box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
         }
 
+        /* Body */
         .body {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
+            padding: 0;
             position: relative;
             z-index: 2;
             min-height: 0;
+            margin: 0;
         }
 
         .message {
-            /* NEW: Add specific emoji/symbol fonts to the stack */
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
             font-size: 62px;
             line-height: 1.5;
             text-align: center;
             color: #ffffff;
             font-weight: 400;
+            max-width: 80%;
             white-space: pre-wrap;
             word-wrap: break-word;
-            text-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
+            /* NEW: Enhanced 3D Text Shadow */
+            text-shadow:
+                0 0 8px rgba(255, 255, 255, 0.3), /* Subtle white glow */
+                0 0 15px rgba(0, 0, 0, 0.6), /* Medium dark shadow */
+                0 5px 10px rgba(0, 0, 0, 0.8); /* Deep dark shadow for lift */
+            margin: 0;
+            padding: 0;
         }
 
         /* Enhanced formatting for INFO content */
@@ -197,13 +208,19 @@
             filter: drop-shadow(0 0 8px rgba(0, 122, 255, 0.5));
         }
 
+        /* Footer */
         .footer {
+            text-align: center;
             margin-top: auto;
             padding-top: 60px;
             padding-bottom: 40px;
+            position: relative;
+            z-index: 2;
         }
 
+        /* Footer Text - mantiene v3 */
         .footer-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
             font-size: 30px;
             color: rgba(255, 255, 255, 0.55);
             letter-spacing: 1.5px;
@@ -211,6 +228,7 @@
             font-weight: 500;
         }
 
+        /* CTA - mantiene v3 */
         .cta {
             display: inline-block;
             padding: 12px 26px;
@@ -224,14 +242,37 @@
             box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
         }
 
-        /* Publish date - minimal and subtle */
-        .publish-date {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 20px;
-            color: rgba(255, 255, 255, 0.35);
-            letter-spacing: 0.5px;
-            margin-top: 10px;
-            font-weight: 400;
+        /* Info-specific elements */
+        .info-title {
+            font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 72px;
+            font-weight: 700;
+            color: #5ac8fa;
+            margin-bottom: 40px;
+            text-shadow:
+                0 0 10px rgba(0, 122, 255, 0.5),
+                0 0 20px rgba(0, 122, 255, 0.3),
+                0 2px 5px rgba(0, 0, 0, 0.8);
+            line-height: 1.2;
+        }
+
+        .info-badge {
+            background: rgba(0, 122, 255, 0.2);
+            border: 1px solid rgba(0, 122, 255, 0.4);
+            color: #5ac8fa;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 22px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .info-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #5ac8fa;
+            text-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
         }
     </style>
 </head>
@@ -249,9 +290,7 @@
 
             <div class="body">
                 {% if title and title != "Titolo Card" %}
-                <div class="message" style="font-size: 52px; font-weight: 700; margin-bottom: 30px; color: #5ac8fa; text-shadow: 0 0 10px rgba(0, 122, 255, 0.5);">
-                    {{ title }}
-                </div>
+                <div class="info-title">{{ title }}</div>
                 {% endif %}
                 <div class="message">{{ message }}</div>
             </div>

@@ -811,6 +811,77 @@ class ImageGenerator:
             print(f"❌ Errore nella creazione del carousel giornaliero: {e}")
             return None
 
+    def create_daily_carousel_from_content(self, content: str, base_filename: str, title: str = None) -> Optional[list]:
+        """
+        Crea un carousel giornaliero da contenuto testuale.
+        Suddivide il contenuto in più immagini se necessario.
+        """
+        if not content:
+            return None
+
+        try:
+            print(f"🎨 Creando carousel da contenuto...")
+
+            # Suddividi il contenuto in parti se è molto lungo
+            content_parts = []
+            max_length = 1000  # Max caratteri per immagine
+
+            if len(content) <= max_length:
+                content_parts.append(content)
+            else:
+                # Suddividi in più parti
+                lines = content.split('\n')
+                current_part = []
+                current_length = 0
+
+                for line in lines:
+                    if current_length + len(line) + 1 <= max_length:
+                        current_part.append(line)
+                        current_length += len(line) + 1
+                    else:
+                        content_parts.append('\n'.join(current_part))
+                        current_part = [line]
+                        current_length = len(line) + 1
+
+                if current_part:
+                    content_parts.append('\n'.join(current_part))
+
+            image_paths = []
+
+            # Crea immagine di introduzione con titolo
+            if title:
+                intro_text = f"📸 {title}\n\n"
+                intro_filename = f"{base_filename}_intro.png"
+                intro_path = self.from_text(intro_text, intro_filename, 0)
+                if intro_path:
+                    image_paths.append(intro_path)
+                    print(f"✅ Creata immagine introduzione: {intro_path}")
+
+            # Crea immagini per ogni parte di contenuto
+            for i, part in enumerate(content_parts, 1):
+                try:
+                    part_filename = f"{base_filename}_part{i}.png"
+                    part_path = self.from_text(part, part_filename, i)
+                    if part_path:
+                        image_paths.append(part_path)
+                        print(f"✅ Creata immagine parte {i}: {part_path}")
+                    else:
+                        print(f"⚠️ Saltata immagine parte {i} - generazione fallita")
+                except Exception as e:
+                    print(f"❌ Errore creazione immagine parte {i}: {e}")
+                    continue
+
+            if len(image_paths) > 0:
+                print(f"🎉 Carousel da contenuto creato con {len(image_paths)} immagini")
+                return image_paths
+            else:
+                print("❌ Carousel da contenuto non creato - nessuna immagine valida")
+                return None
+
+        except Exception as e:
+            print(f"❌ Errore nella creazione del carousel da contenuto: {e}")
+            return None
+
     def _create_grid_layout(self, messages: list, base_filename: str, rows: int, cols: int, title: str = None) -> list:
         """Crea un layout a griglia per il collage giornaliero."""
         if not PIL_AVAILABLE:
