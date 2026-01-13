@@ -53,7 +53,7 @@ class ImageGenerator:
 
                 if not found:
                     # Configurazione vuota - imgkit userà il PATH
-            self.config = {}
+                    self.config = {}
                     print("⚠ wkhtmltoimage non trovato nel PATH. Assicurati che sia installato.")
         # --------------------------------------------------
 
@@ -629,8 +629,8 @@ class ImageGenerator:
         Returns:
             Il percorso del file generato, o None se si verifica un errore.
         """
-            # Definisce il percorso completo per il file di output
-            output_path = os.path.join(self.output_folder, output_filename)
+        # Definisce il percorso completo per il file di output
+        output_path = os.path.join(self.output_folder, output_filename)
 
         # Verifica se stiamo usando un template complesso che richiede Playwright
         template_name = os.path.basename(settings.image.template_path)
@@ -654,16 +654,16 @@ class ImageGenerator:
                 # Renderizza l'HTML con il messaggio e il percorso base
                 html_content = self._render_html(message_text, message_id, message_type, title)
 
-            # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
-            options = {
-                'width': self.image_width,
-                'encoding': "UTF-8",
-                'enable-local-file-access': None, # Necessario per caricare font locali
-                'quiet': '' # Sopprime l'output di wkhtmltoimage
-            }
+                # Opzioni per imgkit: larghezza, qualità, e abilitazione accesso file locali
+                options = {
+                    'width': self.image_width,
+                    'encoding': "UTF-8",
+                    'enable-local-file-access': None, # Necessario per caricare font locali
+                    'quiet': '' # Sopprime l'output di wkhtmltoimage
+                }
 
                 # Genera l'immagine dall'HTML usando wkhtmltoimage
-            imgkit.from_string(html_content, output_path, options=options, config=self.config)
+                imgkit.from_string(html_content, output_path, options=options, config=self.config)
 
                 print(f"Immagine generata con successo (wkhtmltoimage): {output_path}")
 
