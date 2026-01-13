@@ -311,6 +311,15 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="ai_model">Modello AI per Generazione</label>
+                    <select id="ai_model" name="ai_model" class="form-control">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="grok">Grok (xAI)</option>
+                        <option value="local">Modello Locale</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="style">Stile Post</label>
                     <select id="style" name="style" class="form-control">
                         <option value="carousel">Carousel Instagram</option>
@@ -344,6 +353,39 @@ Ecco tutti gli spotted della giornata! 💫</textarea>
                     </button>
                 </div>
             </form>
+        </div>
+
+        <!-- Style Configs Management -->
+        <div class="settings-section">
+            <h2>🎨 Configurazioni Stile</h2>
+            <p>Gestisci gli stili per post e stories</p>
+
+            <div class="actions" style="margin-bottom: 1rem;">
+                <button type="button" class="btn btn-success" id="load-style-configs">
+                    <i class="fas fa-refresh"></i>
+                    Carica Stili
+                </button>
+                <button type="button" class="btn btn-primary" id="create-style-config">
+                    <i class="fas fa-plus"></i>
+                    Nuovo Stile
+                </button>
+            </div>
+
+            <div id="style-configs-container">
+                <div id="style-configs-loading" style="display: none; text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Caricamento stili...</p>
+                </div>
+
+                <div id="style-configs-grid" style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                    <!-- Style configs will be loaded here -->
+                </div>
+
+                <div id="no-style-configs" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                    <i class="fas fa-palette" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>Nessuna configurazione stile trovata</p>
+                </div>
+            </div>
         </div>
 
         <!-- Daily Posts Management -->
@@ -1000,12 +1042,186 @@ Ecco tutti gli spotted della giornata! 💫
             }
         }
 
+        // Load style configs
+        document.getElementById('load-style-configs').addEventListener('click', loadStyleConfigs);
+
+        // Create style config
+        document.getElementById('create-style-config').addEventListener('click', function() {
+            // Simple prompt for now - could be enhanced with a modal
+            const name = prompt('Nome del nuovo stile:');
+            if (!name) return;
+
+            const type = prompt('Tipo di stile (post/story):', 'story');
+            if (!type || !['post', 'story'].includes(type)) {
+                alert('Tipo deve essere "post" o "story"');
+                return;
+            }
+
+            createNewStyleConfig(name, type);
+        });
+
+        async function loadStyleConfigs() {
+            const styleConfigsLoading = document.getElementById('style-configs-loading');
+            const styleConfigsGrid = document.getElementById('style-configs-grid');
+            const noStyleConfigs = document.getElementById('no-style-configs');
+
+            styleConfigsLoading.style.display = 'block';
+            styleConfigsGrid.style.display = 'none';
+            noStyleConfigs.style.display = 'none';
+
+            try {
+                const response = await fetch('/admin/api/style-configs');
+                const result = await response.json();
+
+                if (result.status === 'success' && result.configs.length > 0) {
+                    const configsHtml = result.configs.map(config => {
+                        const typeIcon = config.type === 'post' ? '📱' : '📖';
+                        const defaultBadge = config.is_default ? '<span style="background: var(--success); color: white; padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.7rem;">Predefinito</span>' : '';
+
+                        return `
+                            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                    <h4 style="margin: 0; color: var(--text); display: flex; align-items: center; gap: 0.5rem;">
+                                        ${typeIcon} ${config.name}
+                                        ${defaultBadge}
+                                    </h4>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        ${!config.is_default ? `<button class="btn btn-warning btn-sm" onclick="setAsDefault(${config.id}, '${config.type}')" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                            <i class="fas fa-star"></i> Imposta Default
+                                        </button>` : ''}
+                                        <button class="btn btn-danger btn-sm" onclick="deleteStyleConfig(${config.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                                    <strong>Tipo:</strong> ${config.type === 'post' ? 'Post Instagram' : 'Storia Instagram'}
+                                </div>
+
+                                <div style="background: var(--bg); padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border); font-family: monospace; font-size: 0.8rem; color: var(--text-muted); max-height: 60px; overflow: hidden;">
+                                    ${JSON.stringify(JSON.parse(config.config), null, 2).substring(0, 100)}${JSON.stringify(JSON.parse(config.config), null, 2).length > 100 ? '...' : ''}
+                                </div>
+
+                                <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+                                    Creato: ${new Date(config.created_at).toLocaleDateString('it-IT')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    styleConfigsGrid.innerHTML = configsHtml;
+                    styleConfigsGrid.style.display = 'grid';
+                } else {
+                    noStyleConfigs.style.display = 'block';
+                }
+            } catch (error) {
+                showAlert('Errore caricamento stili: ' + error.message, 'error');
+                noStyleConfigs.style.display = 'block';
+            } finally {
+                styleConfigsLoading.style.display = 'none';
+            }
+        }
+
+        async function createNewStyleConfig(name, type) {
+            try {
+                const defaultConfig = type === 'story' ?
+                    '{"background": "#000000", "text_color": "#ffffff", "font_size": "48px", "glow_effect": true}' :
+                    '{"background": "#ffffff", "text_color": "#000000", "font_size": "36px", "border_radius": "16px"}';
+
+                const response = await fetch('/admin/api/style-configs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        name: name,
+                        type: type,
+                        config: defaultConfig,
+                        is_default: false
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Configurazione stile creata con successo!', 'success');
+                    loadStyleConfigs(); // Refresh the configs list
+                } else {
+                    showAlert('Errore creazione stile: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore connessione: ' + error.message, 'error');
+            }
+        }
+
+        // Global functions for style config actions
+        async function setAsDefault(configId, type) {
+            if (!confirm('Impostare questo stile come predefinito?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/style-configs/' + configId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        is_default: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Stile impostato come predefinito!', 'success');
+                    loadStyleConfigs(); // Refresh configs
+                } else {
+                    showAlert('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore connessione: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteStyleConfig(configId) {
+            if (!confirm('Sei sicuro di voler eliminare questa configurazione stile?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/style-configs/' + configId, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Configurazione stile eliminata con successo!', 'success');
+                    loadStyleConfigs(); // Refresh configs
+                } else {
+                    showAlert('Errore eliminazione: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore eliminazione: ' + error.message, 'error');
+            }
+        }
+
         // Load posts on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
             loadStats();
             updatePreview();
             loadPosts(); // Load posts on page load
+            loadStyleConfigs(); // Load style configs on page load
+
+            // Auto-refresh data every 30 seconds
+            setInterval(function() {
+                loadPosts();
+                loadStyleConfigs();
+                loadStats();
+            }, 30000);
         });
 
         // Auto-refresh stats every 30 seconds
