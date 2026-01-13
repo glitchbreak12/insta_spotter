@@ -248,6 +248,11 @@
             </div>
 
             <div class="body">
+                {% if title and title != "Titolo Card" %}
+                <div class="message" style="font-size: 52px; font-weight: 700; margin-bottom: 30px; color: #5ac8fa; text-shadow: 0 0 10px rgba(0, 122, 255, 0.5);">
+                    {{ title }}
+                </div>
+                {% endif %}
                 <div class="message">{{ message }}</div>
             </div>
 
