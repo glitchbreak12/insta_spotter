@@ -158,7 +158,7 @@
             text-shadow: 0 2px 15px rgba(0, 0, 0, 0.6);
         }
 
-        /* Stili speciali per contenuti INFO */
+        /* Enhanced formatting for INFO content */
         .message strong {
             color: #5ac8fa;
             font-weight: 700;
@@ -188,7 +188,7 @@
         }
 
         .message li::before {
-            content: "💡";
+            content: "📢";
             position: absolute;
             left: 0;
             top: 0;
@@ -224,13 +224,13 @@
             box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
         }
 
-        /* Data pubblicazione */
+        /* Publish date - minimal and subtle */
         .publish-date {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 1px;
-            margin-top: 15px;
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.5px;
+            margin-top: 10px;
             font-weight: 400;
         }
     </style>
@@ -254,7 +254,7 @@
             <div class="footer">
                 <div class="footer-text">@spottedatbz</div>
                 <div class="cta">📢 Info Importante</div>
-                <div class="publish-date">{{ publish_date or "13/01/2025" }}</div>
+                <div class="publish-date">{{ publish_date or "Oggi" }}</div>
             </div>
         </div>
     </div>
