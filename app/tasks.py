@@ -380,3 +380,111 @@ def test_daily_post():
     result = daily_post_task()
     print(f"--- DEBUG [DAILY POST TEST]: Risultato: {result} ---")
     return result
+
+# --- Info Card Publishing Task ---
+
+def publish_single_info_card(card_id: int):
+    """
+    Pubblica una singola info card come storia su Instagram.
+    Questa è la funzione chiamata dal background task.
+    """
+    try:
+        print(f"--- DEBUG [INFO CARD BG TASK]: Pubblicazione info card ID {card_id} ---")
+
+        # Chiama la funzione esistente
+        result = publish_info_card_task(card_id)
+
+        if result.get("status") == "success":
+            print(f"--- DEBUG [INFO CARD BG TASK]: Info card {card_id} pubblicata con successo ---")
+        else:
+            print(f"--- DEBUG [INFO CARD BG TASK]: ERRORE pubblicazione info card {card_id}: {result.get('message')} ---")
+
+        return result
+
+    except Exception as e:
+        print(f"--- DEBUG [INFO CARD BG TASK]: ERRORE CRITICO in background task: {e} ---")
+        return {"status": "error", "message": str(e)}
+
+# --- Daily Post Publishing Task ---
+
+def publish_daily_post_task(post_id: int):
+    """
+    Pubblica un daily post su Instagram.
+    """
+    try:
+        print(f"--- DEBUG [DAILY POST PUBLISH]: Pubblicazione daily post ID {post_id} ---")
+
+        db = SessionLocal()
+        try:
+            # Recupera il daily post
+            from app.database import get_daily_post_by_id
+            post = get_daily_post_by_id(db, post_id)
+
+            if not post:
+                print(f"--- DEBUG [DAILY POST PUBLISH]: Daily post {post_id} non trovato ---")
+                return {"status": "error", "message": "Daily post non trovato"}
+
+            if post.status == "published":
+                print(f"--- DEBUG [DAILY POST PUBLISH]: Daily post {post_id} già pubblicato ---")
+                return {"status": "error", "message": "Daily post già pubblicato"}
+
+            # Genera immagini dal contenuto del post
+            generator = ImageGenerator()
+            base_filename = f"daily_post_{post_id}_{int(datetime.now().timestamp())}"
+
+            # Crea carousel dal contenuto del post
+            image_paths = generator.create_daily_carousel_from_content(
+                post.content,
+                base_filename,
+                title=post.title
+            )
+
+            if not image_paths:
+                print("--- DEBUG [DAILY POST PUBLISH]: ERRORE generazione immagini ---")
+                return {"status": "error", "message": "Errore generazione immagini"}
+
+            print(f"--- DEBUG [DAILY POST PUBLISH]: Generate {len(image_paths)} immagini ---")
+
+            # Pubblica su Instagram
+            if not INSTAGRAM_BOT_AVAILABLE:
+                print("--- DEBUG [DAILY POST PUBLISH]: ⚠️ Instagram bot non disponibile (simulazione) ---")
+                # Aggiorna stato come pubblicato per simulazione
+                from app.database import update_daily_post
+                update_daily_post(db, post_id, status="published", published_at=datetime.utcnow())
+                return {"status": "simulated", "message": f"Daily post '{post.title}' simulato come pubblicato"}
+
+            try:
+                bot = InstagramBot()
+                full_caption = f"{post.title}\n\n{post.content}\n\n{post.hashtags}"
+
+                if len(image_paths) == 1:
+                    # Singola immagine
+                    media_pk = bot.post_story(image_paths[0], full_caption)
+                else:
+                    # Carousel
+                    media_pk = bot.post_carousel(image_paths, full_caption)
+
+                if media_pk:
+                    print(f"--- DEBUG [DAILY POST PUBLISH]: Daily post pubblicato con successo! Media PK: {media_pk} ---")
+                    # Aggiorna stato del post
+                    from app.database import update_daily_post
+                    update_daily_post(db, post_id, status="published", published_at=datetime.utcnow())
+                    return {"status": "success", "message": f"Daily post '{post.title}' pubblicato", "media_pk": media_pk}
+                else:
+                    print("--- DEBUG [DAILY POST PUBLISH]: ERRORE pubblicazione ---")
+                    from app.database import update_daily_post
+                    update_daily_post(db, post_id, status="failed", error_message="Errore pubblicazione Instagram")
+                    return {"status": "error", "message": "Errore pubblicazione Instagram"}
+
+            except Exception as e:
+                print(f"--- DEBUG [DAILY POST PUBLISH]: ERRORE Instagram: {e} ---")
+                from app.database import update_daily_post
+                update_daily_post(db, post_id, status="failed", error_message=f"Errore Instagram: {str(e)}")
+                return {"status": "error", "message": f"Errore Instagram: {str(e)}"}
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        print(f"--- DEBUG [DAILY POST PUBLISH]: ERRORE CRITICO: {e} ---")
+        return {"status": "error", "message": str(e)}

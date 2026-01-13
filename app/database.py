@@ -129,6 +129,24 @@ class DailyPost(Base):
     # Relazione con i messaggi inclusi (opzionale)
     message_ids = Column(String, nullable=True)  # JSON string di ID messaggi inclusi
 
+    # Nuovi campi per stili e multi-foto
+    post_style = Column(String, default="story")  # "post" o "story"
+    style_config = Column(String, nullable=True)  # JSON string per configurazione stile
+    images = Column(String, nullable=True)  # JSON array di percorsi immagini per multi-foto
+
+class StyleConfig(Base):
+    """Configurazioni di stile per post e stories."""
+    __tablename__ = "style_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)  # "post" o "story"
+    config = Column(String, nullable=False)  # JSON string con configurazione stile
+    preview_image = Column(String, nullable=True)
+    is_default = Column(Integer, default=0)  # 1 se è lo stile predefinito
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 # --- Configurazione del Database ---
 
 if settings.database.db_url.startswith("sqlite"):
@@ -323,3 +341,75 @@ def get_published_daily_posts(db: Session, limit: int = 20) -> list:
     return db.query(DailyPost).filter(
         DailyPost.status == "published"
     ).order_by(DailyPost.published_at.desc()).limit(limit).all()
+
+# --- Funzioni per Style Config Management ---
+
+def create_style_config(db: Session, name: str, type: str, config: str, preview_image: str = None, is_default: bool = False) -> StyleConfig:
+    """Crea una nuova configurazione di stile."""
+    if is_default:
+        # Rimuovi il flag default da altri stili dello stesso tipo
+        db.query(StyleConfig).filter(StyleConfig.type == type).update({"is_default": False})
+
+    style_config = StyleConfig(
+        name=name,
+        type=type,
+        config=config,
+        preview_image=preview_image,
+        is_default=int(is_default)
+    )
+    db.add(style_config)
+    db.commit()
+    db.refresh(style_config)
+    return style_config
+
+def get_style_configs(db: Session, type: str = None) -> list:
+    """Recupera tutte le configurazioni di stile."""
+    query = db.query(StyleConfig).order_by(StyleConfig.created_at.desc())
+
+    if type:
+        query = query.filter(StyleConfig.type == type)
+
+    return query.all()
+
+def get_style_config_by_id(db: Session, config_id: int) -> Optional[StyleConfig]:
+    """Recupera una configurazione di stile per ID."""
+    return db.query(StyleConfig).filter(StyleConfig.id == config_id).first()
+
+def get_default_style_config(db: Session, type: str) -> Optional[StyleConfig]:
+    """Recupera la configurazione di stile predefinita per un tipo."""
+    return db.query(StyleConfig).filter(
+        StyleConfig.type == type,
+        StyleConfig.is_default == True
+    ).first()
+
+def update_style_config(db: Session, config_id: int, **kwargs) -> Optional[StyleConfig]:
+    """Aggiorna una configurazione di stile."""
+    config = get_style_config_by_id(db, config_id)
+    if not config:
+        return None
+
+    if "is_default" in kwargs and kwargs["is_default"]:
+        # Rimuovi il flag default da altri stili dello stesso tipo
+        db.query(StyleConfig).filter(
+            StyleConfig.type == config.type,
+            StyleConfig.id != config_id
+        ).update({"is_default": False})
+
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            setattr(config, key, value)
+
+    config.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(config)
+    return config
+
+def delete_style_config(db: Session, config_id: int) -> bool:
+    """Elimina una configurazione di stile."""
+    config = get_style_config_by_id(db, config_id)
+    if not config:
+        return False
+
+    db.delete(config)
+    db.commit()
+    return True

@@ -89,7 +89,6 @@ def run_migration():
                     max_messages INTEGER DEFAULT 20,
                     title_template VARCHAR DEFAULT '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫',
                     hashtag_template VARCHAR DEFAULT '#spotted #instaspotter #dailyrecap',
-                    ai_model VARCHAR DEFAULT 'gemini',
                     last_run TIMESTAMP,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -100,27 +99,28 @@ def run_migration():
 
             # Insert default settings
             connection.execute(text('''
-                INSERT INTO daily_post_settings (enabled, post_time, style, max_messages, title_template, hashtag_template, ai_model)
-                VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap', 'gemini')
+                INSERT INTO daily_post_settings (enabled, post_time, style, max_messages, title_template, hashtag_template)
+                VALUES (1, '20:00', 'carousel', 20, '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', '#spotted #instaspotter #dailyrecap')
             '''))
             connection.commit()
             print("✅ Impostazioni predefinite per il post giornaliero inserite.")
         except Exception as e:
             if "already exists" in str(e):
                 print("ℹ️  Tabella 'daily_post_settings' già esistente.")
-                # Try to add ai_model column if it doesn't exist
-                try:
-                    connection.execute(text('ALTER TABLE daily_post_settings ADD COLUMN ai_model VARCHAR DEFAULT \'gemini\''))
-                    connection.commit()
-                    print("✅ Colonna 'ai_model' aggiunta alla tabella 'daily_post_settings'.")
-                except Exception as col_e:
-                    if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
-                        print("ℹ️  Colonna 'ai_model' già esistente.")
-                    else:
-                        print(f"ℹ️  Colonna 'ai_model' non aggiunta: {col_e}")
-                    connection.rollback()
             else:
                 print(f"❌ Errore tabella 'daily_post_settings': {e}")
+            connection.rollback()
+
+        # Add ai_model column separately
+        try:
+            connection.execute(text('ALTER TABLE daily_post_settings ADD COLUMN ai_model VARCHAR DEFAULT \'gemini\''))
+            connection.commit()
+            print("✅ Colonna 'ai_model' aggiunta alla tabella 'daily_post_settings'.")
+        except Exception as e:
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonna 'ai_model' già esistente.")
+            else:
+                print(f"ℹ️  Colonna 'ai_model' non aggiunta: {e}")
             connection.rollback()
 
         # Create daily_posts table
@@ -141,7 +141,10 @@ def run_migration():
                     created_by VARCHAR,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    message_ids VARCHAR
+                    message_ids VARCHAR,
+                    post_style VARCHAR DEFAULT 'story',
+                    style_config VARCHAR,
+                    images VARCHAR
                 )
             '''))
             connection.commit()
@@ -149,8 +152,64 @@ def run_migration():
         except Exception as e:
             if "already exists" in str(e):
                 print("ℹ️  Tabella 'daily_posts' già esistente.")
+                # Add new columns if they don't exist
+                for column in ['post_style', 'style_config', 'images']:
+                    try:
+                        connection.execute(text(f'ALTER TABLE daily_posts ADD COLUMN {column} VARCHAR'))
+                        connection.commit()
+                        print(f"✅ Colonna '{column}' aggiunta alla tabella 'daily_posts'.")
+                    except Exception as col_e:
+                        if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
+                            print(f"ℹ️  Colonna '{column}' già esistente.")
+                        else:
+                            print(f"ℹ️  Colonna '{column}' non aggiunta: {col_e}")
+                        connection.rollback()
             else:
                 print(f"❌ Errore tabella 'daily_posts': {e}")
+            connection.rollback()
+
+        # Create style_configs table
+        try:
+            connection.execute(text('''
+                CREATE TABLE style_configs (
+                    id INTEGER PRIMARY KEY,
+                    name VARCHAR NOT NULL,
+                    type VARCHAR NOT NULL,
+                    config VARCHAR NOT NULL,
+                    preview_image VARCHAR,
+                    is_default INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            '''))
+            connection.commit()
+            print("✅ Tabella 'style_configs' creata con successo.")
+
+            # Insert default style configs
+            default_configs = [
+                ('Stile Classico Story', 'story', '{"background": "#000000", "text_color": "#ffffff", "font_size": "48px", "glow_effect": true}', None, 1),
+                ('Stile Minimal Post', 'post', '{"background": "#ffffff", "text_color": "#000000", "font_size": "36px", "border_radius": "16px"}', None, 1),
+                ('Stile Colorato Story', 'story', '{"background": "linear-gradient(45deg, #ff6b6b, #4ecdc4)", "text_color": "#ffffff", "font_size": "52px", "glow_effect": true}', None, 0),
+                ('Stile Elegante Post', 'post', '{"background": "#f8f9fa", "text_color": "#2d3748", "font_size": "40px", "shadow": "0 4px 6px rgba(0,0,0,0.1)"}', None, 0),
+            ]
+
+            for name, type_, config, preview, is_default in default_configs:
+                try:
+                    connection.execute(text('''
+                        INSERT INTO style_configs (name, type, config, preview_image, is_default)
+                        VALUES (?, ?, ?, ?, ?)
+                    '''), (name, type_, config, preview, is_default))
+                    connection.commit()
+                except Exception as insert_e:
+                    print(f"ℹ️  Configurazione stile '{name}' già esistente o errore: {insert_e}")
+                    connection.rollback()
+
+            print("✅ Configurazioni di stile predefinite inserite.")
+        except Exception as e:
+            if "already exists" in str(e):
+                print("ℹ️  Tabella 'style_configs' già esistente.")
+            else:
+                print(f"❌ Errore tabella 'style_configs': {e}")
             connection.rollback()
 
         # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)

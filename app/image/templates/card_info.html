@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Info Card - {{ id }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Spotted Card V5 - 3D Glow</title>
     <style>
+        @font-face {
+            font-family: 'Komika Axis';
+            src: url('{{ font_url }}') format('truetype');
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,276 +19,211 @@
         body {
             width: 1080px;
             height: 1920px;
-            background:
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
-                linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 80px;
-            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: #000000;
             overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Animated background particles */
-        .background-particles {
+        /* Sfondo stile Apple - mantiene v3 */
+        .bg-container {
             position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            z-index: 0;
-        }
-
-        .particle {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            animation: float 20s infinite linear;
-        }
-
-        .particle:nth-child(1) { width: 4px; height: 4px; top: 10%; left: 10%; animation-delay: 0s; }
-        .particle:nth-child(2) { width: 6px; height: 6px; top: 20%; left: 80%; animation-delay: 5s; }
-        .particle:nth-child(3) { width: 3px; height: 3px; top: 70%; left: 20%; animation-delay: 10s; }
-        .particle:nth-child(4) { width: 5px; height: 5px; top: 60%; left: 90%; animation-delay: 15s; }
-        .particle:nth-child(5) { width: 2px; height: 2px; top: 30%; left: 50%; animation-delay: 7s; }
-
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
-            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.3; }
-            100% { transform: translateY(0px) rotate(360deg); opacity: 0.7; }
-        }
-
-        /* Main info card with modern glassmorphism design */
-        .info-card {
             background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
-                linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 32px;
-            padding: 60px;
-            max-width: 880px;
+                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        }
+
+        .container {
+            position: relative;
             width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 90px;
+        }
+
+        /* Card con Glow 3D */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 20, 0.8);
+            border-radius: 45px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            /* NEW: Enhanced 3D Box Shadow */
+            box-shadow:
+                0 0 10px rgba(0, 122, 255, 0.3), /* Inner light glow */
+                0 0 40px rgba(0, 122, 255, 0.2), /* Medium glow */
+                0 0 80px rgba(0, 122, 255, 0.15), /* Outer subtle glow */
+                0 20px 60px rgba(0, 0, 0, 0.7); /* Deep dark shadow for depth */
+            backdrop-filter: blur(55px) saturate(190%); /* Slightly stronger blur/saturate */
+            -webkit-backdrop-filter: blur(55px) saturate(190%);
+            display: flex;
+            flex-direction: column;
+            padding: 100px 90px;
+            overflow: hidden;
+            /* Optional: slight transform for subtle 3D tilt */
+            /* transform: perspective(1000px) rotateX(2deg) rotateY(-2deg); */
+        }
+
+        /* Glow sottile - mantiene v3 */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Highlight superiore - mantiene v3 */
+        .highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 350px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+            border-radius: 45px 45px 0 0;
+            pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
             position: relative;
             z-index: 2;
-            box-shadow:
-                0 32px 64px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+            padding-top: 50px;
         }
 
-        /* Header with gradient accent */
-        .info-header {
-            text-align: center;
-            margin-bottom: 50px;
-            position: relative;
-        }
-
-        .info-icon {
-            font-size: 72px;
-            margin-bottom: 24px;
-            display: block;
-            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
-        }
-
-        .info-title {
-            font-size: 48px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-align: center;
-            margin-bottom: 16px;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .info-subtitle {
-            font-size: 24px;
-            color: rgba(148, 163, 184, 0.8);
-            text-align: center;
-            font-weight: 400;
-            letter-spacing: 0.02em;
-        }
-
-        /* Content area with improved typography */
-        .info-content {
-            font-size: 32px;
-            line-height: 1.7;
-            color: rgba(226, 232, 240, 0.9);
-            text-align: left;
-            white-space: pre-line;
-            margin-bottom: 50px;
-            position: relative;
-            font-weight: 400;
-        }
-
-        /* Enhanced styling for text elements */
-        .info-content strong {
-            color: #ffffff;
+        .brand {
+            font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 95px;
             font-weight: 700;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+            letter-spacing: 4px;
+            margin-bottom: 35px;
+            /* NEW: Enhanced 3D Text Shadow */
+            text-shadow:
+                0 0 10px rgba(0, 122, 255, 0.5), /* Inner glow */
+                0 0 20px rgba(0, 122, 255, 0.3), /* Medium glow */
+                0 0 30px rgba(0, 122, 255, 0.1), /* Outer glow */
+                0 2px 5px rgba(0, 0, 0, 0.8); /* Stronger dark shadow for lift */
+            line-height: 1.1;
         }
 
-        .info-content em {
-            color: rgba(168, 85, 247, 0.9);
-            font-style: italic;
-            font-weight: 500;
+        /* Badge - mantiene v3 */
+        .badge {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(0, 122, 255, 0.12);
+            border: 1px solid rgba(0, 122, 255, 0.25);
+            border-radius: 25px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
         }
 
-        .info-content p {
-            margin-bottom: 20px;
-        }
-
-        .info-content ul, .info-content ol {
-            margin-left: 20px;
-            margin-bottom: 20px;
-        }
-
-        .info-content li {
-            margin-bottom: 12px;
+        /* Body */
+        .body {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
             position: relative;
+            z-index: 2;
+            min-height: 0;
+            margin: 0;
         }
 
-        .info-content li::before {
-            content: "•";
-            color: #6366f1;
-            font-weight: bold;
-            position: absolute;
-            left: -20px;
-        }
-
-        /* Footer with subtle design */
-        .info-footer {
+        .message {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 62px;
+            line-height: 1.5;
             text-align: center;
-            padding-top: 40px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 50px;
-            position: relative;
-        }
-
-        .info-footer::before {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.6) 50%, transparent 100%);
-        }
-
-        .info-hashtag {
-            font-size: 24px;
-            color: rgba(148, 163, 184, 0.7);
-            font-weight: 500;
-            letter-spacing: 0.02em;
-        }
-
-        .info-date {
-            font-size: 20px;
-            color: rgba(100, 116, 139, 0.6);
-            margin-top: 12px;
+            color: #ffffff;
             font-weight: 400;
+            max-width: 80%;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            /* NEW: Enhanced 3D Text Shadow */
+            text-shadow:
+                0 0 8px rgba(255, 255, 255, 0.3), /* Subtle white glow */
+                0 0 15px rgba(0, 0, 0, 0.6), /* Medium dark shadow */
+                0 5px 10px rgba(0, 0, 0, 0.8); /* Deep dark shadow for lift */
+            margin: 0;
+            padding: 0;
         }
 
-        /* Decorative gradient borders */
-        .card-decoration {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 32px;
-            padding: 2px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.4), rgba(236, 72, 153, 0.4));
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: subtract;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            z-index: -1;
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: auto;
+            padding-top: 60px;
+            padding-bottom: 40px;
+            position: relative;
+            z-index: 2;
         }
 
-        /* Subtle inner glow effect */
-        .info-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 32px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
-            z-index: -1;
-            opacity: 0.5;
+        /* Footer Text - mantiene v3 */
+        .footer-text {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            font-size: 30px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 1.5px;
+            margin-bottom: 22px;
+            font-weight: 500;
         }
 
-        /* Mobile responsiveness */
-        @media (max-width: 600px) {
-            body {
-                padding: 40px 20px;
-            }
-
-            .info-card {
-                padding: 40px 30px;
-                border-radius: 24px;
-            }
-
-            .info-title {
-                font-size: 36px;
-            }
-
-            .info-subtitle {
-                font-size: 18px;
-            }
-
-            .info-content {
-                font-size: 24px;
-                line-height: 1.6;
-            }
-
-            .info-hashtag {
-                font-size: 18px;
-            }
-
-            .info-date {
-                font-size: 16px;
-            }
+        /* CTA - mantiene v3 */
+        .cta {
+            display: inline-block;
+            padding: 12px 26px;
+            background: rgba(0, 122, 255, 0.18);
+            border: 1px solid rgba(0, 122, 255, 0.35);
+            border-radius: 22px;
+            color: #5ac8fa;
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="background-particles">
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-    </div>
+    <div class="bg-container"></div>
 
-    <div class="info-card">
-        <div class="card-decoration"></div>
+    <div class="container">
+        <div class="card">
+            <div class="highlight"></div>
 
-        <div class="info-header">
-            <div class="info-icon">💫</div>
-            <div class="info-title">{{ title|default("INFORMAZIONI IMPORTANTI") }}</div>
-            <div class="info-subtitle">📢 Aggiornamento dalla redazione</div>
-        </div>
+            <div class="header">
+                <div class="brand">INFO</div>
+                <div class="badge">info#{{ id }}</div>
+            </div>
 
-        <div class="info-content">
-{{ message }}
-        </div>
+            <div class="body">
+                <p class="message">{{ message }}</p>
+            </div>
 
-        <div class="info-footer">
-            <div class="info-hashtag">#InstaSpotter #Info</div>
-            <div class="info-date">{{ "now"|strftime("%d/%m/%Y") }}</div>
+            <div class="footer">
+                <div class="footer-text">@spottedatbz</div>
+                <div class="cta">📢 Info Importante</div>
+            </div>
         </div>
     </div>
 </body>

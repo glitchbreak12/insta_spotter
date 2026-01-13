@@ -963,13 +963,14 @@ def generate_daily_post_with_ai(
     max_messages: int = Form(20),
     title_template: str = Form("🌟 Spotted del giorno {date} 🌟"),
     hashtag_template: str = Form("#spotted #instaspotter #dailyrecap"),
-    user: str = Depends(get_current_user),
+    post_style: str = Form("story"),
+    style_config_id: int = Form(None),
+    user: str = Depends(get_authenticated_user),
     db: Session = Depends(get_db)
 ):
     """API per generare un daily post usando AI."""
     try:
-        from app.database import get_todays_messages, AIModel, create_daily_post
-        from app.ai.moderator import AIModeratorFactory
+        from app.database import get_todays_messages, AIModel, create_daily_post, get_style_config_by_id
 
         # Valida il modello AI
         try:
@@ -981,6 +982,13 @@ def generate_daily_post_with_ai(
         messages = get_todays_messages(db, max_messages)
         if not messages:
             return {"status": "error", "message": "Nessun messaggio disponibile per generare il daily post"}
+
+        # Recupera configurazione stile se specificata
+        style_config_json = None
+        if style_config_id:
+            style_config = get_style_config_by_id(db, style_config_id)
+            if style_config:
+                style_config_json = style_config.config
 
         # Crea contenuto usando AI
         moderator = AIModeratorFactory.create_moderator(ai_model, **{})
@@ -1012,7 +1020,7 @@ Ecco i momenti più divertenti e interessanti della giornata! 💫
 
 {hashtag_template}"""
 
-        # Crea il daily post
+        # Crea il daily post con stile e configurazione
         post = create_daily_post(
             db=db,
             title=title,
@@ -1022,6 +1030,10 @@ Ecco i momenti più divertenti e interessanti della giornata! 💫
             created_by=user
         )
 
+        # Aggiorna con stile e configurazione
+        from app.database import update_daily_post
+        update_daily_post(db, post.id, post_style=post_style, style_config=style_config_json)
+
         return {
             "status": "success",
             "message": "Daily post generato con successo usando AI",
@@ -1030,10 +1042,127 @@ Ecco i momenti più divertenti e interessanti della giornata! 💫
                 "title": post.title,
                 "content": post.content[:200] + "...",
                 "ai_model_used": post.ai_model_used.value,
+                "post_style": post_style,
                 "created_at": post.created_at.isoformat()
             }
         }
 
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+# --- Style Config Management ---
+
+@router.get("/api/style-configs")
+def get_style_configs(
+    type: str = None,
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere tutte le configurazioni di stile."""
+    from app.database import get_style_configs
+    try:
+        configs = get_style_configs(db, type=type)
+        return {
+            "status": "success",
+            "configs": [{
+                "id": config.id,
+                "name": config.name,
+                "type": config.type,
+                "config": config.config,
+                "preview_image": config.preview_image,
+                "is_default": bool(config.is_default),
+                "created_at": config.created_at.isoformat()
+            } for config in configs]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/style-configs")
+def create_style_config(
+    name: str = Form(...),
+    type: str = Form(...),
+    config: str = Form(...),
+    preview_image: str = Form(""),
+    is_default: bool = Form(False),
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per creare una nuova configurazione di stile."""
+    from app.database import create_style_config
+    try:
+        style_config = create_style_config(
+            db=db,
+            name=name,
+            type=type,
+            config=config,
+            preview_image=preview_image if preview_image else None,
+            is_default=is_default
+        )
+
+        return {
+            "status": "success",
+            "message": "Configurazione stile creata con successo",
+            "config": {
+                "id": style_config.id,
+                "name": style_config.name,
+                "type": style_config.type,
+                "is_default": bool(style_config.is_default)
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.put("/api/style-configs/{config_id}")
+def update_style_config(
+    config_id: int,
+    name: str = Form(None),
+    config: str = Form(None),
+    preview_image: str = Form(None),
+    is_default: bool = Form(None),
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per aggiornare una configurazione di stile."""
+    from app.database import update_style_config
+    try:
+        update_data = {}
+        if name is not None:
+            update_data["name"] = name
+        if config is not None:
+            update_data["config"] = config
+        if preview_image is not None:
+            update_data["preview_image"] = preview_image
+        if is_default is not None:
+            update_data["is_default"] = is_default
+
+        config_obj = update_style_config(db, config_id, **update_data)
+        if not config_obj:
+            return {"status": "error", "message": "Configurazione stile non trovata"}
+
+        return {
+            "status": "success",
+            "message": "Configurazione stile aggiornata con successo"
+        }
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.delete("/api/style-configs/{config_id}")
+def delete_style_config(
+    config_id: int,
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per eliminare una configurazione di stile."""
+    from app.database import delete_style_config
+    try:
+        success = delete_style_config(db, config_id)
+        if not success:
+            return {"status": "error", "message": "Configurazione stile non trovata"}
+
+        return {"status": "success", "message": "Configurazione stile eliminata con successo"}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
@@ -1261,19 +1390,10 @@ def create_info_card(
         db.commit()
         db.refresh(info_card)
 
-        # Pubblica automaticamente la card appena creata
-        try:
-            from app.tasks import publish_info_card_task
-            import asyncio
+        # Pubblica automaticamente la card appena creata usando background tasks
+        background_tasks.add_task(publish_single_info_card, info_card.id)
 
-            # Pubblica in background (usa la propria sessione DB)
-            asyncio.create_task(publish_info_card_task(info_card.id))
-            logger.info(f"Auto-publishing info card {info_card.id}")
-
-        except Exception as publish_error:
-            logger.warning(f"Auto-publish failed for card {info_card.id}: {publish_error}")
-
-        return {"status": "success", "message": "Info card creata e pubblicata con successo", "id": info_card.id}
+        return {"status": "success", "message": "Info card creata con successo, pubblicazione in corso", "id": info_card.id}
     except Exception as e:
         db.rollback()
         return {"status": "error", "message": str(e)}
