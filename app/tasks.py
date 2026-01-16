@@ -315,6 +315,11 @@ def daily_post_task():
                     ai_model="gemini"
                 )
 
+            # If the daily post settings exist but are disabled, bail out early
+            if settings and getattr(settings, 'enabled', 1) == 0:
+                print("--- DEBUG [DAILY POST]: Daily post disabilitato ---")
+                return {"status": "disabled", "message": "Daily post disabilitato"} 
+
             # Verifica se abbiamo già pubblicato oggi
             from datetime import datetime, time
             today_start = datetime.combine(datetime.utcnow().date(), time.min)

@@ -515,6 +515,25 @@
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
         }
 
+        /* Simplified individual message actions */
+        .individual-actions {
+            display: flex;
+            gap: var(--space-sm);
+            margin-top: var(--space-md);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border);
+        }
+
+        .individual-actions .btn {
+            flex: 1;
+            padding: var(--space-sm) var(--space-md);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+        }
+
         .message-card::before {
             content: '';
             position: absolute;
@@ -3383,8 +3402,12 @@
 
         async function saveSystemSettings() {
             const maintenanceMode = document.getElementById('maintenanceMode').checked;
-            const maxMessagesPerHour = document.getElementById('maxMessagesPerHour').value;
-            const sessionTimeout = document.getElementById('sessionTimeout').value;
+            // Use default fallback values for other fields expected by the API
+            const debugMode = false;
+            const logLevel = 'INFO';
+            const timezone = 'Europe/Rome';
+            const keepAliveEnabled = true;
+            const trustedHostDisabled = document.getElementById('trustedHostDisabled') ? document.getElementById('trustedHostDisabled').checked : false;
 
             try {
                 const response = await fetch('/admin/api/settings/system', {
@@ -3395,8 +3418,11 @@
                     },
                     body: new URLSearchParams({
                         maintenance_mode: maintenanceMode,
-                        max_messages_per_hour: maxMessagesPerHour,
-                        session_timeout: sessionTimeout
+                        debug_mode: debugMode,
+                        log_level: logLevel,
+                        timezone: timezone,
+                        keep_alive_enabled: keepAliveEnabled,
+                        trusted_host_middleware_disabled: trustedHostDisabled
                     })
                 });
 
@@ -3405,6 +3431,8 @@
                     hideSystemSettings();
                     loadSystemInfo();
                 } else {
+                    const err = await response.json().catch(() => null);
+                    console.error('Save failed', err);
                     throw new Error('Save failed');
                 }
             } catch (error) {

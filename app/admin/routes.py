@@ -511,8 +511,13 @@ def delete_message(message_id: int, db: Session = Depends(get_db), user: str = D
     return {"status": "success", "message": "Messaggio eliminato con successo"}
 
 @router.post("/api/messages/{message_id}/approve")
-def approve_single_message(message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    """Approva un singolo messaggio."""
+def approve_single_message(
+    message_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    user: str = Depends(get_authenticated_user)
+):
+    """Approva un singolo messaggio e avvia la pubblicazione in background."""
     if isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
@@ -523,7 +528,14 @@ def approve_single_message(message_id: int, db: Session = Depends(get_db), user:
     message.status = MessageStatus.APPROVED
     db.commit()
 
-    return {"status": "success", "message": "Messaggio approvato", "message_id": message_id}
+    # Schedule immediate background posting of the single message
+    try:
+        background_tasks.add_task(post_single_message, message_id)
+        scheduled_msg = "Messaggio approvato e pubblicazione pianificata in background"
+    except Exception:
+        scheduled_msg = "Messaggio approvato (impossibile avviare background post)"
+
+    return {"status": "success", "message": scheduled_msg, "message_id": message_id} 
 
 @router.post("/api/messages/{message_id}/reject")
 def reject_single_message(message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
@@ -783,19 +795,18 @@ def preview_daily_post(
         return {"status": "error", "message": str(e)}
 
 @router.post("/api/daily-post/publish")
-def publish_daily_post_now(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    """API per pubblicare manualmente un daily post ora."""
+def publish_daily_post_now(background_tasks: BackgroundTasks, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per pubblicare manualmente un daily post ora. Pianifica il task in background."""
     try:
         from app.tasks import daily_post_task
-        import asyncio
 
-        # Esegui il task in background
-        result = asyncio.run(daily_post_task())
+        # Schedule the daily post task to run in background so the API call returns immediately
+        background_tasks.add_task(daily_post_task)
 
         return {
-            "status": result.get("status", "error"),
-            "message": result.get("message", "Errore sconosciuto"),
-            "media_pk": result.get("media_pk")
+            "status": "scheduled",
+            "message": "Daily post pianificato in background. Controlla i log per l'esito",
+            "media_pk": None
         }
 
     except Exception as e:
