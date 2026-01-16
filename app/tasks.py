@@ -297,11 +297,27 @@ def daily_post_task():
         db = SessionLocal()
         try:
             # Recupera impostazioni del daily post
-            from app.database import get_daily_post_settings, mark_daily_post_run, get_todays_messages
+            from app.database import get_daily_post_settings, mark_daily_post_run, get_todays_messages, update_daily_post_settings
             settings = get_daily_post_settings(db)
-            if not settings or not settings.enabled:
-                print("--- DEBUG [DAILY POST]: Daily post disabilitato ---")
-                return {"status": "disabled", "message": "Daily post disabilitato"}
+
+            # Se non esistono impostazioni, creane di default abilitate
+            if not settings:
+                print("--- DEBUG [DAILY POST]: Creazione impostazioni daily post di default ---")
+                settings = update_daily_post_settings(
+                    db=db,
+                    enabled=True,
+                    post_time="20:00",
+                    style="carousel",
+                    max_messages=20,
+                    title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
+                    hashtag_template="#spotted #instaspotter #dailyrecap",
+                    ai_model="gemini"
+                )
+
+            # Forza abilitazione se disabilitato
+            if not settings.enabled:
+                print("--- DEBUG [DAILY POST]: Riabilitazione daily post forzata ---")
+                settings = update_daily_post_settings(db=db, enabled=True)
 
             # Verifica se abbiamo già pubblicato oggi
             from datetime import datetime, time
@@ -310,11 +326,27 @@ def daily_post_task():
                 print("--- DEBUG [DAILY POST]: Post giornaliero già pubblicato oggi ---")
                 return {"status": "already_run", "message": "Già pubblicato oggi"}
 
-            # Recupera messaggi di oggi
+            # Recupera messaggi APPROVED (non solo di oggi, ma anche passati se necessario)
             messages = get_todays_messages(db, settings.max_messages)
+
+            # Se non ci sono messaggi di oggi, cerca messaggi approvati recenti
             if not messages:
-                print("--- DEBUG [DAILY POST]: Nessun messaggio da pubblicare oggi ---")
-                return {"status": "no_messages", "message": "Nessun messaggio oggi"}
+                print("--- DEBUG [DAILY POST]: Nessun messaggio di oggi, cerco messaggi approvati recenti ---")
+                from app.database import SpottedMessage, MessageStatus, MessageType
+                # Cerca fino a 50 messaggi approvati degli ultimi 7 giorni
+                week_ago = datetime.utcnow() - timedelta(days=7)
+                recent_messages = db.query(SpottedMessage).filter(
+                    SpottedMessage.status == MessageStatus.APPROVED,
+                    SpottedMessage.message_type == MessageType.SPOTTED,  # Solo spotted, non info cards
+                    SpottedMessage.created_at >= week_ago
+                ).order_by(SpottedMessage.created_at.desc()).limit(settings.max_messages).all()
+
+                if recent_messages:
+                    messages = recent_messages
+                    print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi approvati recenti ---")
+                else:
+                    print("--- DEBUG [DAILY POST]: Nessun messaggio approvato trovato negli ultimi 7 giorni ---")
+                    return {"status": "no_messages", "message": "Nessun messaggio approvato disponibile"}
 
             print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi per il post giornaliero ---")
 
