@@ -510,6 +510,99 @@ def delete_message(message_id: int, db: Session = Depends(get_db), user: str = D
 
     return {"status": "success", "message": "Messaggio eliminato con successo"}
 
+# --- Bulk / administrative cleanup endpoints (safe, protected) ---
+@router.post('/api/messages/delete-by-status')
+def delete_messages_by_status(status: str = Form(...), confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i messaggi con lo stato specificato. Richiede confirm=true per eseguire."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+
+    if not confirm:
+        return {'status': 'error', 'message': 'confirm=false, operation aborted'}
+
+    try:
+        valid_statuses = [s.value for s in MessageStatus]
+        if status not in valid_statuses:
+            raise HTTPException(status_code=400, detail='Stato non valido')
+
+        deleted = db.query(SpottedMessage).filter(SpottedMessage.status == MessageStatus(status)).delete(synchronize_session=False)
+        db.commit()
+        return {'status': 'success', 'deleted': deleted}
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
+
+@router.post('/api/messages/delete-all')
+def delete_all_messages(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i messaggi (tranne quelli POSTED). Richiede confirm=true."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+    if not confirm:
+        return {'status': 'error', 'message': 'confirm=false, operation aborted'}
+
+    try:
+        # Only remove non-posted messages to avoid data loss
+        deleted = db.query(SpottedMessage).filter(SpottedMessage.status != MessageStatus.POSTED).delete(synchronize_session=False)
+        db.commit()
+        return {'status': 'success', 'deleted': deleted}
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
+
+@router.post('/api/info-cards/delete-all')
+def delete_all_info_cards(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutte le info cards (MessageType.INFO). Richiede confirm=true."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+    if not confirm:
+        return {'status': 'error', 'message': 'confirm=false, operation aborted'}
+
+    try:
+        from app.database import MessageType
+        deleted = db.query(SpottedMessage).filter(SpottedMessage.message_type == MessageType.INFO).delete(synchronize_session=False)
+        db.commit()
+        return {'status': 'success', 'deleted': deleted}
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
+
+@router.post('/api/daily-posts/delete-all')
+def delete_all_daily_posts(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i daily posts. Richiede confirm=true."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+    if not confirm:
+        return {'status': 'error', 'message': 'confirm=false, operation aborted'}
+
+    try:
+        from app.database import DailyPost
+        deleted = db.query(DailyPost).delete(synchronize_session=False)
+        db.commit()
+        return {'status': 'success', 'deleted': deleted}
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
+
+@router.post('/api/settings/system/reset')
+def reset_system_settings(user: str = Depends(get_authenticated_user), db: Session = Depends(get_db)):
+    """Reset delle impostazioni di sistema ai valori di default."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+
+    from app.database import set_system_setting
+
+    try:
+        set_system_setting(db, 'maintenance_mode', False, 'boolean', 'Modalità manutenzione disabilitata', 'system')
+        set_system_setting(db, 'debug_mode', False, 'boolean', 'Modalità debug disabilitata', 'system')
+        set_system_setting(db, 'log_level', 'INFO', 'string', 'Livello di logging', 'system')
+        set_system_setting(db, 'timezone', 'Europe/Rome', 'string', 'Fuso orario', 'system')
+        set_system_setting(db, 'keep_alive_enabled', True, 'boolean', 'Keep-alive abilitato', 'system')
+        set_system_setting(db, 'trusted_host_middleware_disabled', False, 'boolean', 'Trusted host disabilitato', 'system')
+        return {'status': 'success', 'message': 'Impostazioni di sistema resettate'}
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
+
 @router.post("/api/messages/{message_id}/approve")
 def approve_single_message(
     message_id: int,
