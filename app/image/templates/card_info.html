@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Info Card V5 - 3D Glow</title>
+    <title>Info Card - Spotted Style</title>
     <style>
         @font-face {
             font-family: 'Komika Axis';
@@ -169,45 +169,6 @@
             padding: 0;
         }
 
-        /* Enhanced formatting for INFO content */
-        .message strong {
-            color: #5ac8fa;
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
-        }
-
-        .message em {
-            color: #88d4ff;
-            font-style: italic;
-            text-shadow: 0 0 8px rgba(88, 214, 255, 0.4);
-        }
-
-        .message p {
-            margin-bottom: 20px;
-        }
-
-        .message ul, .message ol {
-            text-align: left;
-            margin: 30px auto;
-            max-width: 80%;
-        }
-
-        .message li {
-            margin-bottom: 20px;
-            position: relative;
-            padding-left: 45px;
-        }
-
-        .message li::before {
-            content: "📢";
-            position: absolute;
-            left: 0;
-            top: 0;
-            color: #5ac8fa;
-            font-size: 32px;
-            filter: drop-shadow(0 0 8px rgba(0, 122, 255, 0.5));
-        }
-
         /* Footer */
         .footer {
             text-align: center;
@@ -241,39 +202,6 @@
             letter-spacing: 0.8px;
             box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
         }
-
-        /* Info-specific elements */
-        .info-title {
-            font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 72px;
-            font-weight: 700;
-            color: #5ac8fa;
-            margin-bottom: 40px;
-            text-shadow:
-                0 0 10px rgba(0, 122, 255, 0.5),
-                0 0 20px rgba(0, 122, 255, 0.3),
-                0 2px 5px rgba(0, 0, 0, 0.8);
-            line-height: 1.2;
-        }
-
-        .info-badge {
-            background: rgba(0, 122, 255, 0.2);
-            border: 1px solid rgba(0, 122, 255, 0.4);
-            color: #5ac8fa;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 22px;
-            font-weight: 600;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
-        .info-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #5ac8fa;
-            text-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
-        }
     </style>
 </head>
 <body>
@@ -289,16 +217,12 @@
             </div>
 
             <div class="body">
-                {% if title and title != "Titolo Card" %}
-                <div class="info-title">{{ title }}</div>
-                {% endif %}
-                <div class="message">{{ message }}</div>
+                <p class="message">{{ message }}</p>
             </div>
 
             <div class="footer">
                 <div class="footer-text">@spottedatbz</div>
                 <div class="cta">📢 Info Importante</div>
-                <div class="publish-date">{{ publish_date or "Oggi" }}</div>
             </div>
         </div>
     </div>

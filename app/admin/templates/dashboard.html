@@ -2168,37 +2168,229 @@
 
         async function moderateMessage(id, action) {
             try {
-                const endpoint = action === 'APPROVED' ? `/admin/messages/${id}/approve` : `/admin/messages/${id}/reject`;
+                // Use the correct individual API endpoints
+                const endpoint = action === 'APPROVED' ? `/admin/api/messages/${id}/approve` : `/admin/api/messages/${id}/reject`;
                 const response = await apiCall(endpoint, { method: 'POST' });
 
                 if (response.ok) {
-                    showNotification('Successo', `Messaggio ${action === 'APPROVED' ? 'approvato' : 'rifiutato'} con successo`, 'success');
-                    loadMessages();
-                    loadDashboardData();
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showNotification('Successo', `Messaggio ${action === 'APPROVED' ? 'approvato' : 'rifiutato'} con successo`, 'success');
+                        loadMessages();
+                        loadDashboardData();
+                    } else {
+                        throw new Error(result.message || 'Moderation failed');
+                    }
                 } else {
-                    throw new Error('Moderation failed');
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Moderation failed');
                 }
             } catch (error) {
                 console.error('Error moderating message:', error);
-                showNotification('Errore', 'Impossibile moderare il messaggio', 'error');
+                showNotification('Errore', 'Impossibile moderare il messaggio: ' + error.message, 'error');
             }
         }
 
         async function postMessage(id) {
             try {
-                const response = await apiCall(`/admin/messages/${id}/post`, { method: 'POST' });
+                // This should use the individual approve endpoint first, then let background task handle posting
+                const response = await apiCall(`/admin/api/messages/${id}/approve`, { method: 'POST' });
 
                 if (response.ok) {
-                    showNotification('Successo', 'Messaggio pubblicato su Instagram!', 'success');
-                    loadMessages();
-                    loadDashboardData();
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showNotification('Successo', 'Messaggio approvato e in pubblicazione!', 'success');
+                        loadMessages();
+                        loadDashboardData();
+                    } else {
+                        throw new Error(result.message || 'Approval failed');
+                    }
                 } else {
-                    throw new Error('Posting failed');
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Approval failed');
                 }
             } catch (error) {
                 console.error('Error posting message:', error);
-                showNotification('Errore', 'Impossibile pubblicare il messaggio', 'error');
+                showNotification('Errore', 'Impossibile pubblicare il messaggio: ' + error.message, 'error');
             }
+        }
+
+        // Add individual message management functions
+        async function viewMessageDetails(id) {
+            try {
+                const response = await apiCall(`/admin/api/messages/${id}`);
+                if (response.ok) {
+                    const message = await response.json();
+                    showMessageDetailsModal(message);
+                } else {
+                    throw new Error('Failed to load message details');
+                }
+            } catch (error) {
+                console.error('Error loading message details:', error);
+                showNotification('Errore', 'Impossibile caricare i dettagli del messaggio', 'error');
+            }
+        }
+
+        async function editMessage(id) {
+            try {
+                const message = allMessages.find(m => m.id === id);
+                if (!message) return;
+
+                const newText = prompt('Modifica il testo del messaggio:', message.text);
+                if (newText && newText.trim() && newText !== message.text) {
+                    const response = await apiCall(`/admin/api/messages/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: newText.trim() })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.status === 'success') {
+                            showNotification('Successo', 'Messaggio aggiornato con successo', 'success');
+                            loadMessages();
+                            loadDashboardData();
+                        } else {
+                            throw new Error(result.message || 'Update failed');
+                        }
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Update failed');
+                    }
+                }
+            } catch (error) {
+                console.error('Error editing message:', error);
+                showNotification('Errore', 'Impossibile aggiornare il messaggio: ' + error.message, 'error');
+            }
+        }
+
+        async function resetMessage(id) {
+            if (!confirm('Resettare questo messaggio allo stato PENDING?')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/messages/${id}/reset`, { method: 'POST' });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showNotification('Successo', 'Messaggio resettato con successo', 'success');
+                        loadMessages();
+                        loadDashboardData();
+                    } else {
+                        throw new Error(result.message || 'Reset failed');
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Reset failed');
+                }
+            } catch (error) {
+                console.error('Error resetting message:', error);
+                showNotification('Errore', 'Impossibile resettare il messaggio: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteMessage(id) {
+            if (!confirm('Eliminare definitivamente questo messaggio? Questa azione non può essere annullata.')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/messages/${id}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showNotification('Successo', 'Messaggio eliminato con successo', 'success');
+                        loadMessages();
+                        loadDashboardData();
+                    } else {
+                        throw new Error(result.message || 'Delete failed');
+                    }
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                showNotification('Errore', 'Impossibile eliminare il messaggio: ' + error.message, 'error');
+            }
+        }
+
+        function showMessageDetailsModal(message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Dettagli Messaggio #${message.id}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div style="padding: var(--space-lg);">
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Status:</strong>
+                            <span class="message-status status-${message.status.toLowerCase()}" style="margin-left: var(--space-sm);">${message.status}</span>
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Testo:</strong>
+                            <div style="margin-top: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius); word-wrap: break-word;">${escapeHtml(message.text)}</div>
+                        </div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Data Creazione:</strong> ${new Date(message.created_at).toLocaleString('it-IT')}
+                        </div>
+                        ${message.posted_at ? `
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Data Pubblicazione:</strong> ${new Date(message.posted_at).toLocaleString('it-IT')}
+                        </div>
+                        ` : ''}
+                        ${message.media_pk ? `
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Media PK:</strong> <code style="background: var(--bg-tertiary); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius);">${message.media_pk}</code>
+                        </div>
+                        ` : ''}
+                        ${message.admin_note ? `
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Nota Admin:</strong>
+                            <div style="margin-top: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius);">${escapeHtml(message.admin_note)}</div>
+                        </div>
+                        ` : ''}
+                        ${message.gemini_analysis ? `
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Analisi AI:</strong>
+                            <div style="margin-top: var(--space-sm); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius); font-size: 0.9rem; color: var(--text-muted);">${escapeHtml(message.gemini_analysis)}</div>
+                        </div>
+                        ` : ''}
+                        ${message.error_message ? `
+                        <div style="margin-bottom: var(--space-lg);">
+                            <strong>Errore:</strong>
+                            <div style="margin-top: var(--space-sm); padding: var(--space-md); background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error); border-radius: var(--radius); color: var(--error);">${escapeHtml(message.error_message)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-header" style="border-top: 1px solid var(--border);">
+                        <div class="action-buttons" style="width: 100%; justify-content: space-between;">
+                            <div>
+                                <button class="btn btn-secondary btn-sm" onclick="editMessage(${message.id})">
+                                    <i class="fas fa-edit"></i>
+                                    Modifica
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="resetMessage(${message.id})">
+                                    <i class="fas fa-undo"></i>
+                                    Reset
+                                </button>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="deleteMessage(${message.id})">
+                                <i class="fas fa-trash"></i>
+                                Elimina
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         async function bulkApprove() {

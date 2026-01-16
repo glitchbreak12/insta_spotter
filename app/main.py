@@ -118,21 +118,106 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, lambda request, exc: {"detail": "Troppi richieste"})
 app.add_middleware(SlowAPIMiddleware)
 
+# --- MAINTENANCE MODE MIDDLEWARE ---
+
+@app.middleware("http")
+async def maintenance_mode_middleware(request, call_next):
+    """Controlla se la modalità manutenzione è abilitata."""
+    # Controlla se la modalità manutenzione è abilitata
+    maintenance_enabled = os.getenv("MAINTENANCE_MODE", "0") == "1"
+
+    # Permetti richieste alla pagina di manutenzione stessa e ad alcune API critiche
+    allowed_paths = [
+        "/maintenance",
+        "/admin/login",
+        "/admin/api/settings/system/maintenance",  # Permetti di disabilitare manutenzione
+        "/health",  # Health check sempre disponibile
+    ]
+
+    if maintenance_enabled and not any(request.url.path.startswith(path) for path in allowed_paths):
+        # Mostra pagina di manutenzione
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html lang="it">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>InstaSpotter - Manutenzione</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .container {
+                    max-width: 500px;
+                    background: rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(10px);
+                    border-radius: 20px;
+                    padding: 40px;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                }
+                .icon {
+                    font-size: 4rem;
+                    margin-bottom: 20px;
+                    opacity: 0.8;
+                }
+                h1 {
+                    font-size: 2rem;
+                    margin-bottom: 10px;
+                }
+                p {
+                    font-size: 1.1rem;
+                    opacity: 0.9;
+                    margin-bottom: 30px;
+                    line-height: 1.6;
+                }
+                .status {
+                    display: inline-block;
+                    background: rgba(255, 255, 255, 0.2);
+                    padding: 10px 20px;
+                    border-radius: 25px;
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="icon">🔧</div>
+                <h1>Manutenzione in Corso</h1>
+                <p>Stiamo effettuando alcuni aggiornamenti per migliorare il servizio. Torneremo online il prima possibile.</p>
+                <div class="status">🚀 InstaSpotter</div>
+            </div>
+        </body>
+        </html>
+        """, status_code=503)
+
+    response = await call_next(request)
+    return response
+
 # --- SECURITY HEADERS MIDDLEWARE ---
 
 @app.middleware("http")
 async def add_security_headers(request, call_next):
     """Aggiunge headers di sicurezza a tutte le response."""
     response = await call_next(request)
-    
+
     # Aggiungi headers di sicurezza
     for header, value in SECURITY_HEADERS.items():
         response.headers[header] = value
-    
+
     # Forza HTTPS (in produzione)
     if request.url.scheme != "http":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    
+
     return response
 
 # --- Keep Alive Background Task per Replit ---

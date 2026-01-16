@@ -2141,13 +2141,17 @@ def get_system_settings(user: str = Depends(get_current_user)):
     """Ottieni impostazioni di sistema."""
     try:
         import os
+        maintenance_mode = os.getenv("MAINTENANCE_MODE", "0") == "1"
+        debug_mode = os.getenv("DEBUG_MODE", "0") == "1"
+
         return {
-            "maintenance_mode": bool(os.getenv("MAINTENANCE_MODE", False)),
-            "debug_mode": bool(os.getenv("DEBUG_MODE", False)),
+            "maintenance_mode": maintenance_mode,
+            "debug_mode": debug_mode,
             "log_level": os.getenv("LOG_LEVEL", "INFO"),
             "timezone": os.getenv("TZ", "Europe/Rome"),
             "keep_alive_enabled": bool(os.getenv("DISABLE_KEEP_ALIVE") != "1"),
-            "trusted_host_middleware_disabled": bool(os.getenv("DISABLE_TRUSTED_HOST", False))
+            "trusted_host_middleware_disabled": bool(os.getenv("DISABLE_TRUSTED_HOST", "0") == "1"),
+            "current_maintenance_status": "ATTIVA" if maintenance_mode else "DISATTIVA"
         }
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -2164,29 +2168,32 @@ def update_system_settings(
 ):
     """Aggiorna impostazioni di sistema."""
     try:
-        # Nota: Su Replit, le variabili d'ambiente sono spesso di sola lettura
-        # Queste impostazioni potrebbero non persistere tra riavvii
-        # In produzione, salva nel database o in un file di configurazione
-
         # Valida log level
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if log_level.upper() not in valid_log_levels:
             return {"status": "error", "message": f"Log level non valido. Valori validi: {', '.join(valid_log_levels)}"}
 
-        # Su Replit, possiamo solo restituire conferma che le impostazioni sono state "salvate"
-        # In realtà non possiamo modificare le variabili d'ambiente in runtime
+        # Imposta variabili d'ambiente
+        os.environ["MAINTENANCE_MODE"] = "1" if maintenance_mode else "0"
+        os.environ["DEBUG_MODE"] = "1" if debug_mode else "0"
+        os.environ["LOG_LEVEL"] = log_level.upper()
+        os.environ["TZ"] = timezone
+        os.environ["DISABLE_KEEP_ALIVE"] = "0" if keep_alive_enabled else "1"
+        os.environ["DISABLE_TRUSTED_HOST"] = "1" if trusted_host_middleware_disabled else "0"
+
         settings_summary = {
             "maintenance_mode": maintenance_mode,
             "debug_mode": debug_mode,
             "log_level": log_level.upper(),
             "timezone": timezone,
             "keep_alive_enabled": keep_alive_enabled,
-            "trusted_host_middleware_disabled": trusted_host_middleware_disabled
+            "trusted_host_middleware_disabled": trusted_host_middleware_disabled,
+            "status": "ATTIVA" if maintenance_mode else "DISATTIVA"
         }
 
         return {
             "status": "success",
-            "message": "Impostazioni sistema aggiornate (nota: su Replit potrebbero non persistere tra riavvii)",
+            "message": f"Impostazioni sistema aggiornate. Modalità manutenzione: {settings_summary['status']}",
             "settings": settings_summary
         }
 
@@ -2200,19 +2207,17 @@ def toggle_maintenance_mode(
 ):
     """Attiva/disattiva modalità manutenzione."""
     try:
-        # Su Replit, possiamo impostare temporaneamente una variabile d'ambiente
-        # ma non persisterà tra riavvii
-        if enabled:
-            os.environ["MAINTENANCE_MODE"] = "1"
-            message = "Modalità manutenzione attivata"
-        else:
-            os.environ.pop("MAINTENANCE_MODE", None)
-            message = "Modalità manutenzione disattivata"
+        # Imposta la variabile d'ambiente
+        os.environ["MAINTENANCE_MODE"] = "1" if enabled else "0"
+
+        status_message = "attivata" if enabled else "disattivata"
+        message = f"Modalità manutenzione {status_message}"
 
         return {
             "status": "success",
             "message": message,
-            "maintenance_mode": enabled
+            "maintenance_mode": enabled,
+            "current_status": "ATTIVA" if enabled else "DISATTIVA"
         }
 
     except Exception as e:

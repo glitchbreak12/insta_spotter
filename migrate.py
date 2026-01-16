@@ -34,10 +34,15 @@ def run_migration():
             connection.execute(text('''
                 CREATE TABLE technical_users (
                     id VARCHAR PRIMARY KEY,
+                    username VARCHAR,
+                    password_hash VARCHAR,
+                    role VARCHAR DEFAULT 'moderator',
                     first_seen_at TIMESTAMP,
                     last_seen_at TIMESTAMP,
-                    trust_score INTEGER,
-                    status VARCHAR
+                    trust_score INTEGER DEFAULT 100,
+                    status VARCHAR DEFAULT 'active',
+                    created_by VARCHAR,
+                    is_active INTEGER DEFAULT 1
                 )
             '''))
             connection.commit()
@@ -45,6 +50,25 @@ def run_migration():
         except Exception as e:
             if "already exists" in str(e):
                 print("ℹ️  Tabella 'technical_users' già esistente.")
+                # Try to add missing columns
+                missing_columns = [
+                    ('username', 'VARCHAR'),
+                    ('password_hash', 'VARCHAR'),
+                    ('role', "VARCHAR DEFAULT 'moderator'"),
+                    ('created_by', 'VARCHAR'),
+                    ('is_active', 'INTEGER DEFAULT 1')
+                ]
+                for col_name, col_type in missing_columns:
+                    try:
+                        connection.execute(text(f'ALTER TABLE technical_users ADD COLUMN {col_name} {col_type}'))
+                        connection.commit()
+                        print(f"✅ Colonna '{col_name}' aggiunta alla tabella 'technical_users'.")
+                    except Exception as col_e:
+                        if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
+                            print(f"ℹ️  Colonna '{col_name}' già esistente.")
+                        else:
+                            print(f"ℹ️  Colonna '{col_name}' non aggiunta: {col_e}")
+                        connection.rollback()
             else:
                 print(f"❌ Errore tabella 'technical_users': {e}")
             connection.rollback()
