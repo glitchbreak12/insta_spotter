@@ -1157,8 +1157,76 @@
                         <div class="loading">
                             <div class="spinner"></div>
                             <div class="loading-text">Caricamento messaggi...</div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions Bar -->
+                    <div id="bulkActionsBar" class="stat-card" style="display: none; margin-top: var(--space-lg);">
+                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">
+                            <i class="fas fa-tasks" style="margin-right: var(--space-sm);"></i>
+                            Azioni di Massa (<span id="selectedCount">0</span> selezionati)
+                        </h4>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="bulkApproveSelected()">
+                                <i class="fas fa-check-double"></i>
+                                Approva Selezionati
+                            </button>
+                            <button class="btn btn-danger" onclick="bulkRejectSelected()">
+                                <i class="fas fa-times-circle"></i>
+                                Rifiuta Selezionati
+                            </button>
+                            <button class="btn btn-warning" onclick="bulkResetSelected()">
+                                <i class="fas fa-undo"></i>
+                                Reset Selezionati
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearSelection()">
+                                <i class="fas fa-times"></i>
+                                Deseleziona Tutto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Individual Message Actions Modal -->
+                    <div id="messageActionsModal" class="modal">
+                        <div class="modal-content" style="max-width: 500px;">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Azioni Messaggio <span id="modalMessageId"></span></h3>
+                                <button class="modal-close" onclick="closeMessageActionsModal()">&times;</button>
+                            </div>
+                            <div id="modalMessageContent" style="padding: var(--space-lg);">
+                                <!-- Message content will be loaded here -->
+                            </div>
+                            <div class="modal-header" style="border-top: 1px solid var(--border);">
+                                <div class="action-buttons" style="width: 100%; justify-content: space-between;">
+                                    <div>
+                                        <button class="btn btn-secondary btn-sm" onclick="editMessageModal()">
+                                            <i class="fas fa-edit"></i>
+                                            Modifica
+                                        </button>
+                                        <button class="btn btn-warning btn-sm" onclick="resetMessageModal()">
+                                            <i class="fas fa-undo"></i>
+                                            Reset
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm" onclick="approveMessageModal()">
+                                            <i class="fas fa-check"></i>
+                                            Approva
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="rejectMessageModal()">
+                                            <i class="fas fa-times"></i>
+                                            Rifiuta
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteMessageModal()">
+                                            <i class="fas fa-trash"></i>
+                                            Elimina
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
                     </div>
             </section>
 
@@ -2536,8 +2604,10 @@
         // Info Cards functions
         async function loadInfoCards() {
             try {
+                console.log('Loading info cards...');
                 const response = await apiCall('/admin/api/info-cards');
                 const cards = await response.json();
+                console.log('Info cards loaded:', cards);
 
                 renderInfoCards(cards);
             } catch (error) {
@@ -2675,13 +2745,19 @@
                 console.log('Preview generated:', data);
 
                 if (data.image_url) {
-                    // Show the actual generated image (same as published)
+                    // Show the actual generated image (same as published) with cache busting
+                    const timestamp = Date.now();
+                    const cacheBustedUrl = `${data.image_url}?t=${timestamp}&cache=${Math.random()}`;
+
                     document.getElementById('cardPreview').innerHTML = `
-                        <img src="${data.image_url}?t=${Date.now()}"
+                        <img src="${cacheBustedUrl}"
                              alt="Card Preview"
                              style="width: 100%; max-width: 300px; border-radius: 12px; box-shadow: var(--shadow-lg); display: block; margin: 0 auto;"
-                             onload="console.log('Preview image loaded')"
-                             onerror="console.error('Preview image failed to load')">
+                             onload="console.log('Preview image loaded successfully')"
+                             onerror="handlePreviewError(this, '${data.image_url}', ${timestamp})">
+                        <div style="text-align: center; margin-top: 10px; font-size: 0.8rem; color: var(--text-muted);">
+                            Anteprima aggiornata - usa la stessa immagine per pubblicazione
+                        </div>
                     `;
                 } else {
                     throw new Error('No image URL returned');
@@ -4873,6 +4949,32 @@
             notification.textContent = message;
             document.body.appendChild(notification);
             setTimeout(() => document.body.removeChild(notification), 3000);
+        }
+
+        // Handle preview image loading errors
+        function handlePreviewError(imgElement, originalUrl, timestamp) {
+            console.warn('Preview image failed to load, trying fallback...');
+
+            // Try without cache busting
+            if (originalUrl.includes('?t=') && originalUrl.includes('&cache=')) {
+                imgElement.src = originalUrl.split('?')[0];
+                return;
+            }
+
+            // Show error message
+            document.getElementById('cardPreview').innerHTML = `
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; text-align: center;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning); font-size: 2rem; margin-bottom: 10px;"></i>
+                    <div style="font-weight: bold; margin-bottom: 10px; color: var(--warning);">Anteprima non disponibile</div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">
+                        L'immagine verrà generata correttamente quando pubblichi la card
+                    </div>
+                    <button class="btn btn-sm btn-secondary" onclick="generateCardPreview(document.getElementById('cardTitle').value, document.getElementById('cardContent').value)">
+                        <i class="fas fa-redo"></i>
+                        Riprova
+                    </button>
+                </div>
+            `;
         }
     </script>
 </body>

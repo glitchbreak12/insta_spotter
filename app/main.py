@@ -122,20 +122,36 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.middleware("http")
 async def maintenance_mode_middleware(request, call_next):
-    """Controlla se la modalità manutenzione è abilitata."""
+    """Controlla se la modalità manutenzione è abilitata - blocca solo inserimento spot pubblici, non admin."""
     # Controlla se la modalità manutenzione è abilitata
     maintenance_enabled = os.getenv("MAINTENANCE_MODE", "0") == "1"
 
-    # Permetti richieste alla pagina di manutenzione stessa e ad alcune API critiche
-    allowed_paths = [
+    # Permetti sempre le seguenti route (admin e API critiche)
+    admin_allowed_paths = [
+        "/admin",  # Tutte le route admin
         "/maintenance",
-        "/admin/login",
-        "/admin/api/settings/system/maintenance",  # Permetti di disabilitare manutenzione
         "/health",  # Health check sempre disponibile
+        "/favicon.ico",
+        "/static",  # File statici
+        "/generated_images",  # Immagini generate
     ]
 
-    if maintenance_enabled and not any(request.url.path.startswith(path) for path in allowed_paths):
-        # Mostra pagina di manutenzione
+    # Se è una route admin, permetti sempre - anche in manutenzione
+    if any(request.url.path.startswith(path) for path in admin_allowed_paths):
+        response = await call_next(request)
+        return response
+
+    # Se manutenzione è abilitata, blocca solo l'inserimento di nuovi spot (route pubbliche)
+    public_blocked_paths = [
+        "/",  # Homepage con form
+        "/submit",  # Endpoint di invio spot
+        "/spotted/new",  # Creazione nuovi spot
+        "/api/messages",  # API per creare messaggi pubblici
+        "/api/submit",  # Altro endpoint di invio
+    ]
+
+    if maintenance_enabled and any(request.url.path.startswith(path) for path in public_blocked_paths):
+        # Mostra pagina di manutenzione per utenti pubblici
         return HTMLResponse(content="""
         <!DOCTYPE html>
         <html lang="it">
@@ -193,7 +209,7 @@ async def maintenance_mode_middleware(request, call_next):
             <div class="container">
                 <div class="icon">🔧</div>
                 <h1>Manutenzione in Corso</h1>
-                <p>Stiamo effettuando alcuni aggiornamenti per migliorare il servizio. Torneremo online il prima possibile.</p>
+                <p>L'invio di nuovi spot è temporaneamente disabilitato per manutenzione. Il pannello di amministrazione rimane accessibile.</p>
                 <div class="status">🚀 InstaSpotter</div>
             </div>
         </body>
