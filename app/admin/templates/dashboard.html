@@ -3602,12 +3602,13 @@
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: status })
+                    body: JSON.stringify({ status: status, confirm: true })
                 });
 
                 if (response.ok) {
                     const result = await response.json();
-                    showNotification('Successo', `Cancellati ${result.deleted_count} messaggi ${statusText}`, 'success');
+                    const deleted = result.deleted_count || result.deleted || 0;
+                    showNotification('Successo', `Cancellati ${deleted} messaggi ${statusText}`, 'success');
                     loadDashboardData();
                     loadMessages();
                 } else {
@@ -3654,11 +3655,14 @@
 
                 const response = await fetch('/admin/api/messages/delete-all', {
                     method: 'POST',
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm: true })
                 });
 
                 if (response.ok) {
-                    showNotification('Successo', 'Tutti i messaggi sono stati cancellati', 'success');
+                    const result = await response.json().catch(() => null);
+                    showNotification('Successo', `Tutti i messaggi cancellati (${result ? (result.deleted_count || result.deleted || 0) : 'n/a'})`, 'success');
                     loadDashboardData();
                     loadMessages();
                 } else {
@@ -3679,11 +3683,14 @@
 
                 const response = await fetch('/admin/api/info-cards/delete-all', {
                     method: 'POST',
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm: true })
                 });
 
                 if (response.ok) {
-                    showNotification('Successo', 'Tutte le Info Cards cancellate', 'success');
+                    const result = await response.json().catch(() => null);
+                    showNotification('Successo', `Tutte le Info Cards cancellate (${result ? (result.deleted_count || result.deleted || 0) : 'n/a'})`, 'success');
                     loadInfoCards();
                 } else {
                     throw new Error('Cancellazione fallita');
@@ -3702,11 +3709,14 @@
 
                 const response = await fetch('/admin/api/daily-posts/delete-all', {
                     method: 'POST',
-                    credentials: 'same-origin'
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ confirm: true })
                 });
 
                 if (response.ok) {
-                    showNotification('Successo', 'Tutti i Daily Posts cancellati', 'success');
+                    const result = await response.json().catch(() => null);
+                    showNotification('Successo', `Tutti i Daily Posts cancellati (${result ? (result.deleted_count || result.deleted || 0) : 'n/a'})`, 'success');
                     loadDailyPostSettings();
                 } else {
                     throw new Error('Cancellazione fallita');

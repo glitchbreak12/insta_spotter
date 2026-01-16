@@ -512,10 +512,23 @@ def delete_message(message_id: int, db: Session = Depends(get_db), user: str = D
 
 # --- Bulk / administrative cleanup endpoints (safe, protected) ---
 @router.post('/api/messages/delete-by-status')
-def delete_messages_by_status(status: str = Form(...), confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    """Elimina tutti i messaggi con lo stato specificato. Richiede confirm=true per eseguire."""
+async def delete_messages_by_status(request: Request, status: str = Form(None), confirm: bool = Form(None), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i messaggi con lo stato specificato. Conferma tramite form o JSON."""
     if isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail='Not authenticated')
+
+    # Support JSON body from frontend
+    try:
+        payload = {}
+        if request.headers.get('content-type', '').lower().startswith('application/json'):
+            payload = await request.json()
+    except Exception:
+        payload = {}
+
+    if status is None:
+        status = payload.get('status')
+    if confirm is None:
+        confirm = payload.get('confirm', True)
 
     if not confirm:
         return {'status': 'error', 'message': 'confirm=false, operation aborted'}
@@ -527,16 +540,27 @@ def delete_messages_by_status(status: str = Form(...), confirm: bool = Form(Fals
 
         deleted = db.query(SpottedMessage).filter(SpottedMessage.status == MessageStatus(status)).delete(synchronize_session=False)
         db.commit()
-        return {'status': 'success', 'deleted': deleted}
+        return {'status': 'success', 'deleted_count': deleted}
     except Exception as e:
         db.rollback()
         return {'status': 'error', 'message': str(e)}
 
 @router.post('/api/messages/delete-all')
-def delete_all_messages(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    """Elimina tutti i messaggi (tranne quelli POSTED). Richiede confirm=true."""
+async def delete_all_messages(request: Request, confirm: bool = Form(None), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i messaggi (tranne quelli POSTED). Conferma tramite form o JSON."""
     if isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail='Not authenticated')
+
+    try:
+        payload = {}
+        if request.headers.get('content-type', '').lower().startswith('application/json'):
+            payload = await request.json()
+    except Exception:
+        payload = {}
+
+    if confirm is None:
+        confirm = payload.get('confirm', True)
+
     if not confirm:
         return {'status': 'error', 'message': 'confirm=false, operation aborted'}
 
@@ -544,16 +568,27 @@ def delete_all_messages(confirm: bool = Form(False), db: Session = Depends(get_d
         # Only remove non-posted messages to avoid data loss
         deleted = db.query(SpottedMessage).filter(SpottedMessage.status != MessageStatus.POSTED).delete(synchronize_session=False)
         db.commit()
-        return {'status': 'success', 'deleted': deleted}
+        return {'status': 'success', 'deleted_count': deleted}
     except Exception as e:
         db.rollback()
         return {'status': 'error', 'message': str(e)}
 
 @router.post('/api/info-cards/delete-all')
-def delete_all_info_cards(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    """Elimina tutte le info cards (MessageType.INFO). Richiede confirm=true."""
+async def delete_all_info_cards(request: Request, confirm: bool = Form(None), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutte le info cards (MessageType.INFO). Conferma tramite form o JSON."""
     if isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail='Not authenticated')
+
+    try:
+        payload = {}
+        if request.headers.get('content-type', '').lower().startswith('application/json'):
+            payload = await request.json()
+    except Exception:
+        payload = {}
+
+    if confirm is None:
+        confirm = payload.get('confirm', True)
+
     if not confirm:
         return {'status': 'error', 'message': 'confirm=false, operation aborted'}
 
@@ -561,16 +596,27 @@ def delete_all_info_cards(confirm: bool = Form(False), db: Session = Depends(get
         from app.database import MessageType
         deleted = db.query(SpottedMessage).filter(SpottedMessage.message_type == MessageType.INFO).delete(synchronize_session=False)
         db.commit()
-        return {'status': 'success', 'deleted': deleted}
+        return {'status': 'success', 'deleted_count': deleted}
     except Exception as e:
         db.rollback()
         return {'status': 'error', 'message': str(e)}
 
 @router.post('/api/daily-posts/delete-all')
-def delete_all_daily_posts(confirm: bool = Form(False), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
-    """Elimina tutti i daily posts. Richiede confirm=true."""
+async def delete_all_daily_posts(request: Request, confirm: bool = Form(None), db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Elimina tutti i daily posts. Conferma tramite form o JSON."""
     if isinstance(user, RedirectResponse):
         raise HTTPException(status_code=401, detail='Not authenticated')
+
+    try:
+        payload = {}
+        if request.headers.get('content-type', '').lower().startswith('application/json'):
+            payload = await request.json()
+    except Exception:
+        payload = {}
+
+    if confirm is None:
+        confirm = payload.get('confirm', True)
+
     if not confirm:
         return {'status': 'error', 'message': 'confirm=false, operation aborted'}
 
@@ -578,7 +624,7 @@ def delete_all_daily_posts(confirm: bool = Form(False), db: Session = Depends(ge
         from app.database import DailyPost
         deleted = db.query(DailyPost).delete(synchronize_session=False)
         db.commit()
-        return {'status': 'success', 'deleted': deleted}
+        return {'status': 'success', 'deleted_count': deleted}
     except Exception as e:
         db.rollback()
         return {'status': 'error', 'message': str(e)}
