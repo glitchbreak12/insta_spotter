@@ -426,3 +426,148 @@ def delete_style_config(db: Session, config_id: int) -> bool:
     db.delete(config)
     db.commit()
     return True
+
+# --- SYSTEM SETTINGS FUNCTIONS ---
+
+class SystemSetting(Base):
+    """Modello per le impostazioni di sistema persistenti."""
+    __tablename__ = "system_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, nullable=False, index=True)
+    value = Column(String, nullable=True)  # Valore come stringa, convertito in base al tipo
+    value_type = Column(String, default="string")  # "string", "boolean", "integer", "float"
+    description = Column(String, nullable=True)
+    category = Column(String, default="general")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+def get_system_setting(db: Session, key: str) -> Optional[SystemSetting]:
+    """Recupera una singola impostazione di sistema."""
+    return db.query(SystemSetting).filter(SystemSetting.key == key).first()
+
+def get_all_system_settings(db: Session, category: str = None) -> list:
+    """Recupera tutte le impostazioni di sistema, opzionalmente filtrate per categoria."""
+    query = db.query(SystemSetting)
+    if category:
+        query = query.filter(SystemSetting.category == category)
+    return query.order_by(SystemSetting.category, SystemSetting.key).all()
+
+def set_system_setting(db: Session, key: str, value: any, value_type: str = "string", description: str = None, category: str = "general") -> SystemSetting:
+    """Imposta o aggiorna una impostazione di sistema."""
+    setting = get_system_setting(db, key)
+
+    # Converti il valore in stringa per il database
+    if value_type == "boolean":
+        str_value = "1" if value else "0"
+    elif value_type == "integer":
+        str_value = str(int(value))
+    elif value_type == "float":
+        str_value = str(float(value))
+    else:
+        str_value = str(value) if value is not None else ""
+
+    if setting:
+        # Aggiorna impostazione esistente
+        setting.value = str_value
+        setting.value_type = value_type
+        if description:
+            setting.description = description
+        if category:
+            setting.category = category
+        setting.updated_at = datetime.utcnow()
+    else:
+        # Crea nuova impostazione
+        setting = SystemSetting(
+            key=key,
+            value=str_value,
+            value_type=value_type,
+            description=description,
+            category=category
+        )
+        db.add(setting)
+
+    db.commit()
+    db.refresh(setting)
+    return setting
+
+def get_system_setting_value(db: Session, key: str, default_value: any = None) -> any:
+    """Recupera il valore di una impostazione di sistema convertito al tipo corretto."""
+    setting = get_system_setting(db, key)
+    if not setting:
+        return default_value
+
+    try:
+        if setting.value_type == "boolean":
+            return setting.value == "1"
+        elif setting.value_type == "integer":
+            return int(setting.value)
+        elif setting.value_type == "float":
+            return float(setting.value)
+        else:
+            return setting.value
+    except (ValueError, TypeError):
+        return default_value
+
+def delete_system_setting(db: Session, key: str) -> bool:
+    """Elimina una impostazione di sistema."""
+    setting = get_system_setting(db, key)
+    if not setting:
+        return False
+
+    db.delete(setting)
+    db.commit()
+    return True
+
+# --- UTILITY FUNCTIONS FOR SETTINGS ---
+
+def load_settings_to_environment(db: Session):
+    """Carica tutte le impostazioni di sistema nell'ambiente per compatibilità con il codice esistente."""
+    settings = get_all_system_settings(db)
+
+    for setting in settings:
+        value = get_system_setting_value(db, setting.key)
+        if value is not None:
+            # Converti in formato compatibile con il codice esistente
+            if setting.value_type == "boolean":
+                os.environ[setting.key.upper()] = "1" if value else "0"
+            else:
+                os.environ[setting.key.upper()] = str(value)
+
+def save_environment_to_settings(db: Session):
+    """Salva le variabili d'ambiente correnti nelle impostazioni di sistema."""
+    # Mappa delle impostazioni chiave -> (tipo, descrizione, categoria)
+    env_mapping = {
+        "MAINTENANCE_MODE": ("boolean", "Modalità manutenzione abilitata", "system"),
+        "MAX_MESSAGES_PER_HOUR": ("integer", "Massimo messaggi per ora", "limits"),
+        "SESSION_TIMEOUT": ("integer", "Timeout sessione in ore", "security"),
+        "INSTAGRAM_USERNAME": ("string", "Username Instagram", "instagram"),
+        "INSTAGRAM_PASSWORD": ("string", "Password Instagram", "instagram"),
+        "GEMINI_API_KEY": ("string", "API Key Google Gemini", "ai"),
+        "AI_ENABLED": ("boolean", "AI abilitata", "ai"),
+        "AI_MODERATION_ENABLED": ("boolean", "Moderazione AI abilitata", "ai"),
+        "AI_MODEL": ("string", "Modello AI selezionato", "ai"),
+        "AI_AUTO_APPROVE_THRESHOLD": ("float", "Soglia approvazione automatica AI", "ai"),
+        "DAILY_POST_ENABLED": ("boolean", "Daily post abilitato", "daily_post"),
+        "DAILY_POST_TIME": ("string", "Orario daily post", "daily_post"),
+        "DAILY_POST_MAX_MESSAGES": ("integer", "Max messaggi per daily post", "daily_post"),
+        "DAILY_POST_TITLE_TEMPLATE": ("string", "Template titolo daily post", "daily_post"),
+        "DAILY_POST_HASHTAG_TEMPLATE": ("string", "Template hashtag daily post", "daily_post"),
+    }
+
+    for env_key, (value_type, description, category) in env_mapping.items():
+        env_value = os.getenv(env_key)
+        if env_value is not None:
+            try:
+                if value_type == "boolean":
+                    value = env_value.lower() in ("1", "true", "yes", "on")
+                elif value_type == "integer":
+                    value = int(env_value)
+                elif value_type == "float":
+                    value = float(env_value)
+                else:
+                    value = env_value
+
+                set_system_setting(db, env_key.lower(), value, value_type, description, category)
+            except (ValueError, TypeError):
+                print(f"⚠️ Impossibile convertire {env_key}={env_value} a {value_type}")

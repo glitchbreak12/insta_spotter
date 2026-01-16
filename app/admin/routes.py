@@ -10,7 +10,7 @@ import json
 import io
 import os
 
-from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal, get_ai_config, update_ai_config, AIModel
+from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal, get_ai_config, update_ai_config, AIModel, set_system_setting, get_system_setting_value
 from app.admin.security import authenticate_user, create_access_token, get_current_user
 from app.tasks import post_daily_compilation
 from config import settings # Import settings
@@ -2137,20 +2137,26 @@ def instagram_manual_login(user: str = Depends(get_current_user)):
 # === SYSTEM SETTINGS ENDPOINTS ===
 
 @router.get("/api/settings/system")
-def get_system_settings(user: str = Depends(get_current_user)):
-    """Ottieni impostazioni di sistema."""
+def get_system_settings(user: str = Depends(get_authenticated_user), db: Session = Depends(get_db)):
+    """Ottieni impostazioni di sistema dal database."""
     try:
-        import os
-        maintenance_mode = os.getenv("MAINTENANCE_MODE", "0") == "1"
-        debug_mode = os.getenv("DEBUG_MODE", "0") == "1"
+        from app.database import get_system_setting_value
+
+        # Ottieni tutte le impostazioni dal database
+        maintenance_mode = get_system_setting_value(db, "maintenance_mode", False)
+        debug_mode = get_system_setting_value(db, "debug_mode", False)
+        log_level = get_system_setting_value(db, "log_level", "INFO")
+        timezone = get_system_setting_value(db, "timezone", "Europe/Rome")
+        keep_alive_enabled = get_system_setting_value(db, "keep_alive_enabled", True)
+        trusted_host_middleware_disabled = get_system_setting_value(db, "trusted_host_middleware_disabled", False)
 
         return {
             "maintenance_mode": maintenance_mode,
             "debug_mode": debug_mode,
-            "log_level": os.getenv("LOG_LEVEL", "INFO"),
-            "timezone": os.getenv("TZ", "Europe/Rome"),
-            "keep_alive_enabled": bool(os.getenv("DISABLE_KEEP_ALIVE") != "1"),
-            "trusted_host_middleware_disabled": bool(os.getenv("DISABLE_TRUSTED_HOST", "0") == "1"),
+            "log_level": log_level,
+            "timezone": timezone,
+            "keep_alive_enabled": keep_alive_enabled,
+            "trusted_host_middleware_disabled": trusted_host_middleware_disabled,
             "current_maintenance_status": "ATTIVA" if maintenance_mode else "DISATTIVA"
         }
     except Exception as e:
@@ -2164,16 +2170,27 @@ def update_system_settings(
     timezone: str = Form("Europe/Rome"),
     keep_alive_enabled: bool = Form(True),
     trusted_host_middleware_disabled: bool = Form(False),
-    user: str = Depends(get_current_user)
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
 ):
-    """Aggiorna impostazioni di sistema."""
+    """Aggiorna impostazioni di sistema nel database."""
     try:
+        from app.database import set_system_setting
+
         # Valida log level
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if log_level.upper() not in valid_log_levels:
             return {"status": "error", "message": f"Log level non valido. Valori validi: {', '.join(valid_log_levels)}"}
 
-        # Imposta variabili d'ambiente
+        # Salva tutte le impostazioni nel database
+        set_system_setting(db, "maintenance_mode", maintenance_mode, "boolean", "Modalità manutenzione abilitata", "system")
+        set_system_setting(db, "debug_mode", debug_mode, "boolean", "Modalità debug abilitata", "system")
+        set_system_setting(db, "log_level", log_level.upper(), "string", "Livello di logging", "system")
+        set_system_setting(db, "timezone", timezone, "string", "Fuso orario", "system")
+        set_system_setting(db, "keep_alive_enabled", keep_alive_enabled, "boolean", "Keep-alive abilitato", "system")
+        set_system_setting(db, "trusted_host_middleware_disabled", trusted_host_middleware_disabled, "boolean", "Trusted host disabilitato", "system")
+
+        # Aggiorna anche le variabili d'ambiente per compatibilità immediata
         os.environ["MAINTENANCE_MODE"] = "1" if maintenance_mode else "0"
         os.environ["DEBUG_MODE"] = "1" if debug_mode else "0"
         os.environ["LOG_LEVEL"] = log_level.upper()
@@ -2193,25 +2210,32 @@ def update_system_settings(
 
         return {
             "status": "success",
-            "message": f"Impostazioni sistema aggiornate. Modalità manutenzione: {settings_summary['status']}",
+            "message": f"Impostazioni sistema aggiornate e salvate nel database. Modalità manutenzione: {settings_summary['status']}",
             "settings": settings_summary
         }
 
     except Exception as e:
+        db.rollback()
         return {"status": "error", "message": str(e)}
 
 @router.post("/api/settings/system/maintenance")
 def toggle_maintenance_mode(
     enabled: bool = Form(False),
-    user: str = Depends(get_current_user)
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
 ):
-    """Attiva/disattiva modalità manutenzione."""
+    """Attiva/disattiva modalità manutenzione nel database."""
     try:
-        # Imposta la variabile d'ambiente
+        from app.database import set_system_setting
+
+        # Salva nel database
+        set_system_setting(db, "maintenance_mode", enabled, "boolean", "Modalità manutenzione abilitata", "system")
+
+        # Aggiorna anche la variabile d'ambiente per compatibilità immediata
         os.environ["MAINTENANCE_MODE"] = "1" if enabled else "0"
 
         status_message = "attivata" if enabled else "disattivata"
-        message = f"Modalità manutenzione {status_message}"
+        message = f"Modalità manutenzione {status_message} e salvata nel database"
 
         return {
             "status": "success",
@@ -2221,6 +2245,7 @@ def toggle_maintenance_mode(
         }
 
     except Exception as e:
+        db.rollback()
         return {"status": "error", "message": str(e)}
 
 @router.get("/api/settings/system/status")

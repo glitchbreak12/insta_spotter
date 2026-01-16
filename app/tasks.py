@@ -289,15 +289,16 @@ def post_daily_compilation(db: Session):
 
 def daily_post_task():
     """
-    Task giornaliero che pubblica un riepilogo di tutti gli spotted della giornata.
+    Task giornaliero che pubblica TUTTI gli spotted della giornata come carousel Instagram.
+    Crea una card introduttiva, tutte le card spotted, e una card finale.
     """
     try:
-        print("--- DEBUG [DAILY POST]: Avvio task giornaliero ---")
+        print("--- DEBUG [DAILY POST]: Avvio task giornaliero completo ---")
 
         db = SessionLocal()
         try:
             # Recupera impostazioni del daily post
-            from app.database import get_daily_post_settings, mark_daily_post_run, get_todays_messages, update_daily_post_settings
+            from app.database import get_daily_post_settings, mark_daily_post_run, get_todays_messages, update_daily_post_settings, MessageType
             settings = get_daily_post_settings(db)
 
             # Se non esistono impostazioni, creane di default abilitate
@@ -308,16 +309,11 @@ def daily_post_task():
                     enabled=True,
                     post_time="20:00",
                     style="carousel",
-                    max_messages=20,
+                    max_messages=50,  # Aumentato per gestire più messaggi
                     title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
                     hashtag_template="#spotted #instaspotter #dailyrecap",
                     ai_model="gemini"
                 )
-
-            # Forza abilitazione se disabilitato
-            if not settings.enabled:
-                print("--- DEBUG [DAILY POST]: Riabilitazione daily post forzata ---")
-                settings = update_daily_post_settings(db=db, enabled=True)
 
             # Verifica se abbiamo già pubblicato oggi
             from datetime import datetime, time
@@ -326,72 +322,77 @@ def daily_post_task():
                 print("--- DEBUG [DAILY POST]: Post giornaliero già pubblicato oggi ---")
                 return {"status": "already_run", "message": "Già pubblicato oggi"}
 
-            # Recupera messaggi APPROVED (non solo di oggi, ma anche passati se necessario)
-            messages = get_todays_messages(db, settings.max_messages)
+            # Recupera TUTTI i messaggi APPROVED di oggi (solo SPOTTED, non INFO)
+            messages = db.query(SpottedMessage).filter(
+                SpottedMessage.status == MessageStatus.APPROVED,
+                SpottedMessage.message_type == MessageType.SPOTTED,  # Solo spotted, non info cards
+                SpottedMessage.created_at >= today_start
+            ).order_by(SpottedMessage.created_at).limit(settings.max_messages).all()
 
-            # Se non ci sono messaggi di oggi, cerca messaggi approvati recenti
             if not messages:
-                print("--- DEBUG [DAILY POST]: Nessun messaggio di oggi, cerco messaggi approvati recenti ---")
-                from app.database import SpottedMessage, MessageStatus, MessageType
-                # Cerca fino a 50 messaggi approvati degli ultimi 7 giorni
-                week_ago = datetime.utcnow() - timedelta(days=7)
-                recent_messages = db.query(SpottedMessage).filter(
-                    SpottedMessage.status == MessageStatus.APPROVED,
-                    SpottedMessage.message_type == MessageType.SPOTTED,  # Solo spotted, non info cards
-                    SpottedMessage.created_at >= week_ago
-                ).order_by(SpottedMessage.created_at.desc()).limit(settings.max_messages).all()
+                print("--- DEBUG [DAILY POST]: Nessun messaggio spotted approvato di oggi ---")
+                return {"status": "no_messages", "message": "Nessun messaggio spotted approvato oggi"}
 
-                if recent_messages:
-                    messages = recent_messages
-                    print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi approvati recenti ---")
-                else:
-                    print("--- DEBUG [DAILY POST]: Nessun messaggio approvato trovato negli ultimi 7 giorni ---")
-                    return {"status": "no_messages", "message": "Nessun messaggio approvato disponibile"}
+            print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi spotted approvati di oggi ---")
 
-            print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi per il post giornaliero ---")
-
-            # Genera carousel giornaliero
+            # Genera carousel completo: INTRO + TUTTI GLI SPOTTED + FINALE
             generator = ImageGenerator()
             today = datetime.utcnow().strftime("%d/%m/%Y")
+            base_filename = f"daily_complete_{datetime.utcnow().strftime('%Y%m%d')}"
 
-            # Prepara titolo
-            title = settings.title_template.format(date=today)
+            # Crea carousel con card introduttiva, tutti gli spotted, e card finale
+            image_paths = generator.create_complete_daily_carousel(messages, base_filename, today)
 
-            # Genera carousel con immagini individuali
-            base_filename = f"daily_recap_{datetime.utcnow().strftime('%Y%m%d')}"
-            image_paths = generator.create_daily_carousel(messages, base_filename, title)
+            if not image_paths or len(image_paths) < 3:  # Dovremmo avere almeno intro + 1 spotted + finale
+                print("--- DEBUG [DAILY POST]: ERRORE nella generazione del carousel completo ---")
+                return {"status": "error", "message": "Errore generazione carousel completo"}
 
-            if not image_paths:
-                print("--- DEBUG [DAILY POST]: ERRORE nella generazione del collage ---")
-                return {"status": "error", "message": "Errore generazione collage"}
+            print(f"--- DEBUG [DAILY POST]: Carousel completo creato con {len(image_paths)} immagini ---")
 
-            print(f"--- DEBUG [DAILY POST]: Collage creato con {len(image_paths)} immagini ---")
-
-            # Pubblica su Instagram
+            # Pubblica su Instagram come CAROUSEL
             if not INSTAGRAM_BOT_AVAILABLE:
                 print("--- DEBUG [DAILY POST]: ⚠️ Instagram bot non disponibile (simulazione) ---")
                 # Simula pubblicazione per test
                 mark_daily_post_run(db)
-                return {"status": "simulated", "message": f"Simulato post giornaliero con {len(messages)} messaggi"}
+                return {"status": "simulated", "message": f"Simulato carousel giornaliero completo con {len(messages)} spotted"}
 
             try:
                 bot = InstagramBot()
+
+                # Crea caption completa con titolo e hashtag
+                title = settings.title_template.format(date=today)
                 full_caption = f"{title}\n\n{settings.hashtag_template}"
 
-                if len(image_paths) == 1:
-                    # Singola immagine
-                    media_pk = bot.post_story(image_paths[0], full_caption)
-                else:
-                    # Carousel
-                    media_pk = bot.post_carousel(image_paths, full_caption)
+                print(f"--- DEBUG [DAILY POST]: Pubblicazione carousel con {len(image_paths)} immagini ---")
+
+                # Pubblica come carousel (sempre carousel, anche se una sola immagine)
+                media_pk = bot.post_carousel(image_paths, full_caption)
 
                 if media_pk:
-                    print(f"--- DEBUG [DAILY POST]: Post giornaliero pubblicato con successo! Media PK: {media_pk} ---")
+                    print(f"--- DEBUG [DAILY POST]: Carousel giornaliero pubblicato con successo! Media PK: {media_pk} ---")
                     mark_daily_post_run(db)
-                    return {"status": "success", "message": f"Pubblicato riepilogo giornaliero con {len(messages)} messaggi", "media_pk": media_pk}
+
+                    # Salva info del post pubblicato nel database per cronologia
+                    from app.database import create_daily_post
+                    post_record = create_daily_post(
+                        db=db,
+                        title=title,
+                        content=f"Carousel giornaliero con {len(messages)} spotted del {today}",
+                        hashtags=settings.hashtag_template,
+                        ai_model_used=None,  # Non usiamo AI qui
+                        created_by="system"
+                    )
+
+                    return {
+                        "status": "success",
+                        "message": f"Pubblicato carousel giornaliero completo con {len(messages)} spotted",
+                        "media_pk": media_pk,
+                        "image_count": len(image_paths),
+                        "spotted_count": len(messages)
+                    }
                 else:
-                    print("--- DEBUG [DAILY POST]: ERRORE nella pubblicazione ---")
-                    return {"status": "error", "message": "Errore pubblicazione Instagram"}
+                    print("--- DEBUG [DAILY POST]: ERRORE nella pubblicazione del carousel ---")
+                    return {"status": "error", "message": "Errore pubblicazione carousel Instagram"}
 
             except Exception as e:
                 print(f"--- DEBUG [DAILY POST]: ERRORE pubblicazione Instagram: {e} ---")
@@ -402,6 +403,8 @@ def daily_post_task():
 
     except Exception as e:
         print(f"--- DEBUG [DAILY POST]: ERRORE CRITICO nel daily post task: {e} ---")
+        import traceback
+        traceback.print_exc()
         return {"status": "error", "message": str(e)}
 
 def test_daily_post():

@@ -278,6 +278,61 @@ def run_migration():
                 print(f"❌ Errore tabella 'ai_config': {e}")
             connection.rollback()
 
+        # Create system_settings table for persistent settings
+        try:
+            connection.execute(text('''
+                CREATE TABLE system_settings (
+                    id INTEGER PRIMARY KEY,
+                    key VARCHAR UNIQUE NOT NULL,
+                    value TEXT,
+                    value_type VARCHAR DEFAULT 'string',
+                    description VARCHAR,
+                    category VARCHAR DEFAULT 'general',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            '''))
+            connection.commit()
+            print("✅ Tabella 'system_settings' creata con successo.")
+
+            # Insert default settings
+            default_settings = [
+                ('maintenance_mode', '0', 'boolean', 'Modalità manutenzione abilitata', 'system'),
+                ('max_messages_per_hour', '10', 'integer', 'Massimo messaggi per ora', 'limits'),
+                ('session_timeout', '24', 'integer', 'Timeout sessione in ore', 'security'),
+                ('instagram_username', '', 'string', 'Username Instagram', 'instagram'),
+                ('instagram_password', '', 'string', 'Password Instagram', 'instagram'),
+                ('gemini_api_key', '', 'string', 'API Key Google Gemini', 'ai'),
+                ('ai_enabled', '1', 'boolean', 'AI abilitata', 'ai'),
+                ('ai_moderation_enabled', '1', 'boolean', 'Moderazione AI abilitata', 'ai'),
+                ('ai_model', 'gemini', 'string', 'Modello AI selezionato', 'ai'),
+                ('ai_auto_approve_threshold', '0.8', 'float', 'Soglia approvazione automatica AI', 'ai'),
+                ('daily_post_enabled', '1', 'boolean', 'Daily post abilitato', 'daily_post'),
+                ('daily_post_time', '20:00', 'string', 'Orario daily post', 'daily_post'),
+                ('daily_post_max_messages', '20', 'integer', 'Max messaggi per daily post', 'daily_post'),
+                ('daily_post_title_template', '🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫', 'string', 'Template titolo daily post', 'daily_post'),
+                ('daily_post_hashtag_template', '#spotted #instaspotter #dailyrecap', 'string', 'Template hashtag daily post', 'daily_post'),
+            ]
+
+            for key, value, value_type, description, category in default_settings:
+                try:
+                    connection.execute(text('''
+                        INSERT OR IGNORE INTO system_settings (key, value, value_type, description, category)
+                        VALUES (?, ?, ?, ?, ?)
+                    '''), (key, value, value_type, description, category))
+                    connection.commit()
+                except Exception as insert_e:
+                    print(f"ℹ️  Impostazione '{key}' già esistente: {insert_e}")
+                    connection.rollback()
+
+            print("✅ Impostazioni predefinite inserite.")
+        except Exception as e:
+            if "already exists" in str(e):
+                print("ℹ️  Tabella 'system_settings' già esistente.")
+            else:
+                print(f"❌ Errore tabella 'system_settings': {e}")
+            connection.rollback()
+
     print("\n🎉 Migrazione database completata con successo!")
 
 if __name__ == "__main__":
