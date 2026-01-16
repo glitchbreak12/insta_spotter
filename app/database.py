@@ -251,6 +251,13 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
                 except ValueError:
                     print(f"⚠️ Stile '{value}' non valido, uso CAROUSEL come default")
                     setattr(settings, key, DailyPostStyle.CAROUSEL)
+            else:
+                setattr(settings, key, value)
+
+    # Commit changes
+    db.commit()
+    db.refresh(settings)
+    return settings
 
 def get_todays_messages(db: Session, limit: int = 20) -> list:
     """Recupera tutti i messaggi APPROVED di oggi."""

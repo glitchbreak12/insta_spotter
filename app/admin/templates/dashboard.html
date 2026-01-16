@@ -503,6 +503,16 @@
             transition: var(--transition-normal);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+        }
+
+        .message-card[data-message-id] {
+            cursor: pointer;
+        }
+
+        .message-card[data-message-id]:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
         }
 
         .message-card::before {
@@ -525,6 +535,155 @@
 
         .message-card:hover::before {
             opacity: 1;
+        }
+
+        .message-card.clickable {
+            cursor: pointer;
+        }
+
+        /* Individual message management modal */
+        #individualMessageModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #individualMessageModal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .individual-modal-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--space-2xl);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+        }
+
+        .individual-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .individual-modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .individual-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--space-sm);
+            border-radius: var(--radius);
+            transition: var(--transition-fast);
+        }
+
+        .individual-modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .individual-message-content {
+            margin-bottom: var(--space-xl);
+        }
+
+        .individual-message-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .individual-message-text {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .individual-message-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .individual-action-btn {
+            padding: var(--space-md) var(--space-lg);
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            text-decoration: none;
+        }
+
+        .individual-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .individual-action-btn.approve {
+            background: var(--gradient-success);
+            color: white;
+        }
+
+        .individual-action-btn.reject {
+            background: var(--gradient-error);
+            color: white;
+        }
+
+        .individual-action-btn.edit {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .individual-action-btn.delete {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .individual-action-btn.reset {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
         }
 
         .message-header {
@@ -1187,43 +1346,37 @@
                         </div>
                     </div>
 
-                    <!-- Individual Message Actions Modal -->
-                    <div id="messageActionsModal" class="modal">
-                        <div class="modal-content" style="max-width: 500px;">
-                            <div class="modal-header">
-                                <h3 class="modal-title">Azioni Messaggio <span id="modalMessageId"></span></h3>
-                                <button class="modal-close" onclick="closeMessageActionsModal()">&times;</button>
+                    <!-- Individual Message Management Modal -->
+                    <div id="individualMessageModal" class="modal">
+                        <div class="individual-modal-content">
+                            <div class="individual-modal-header">
+                                <h3 class="individual-modal-title">Gestione Messaggio <span id="individualModalMessageId"></span></h3>
+                                <button class="individual-modal-close" onclick="closeIndividualMessageModal()">&times;</button>
                             </div>
-                            <div id="modalMessageContent" style="padding: var(--space-lg);">
+                            <div id="individualModalContent" class="individual-message-content">
                                 <!-- Message content will be loaded here -->
                             </div>
-                            <div class="modal-header" style="border-top: 1px solid var(--border);">
-                                <div class="action-buttons" style="width: 100%; justify-content: space-between;">
-                                    <div>
-                                        <button class="btn btn-secondary btn-sm" onclick="editMessageModal()">
-                                            <i class="fas fa-edit"></i>
-                                            Modifica
-                                        </button>
-                                        <button class="btn btn-warning btn-sm" onclick="resetMessageModal()">
-                                            <i class="fas fa-undo"></i>
-                                            Reset
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button class="btn btn-success btn-sm" onclick="approveMessageModal()">
-                                            <i class="fas fa-check"></i>
-                                            Approva
-                                        </button>
-                                        <button class="btn btn-danger btn-sm" onclick="rejectMessageModal()">
-                                            <i class="fas fa-times"></i>
-                                            Rifiuta
-                                        </button>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteMessageModal()">
-                                            <i class="fas fa-trash"></i>
-                                            Elimina
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="individual-message-actions">
+                                <button class="individual-action-btn approve" onclick="approveMessageIndividual()">
+                                    <i class="fas fa-check"></i>
+                                    Approva
+                                </button>
+                                <button class="individual-action-btn edit" onclick="editMessageIndividual()">
+                                    <i class="fas fa-edit"></i>
+                                    Modifica
+                                </button>
+                                <button class="individual-action-btn reset" onclick="resetMessageIndividual()">
+                                    <i class="fas fa-undo"></i>
+                                    Reset
+                                </button>
+                                <button class="individual-action-btn delete" onclick="deleteMessageIndividual()">
+                                    <i class="fas fa-trash"></i>
+                                    Elimina
+                                </button>
+                                <button class="individual-action-btn" onclick="closeIndividualMessageModal()" style="background: var(--bg-tertiary); color: var(--text-primary);">
+                                    <i class="fas fa-times"></i>
+                                    Chiudi
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -2183,7 +2336,7 @@
             }
 
             const html = filteredMessages.map(msg => `
-                <div class="message-card">
+                <div class="message-card" data-message-id="${msg.id}" onclick="openMessageModal(${msg.id})">
                     <div class="message-header">
                         <span class="message-id">#${msg.id}</span>
                         <span class="message-status status-${msg.status.toLowerCase()}">${msg.status}</span>
@@ -2195,21 +2348,21 @@
                     </div>
                     <div class="message-actions">
                         ${msg.status === 'PENDING' ? `
-                            <button class="btn btn-success btn-sm" onclick="moderateMessage(${msg.id}, 'APPROVED')">
+                            <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); moderateMessage(${msg.id}, 'APPROVED')">
                                 <i class="fas fa-check"></i>
                                 Approva
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="moderateMessage(${msg.id}, 'REJECTED')">
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); moderateMessage(${msg.id}, 'REJECTED')">
                                 <i class="fas fa-times"></i>
                                 Rifiuta
                             </button>
                         ` : msg.status === 'APPROVED' ? `
-                            <button class="btn btn-primary btn-sm" onclick="postMessage(${msg.id})">
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); postMessage(${msg.id})">
                                 <i class="fas fa-paper-plane"></i>
                                 Pubblica
                             </button>
                         ` : ''}
-                        <button class="btn btn-outline btn-sm" onclick="viewMessageDetails(${msg.id})">
+                        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewMessageDetails(${msg.id})">
                             <i class="fas fa-eye"></i>
                             Dettagli
                         </button>
@@ -4975,6 +5128,251 @@
                     </button>
                 </div>
             `;
+        }
+
+        // Individual message management modal functions
+        async function openMessageModal(messageId) {
+            try {
+                // Get message data
+                const message = allMessages.find(m => m.id === messageId);
+                if (!message) {
+                    showNotification('Errore', 'Messaggio non trovato', 'error');
+                    return;
+                }
+
+                // Populate modal
+                document.getElementById('individualModalMessageId').textContent = message.id;
+
+                const contentHtml = `
+                    <div class="individual-message-meta">
+                        <div><strong>Status:</strong> <span class="message-status status-${message.status.toLowerCase()}">${message.status}</span></div>
+                        <div><strong>Data:</strong> ${new Date(message.created_at).toLocaleString('it-IT')}</div>
+                        <div><strong>IP:</strong> ${message.ip_address || 'N/A'}</div>
+                        <div><strong>ID:</strong> #${message.id}</div>
+                    </div>
+                    <div class="individual-message-text">${escapeHtml(message.text)}</div>
+                    ${message.gemini_analysis ? `
+                        <div style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--bg-tertiary); border-radius: var(--radius); border-left: 3px solid var(--info);">
+                            <strong style="color: var(--info);">Analisi AI:</strong>
+                            <div style="margin-top: var(--space-sm); font-size: 0.9rem; color: var(--text-secondary);">${escapeHtml(message.gemini_analysis)}</div>
+                        </div>
+                    ` : ''}
+                    ${message.error_message ? `
+                        <div style="margin-top: var(--space-lg); padding: var(--space-md); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius); border-left: 3px solid var(--error);">
+                            <strong style="color: var(--error);">Errore:</strong>
+                            <div style="margin-top: var(--space-sm); font-size: 0.9rem; color: var(--error);">${escapeHtml(message.error_message)}</div>
+                        </div>
+                    ` : ''}
+                    ${message.admin_note ? `
+                        <div style="margin-top: var(--space-lg); padding: var(--space-md); background: rgba(245, 158, 11, 0.1); border-radius: var(--radius); border-left: 3px solid var(--warning);">
+                            <strong style="color: var(--warning);">Nota Admin:</strong>
+                            <div style="margin-top: var(--space-sm); font-size: 0.9rem; color: var(--text-secondary);">${escapeHtml(message.admin_note)}</div>
+                        </div>
+                    ` : ''}
+                `;
+
+                document.getElementById('individualModalContent').innerHTML = contentHtml;
+
+                // Update action buttons based on message status
+                const actionsContainer = document.querySelector('.individual-message-actions');
+
+                if (message.status === 'PENDING') {
+                    actionsContainer.innerHTML = `
+                        <button class="individual-action-btn approve" onclick="approveMessageIndividual()">
+                            <i class="fas fa-check"></i>
+                            Approva
+                        </button>
+                        <button class="individual-action-btn reject" onclick="rejectMessageIndividual()">
+                            <i class="fas fa-times"></i>
+                            Rifiuta
+                        </button>
+                        <button class="individual-action-btn edit" onclick="editMessageIndividual()">
+                            <i class="fas fa-edit"></i>
+                            Modifica
+                        </button>
+                        <button class="individual-action-btn delete" onclick="deleteMessageIndividual()">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                        <button class="individual-action-btn" onclick="closeIndividualMessageModal()" style="background: var(--bg-tertiary); color: var(--text-primary);">
+                            <i class="fas fa-times"></i>
+                            Chiudi
+                        </button>
+                    `;
+                } else if (message.status === 'APPROVED') {
+                    actionsContainer.innerHTML = `
+                        <button class="individual-action-btn edit" onclick="editMessageIndividual()">
+                            <i class="fas fa-edit"></i>
+                            Modifica
+                        </button>
+                        <button class="individual-action-btn reset" onclick="resetMessageIndividual()">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                        <button class="individual-action-btn delete" onclick="deleteMessageIndividual()">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                        <button class="individual-action-btn" onclick="closeIndividualMessageModal()" style="background: var(--bg-tertiary); color: var(--text-primary);">
+                            <i class="fas fa-times"></i>
+                            Chiudi
+                        </button>
+                    `;
+                } else {
+                    actionsContainer.innerHTML = `
+                        <button class="individual-action-btn edit" onclick="editMessageIndividual()">
+                            <i class="fas fa-edit"></i>
+                            Modifica
+                        </button>
+                        <button class="individual-action-btn reset" onclick="resetMessageIndividual()">
+                            <i class="fas fa-undo"></i>
+                            Reset
+                        </button>
+                        <button class="individual-action-btn delete" onclick="deleteMessageIndividual()">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                        <button class="individual-action-btn" onclick="closeIndividualMessageModal()" style="background: var(--bg-tertiary); color: var(--text-primary);">
+                            <i class="fas fa-times"></i>
+                            Chiudi
+                        </button>
+                    `;
+                }
+
+                // Store current message ID
+                window.currentMessageId = messageId;
+
+                // Show modal
+                document.getElementById('individualMessageModal').classList.add('active');
+
+            } catch (error) {
+                console.error('Error opening message modal:', error);
+                showNotification('Errore', 'Impossibile aprire la gestione messaggio', 'error');
+            }
+        }
+
+        function closeIndividualMessageModal() {
+            document.getElementById('individualMessageModal').classList.remove('active');
+            window.currentMessageId = null;
+        }
+
+        async function approveMessageIndividual() {
+            if (!window.currentMessageId) return;
+
+            try {
+                showNotification('Info', 'Approvando messaggio...', 'info');
+                const response = await apiCall(`/admin/api/messages/${window.currentMessageId}/approve`, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Messaggio approvato!', 'success');
+                    closeIndividualMessageModal();
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Approval failed');
+                }
+            } catch (error) {
+                console.error('Error approving message:', error);
+                showNotification('Errore', 'Impossibile approvare il messaggio', 'error');
+            }
+        }
+
+        async function rejectMessageIndividual() {
+            if (!window.currentMessageId) return;
+
+            try {
+                showNotification('Info', 'Rifiutando messaggio...', 'info');
+                const response = await apiCall(`/admin/api/messages/${window.currentMessageId}/reject`, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Messaggio rifiutato!', 'success');
+                    closeIndividualMessageModal();
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Rejection failed');
+                }
+            } catch (error) {
+                console.error('Error rejecting message:', error);
+                showNotification('Errore', 'Impossibile rifiutare il messaggio', 'error');
+            }
+        }
+
+        async function editMessageIndividual() {
+            if (!window.currentMessageId) return;
+
+            try {
+                const message = allMessages.find(m => m.id === window.currentMessageId);
+                if (!message) return;
+
+                const newText = prompt('Modifica il testo del messaggio:', message.text);
+                if (newText && newText.trim() && newText !== message.text) {
+                    showNotification('Info', 'Aggiornando messaggio...', 'info');
+                    const response = await apiCall(`/admin/api/messages/${window.currentMessageId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: newText.trim() })
+                    });
+
+                    if (response.ok) {
+                        showNotification('Successo', 'Messaggio aggiornato!', 'success');
+                        closeIndividualMessageModal();
+                        loadMessages();
+                        loadDashboardData();
+                    } else {
+                        throw new Error('Update failed');
+                    }
+                }
+            } catch (error) {
+                console.error('Error editing message:', error);
+                showNotification('Errore', 'Impossibile aggiornare il messaggio', 'error');
+            }
+        }
+
+        async function resetMessageIndividual() {
+            if (!window.currentMessageId) return;
+
+            if (!confirm('Resettare questo messaggio allo stato PENDING?')) return;
+
+            try {
+                showNotification('Info', 'Resettando messaggio...', 'info');
+                const response = await apiCall(`/admin/api/messages/${window.currentMessageId}/reset`, { method: 'POST' });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Messaggio resettato!', 'success');
+                    closeIndividualMessageModal();
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Reset failed');
+                }
+            } catch (error) {
+                console.error('Error resetting message:', error);
+                showNotification('Errore', 'Impossibile resettare il messaggio', 'error');
+            }
+        }
+
+        async function deleteMessageIndividual() {
+            if (!window.currentMessageId) return;
+
+            if (!confirm('Eliminare definitivamente questo messaggio? Questa azione non può essere annullata.')) return;
+
+            try {
+                showNotification('Info', 'Eliminando messaggio...', 'info');
+                const response = await apiCall(`/admin/api/messages/${window.currentMessageId}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    showNotification('Successo', 'Messaggio eliminato!', 'success');
+                    closeIndividualMessageModal();
+                    loadMessages();
+                    loadDashboardData();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                showNotification('Errore', 'Impossibile eliminare il messaggio', 'error');
+            }
         }
     </script>
 </body>

@@ -318,7 +318,7 @@ def daily_post_task():
             # Verifica se abbiamo già pubblicato oggi
             from datetime import datetime, time
             today_start = datetime.combine(datetime.utcnow().date(), time.min)
-            if settings.last_run and settings.last_run >= today_start:
+            if settings and settings.last_run and settings.last_run >= today_start:
                 print("--- DEBUG [DAILY POST]: Post giornaliero già pubblicato oggi ---")
                 return {"status": "already_run", "message": "Già pubblicato oggi"}
 
