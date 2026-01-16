@@ -340,19 +340,16 @@ def daily_post_task():
 
             print(f"--- DEBUG [DAILY POST]: Trovati {len(messages)} messaggi spotted approvati di oggi ---")
 
-            # Genera carousel completo: INTRO + TUTTI GLI SPOTTED + FINALE
+            # Genera carousel: usa il metodo create_daily_carousel che esiste
             generator = ImageGenerator()
             today = datetime.utcnow().strftime("%d/%m/%Y")
-            base_filename = f"daily_complete_{datetime.utcnow().strftime('%Y%m%d')}"
+            base_filename = f"daily_carousel_{datetime.utcnow().strftime('%Y%m%d')}"
 
-            # Crea carousel con card introduttiva, tutti gli spotted, e card finale
-            image_paths = generator.create_complete_daily_carousel(messages, base_filename, today)
-
-            if not image_paths or len(image_paths) < 3:  # Dovremmo avere almeno intro + 1 spotted + finale
-                print("--- DEBUG [DAILY POST]: ERRORE nella generazione del carousel completo ---")
-                return {"status": "error", "message": "Errore generazione carousel completo"}
-
-            print(f"--- DEBUG [DAILY POST]: Carousel completo creato con {len(image_paths)} immagini ---")
+            # Crea carousel con tutti gli spotted
+            image_paths = generator.create_daily_carousel(messages, base_filename, today)            
+            if not image_paths:
+                print("--- DEBUG [DAILY POST]: ERRORE nella generazione del carousel ---")
+                return {"status": "error", "message": "Errore generazione carousel"}
 
             # Pubblica su Instagram come CAROUSEL
             if not INSTAGRAM_BOT_AVAILABLE:
@@ -369,8 +366,6 @@ def daily_post_task():
                 full_caption = f"{title}\n\n{settings.hashtag_template}"
 
                 print(f"--- DEBUG [DAILY POST]: Pubblicazione carousel con {len(image_paths)} immagini ---")
-
-                # Pubblica come carousel (sempre carousel, anche se una sola immagine)
                 media_pk = bot.post_carousel(image_paths, full_caption)
 
                 if media_pk:

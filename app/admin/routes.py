@@ -742,10 +742,17 @@ def post_single_message(message_id: int):
         
         print(f"--- DEBUG [POST]: Inizio pubblicazione messaggio ID {message_id} ---")
         
-        # Genera immagine
+        # Genera immagine (passa message_type e title se presente)
         image_generator = ImageGenerator()
         output_filename = f"spotted_{message.id}_{int(datetime.now().timestamp())}.png"
-        image_path = image_generator.from_text(message.text, output_filename, message.id)
+        message_type_str = message.message_type.value if message.message_type else "spotted"
+        image_path = image_generator.from_text(
+            message.text, 
+            output_filename, 
+            message.id,
+            message_type=message_type_str,
+            title=message.title
+        )
         
         if not image_path:
             raise Exception("Image generation failed")
