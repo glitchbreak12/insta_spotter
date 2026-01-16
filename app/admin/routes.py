@@ -674,7 +674,26 @@ def approve_single_message(
     except Exception:
         scheduled_msg = "Messaggio approvato (impossibile avviare background post)"
 
-    return {"status": "success", "message": scheduled_msg, "message_id": message_id} 
+    return {"status": "success", "message": scheduled_msg, "message_id": message_id}
+
+@router.post('/api/messages/{message_id}/publish-now')
+def publish_single_now(message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
+    """Pubblica immediatamente un singolo messaggio (sincrono)."""
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+
+    # Ensure message exists
+    message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail='Messaggio non trovato')
+
+    # Only allow publishing if approved
+    if message.status != MessageStatus.APPROVED:
+        return {'status': 'error', 'message': 'Il messaggio deve essere APPROVED per essere pubblicato'}
+
+    # Call the publishing function synchronously
+    result = post_single_message(message_id)
+    return result 
 
 @router.post("/api/messages/{message_id}/reject")
 def reject_single_message(message_id: int, db: Session = Depends(get_db), user: str = Depends(get_authenticated_user)):
@@ -709,7 +728,7 @@ def reset_message_status(message_id: int, db: Session = Depends(get_db), user: s
     return {"status": "success", "message": "Stato messaggio resettato", "message_id": message_id}
 
 def post_single_message(message_id: int):
-    """Posta un singolo messaggio approvato su Instagram."""
+    """Posta un singolo messaggio approvato su Instagram. Restituisce un dict di risultato."""
     from app.image.generator import ImageGenerator
     from app.bot.poster import InstagramBot
     
@@ -717,8 +736,9 @@ def post_single_message(message_id: int):
     try:
         message = db.query(SpottedMessage).filter(SpottedMessage.id == message_id).first()
         if not message or message.status != MessageStatus.APPROVED:
-            print(f"--- DEBUG [POST]: Messaggio ID {message_id} non trovato o non approvato. ---")
-            return
+            msg = f"Messaggio ID {message_id} non trovato o non approvato."
+            print(f"--- DEBUG [POST]: {msg} ---")
+            return {"status": "error", "message": msg}
         
         print(f"--- DEBUG [POST]: Inizio pubblicazione messaggio ID {message_id} ---")
         
@@ -753,13 +773,18 @@ def post_single_message(message_id: int):
         
         db.commit()
         print(f"--- DEBUG [POST]: Messaggio ID {message_id} pubblicato con successo. Media PK: {media_pk} ---")
+        return {"status": "success", "media_pk": media_pk}
         
     except Exception as e:
         print(f"--- DEBUG [POST]: Errore pubblicazione ID {message_id}: {e} ---")
         if message:
-            message.status = MessageStatus.FAILED
-            message.error_message = str(e)
-            db.commit()
+            try:
+                message.status = MessageStatus.FAILED
+                message.error_message = str(e)
+                db.commit()
+            except Exception:
+                db.rollback()
+        return {"status": "error", "message": str(e)}
     finally:
         db.close()
 
@@ -1646,6 +1671,7 @@ def get_info_cards(user: str = Depends(get_current_user), db: Session = Depends(
 def create_info_card(
     title: str = Form(...),
     text: str = Form(...),
+    background_tasks: BackgroundTasks = None,
     user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1674,7 +1700,8 @@ def create_info_card(
         db.refresh(info_card)
 
         # Pubblica automaticamente la card appena creata usando background tasks
-        background_tasks.add_task(publish_single_info_card, info_card.id)
+        if background_tasks:
+            background_tasks.add_task(publish_single_info_card, info_card.id)
 
         return {"status": "success", "message": "Info card creata con successo, pubblicazione in corso", "id": info_card.id}
     except Exception as e:
@@ -1748,6 +1775,56 @@ def preview_info_card(
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+@router.post('/api/info-cards/recreate-defaults')
+def recreate_default_info_cards(confirm: bool = Form(False), background_tasks: BackgroundTasks = None, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Elimina tutte le info cards esistenti e ricrea un set di default con il nuovo stile (v5)."""
+    from app.database import MessageType, MessageStatus, get_or_create_technical_user
+
+    if isinstance(user, RedirectResponse):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+
+    if not confirm:
+        return {'status': 'error', 'message': 'confirm=false, operation aborted'}
+
+    try:
+        # Delete all existing info cards
+        deleted = db.query(SpottedMessage).filter(SpottedMessage.message_type == MessageType.INFO).delete(synchronize_session=False)
+        db.commit()
+
+        # Create defaults
+        defaults = [
+            {"title": "Aggiornamento Importante", "text": "Abbiamo rilasciato una nuova versione! Scopri le novità nel pannello admin."},
+            {"title": "Regole della Community", "text": "Rispetta gli altri utenti. Messaggi offensivi verranno rimossi."},
+            {"title": "GPDR & Privacy", "text": "I dati sono trattati in conformità con le norme sulla privacy."},
+            {"title": "Come funziona", "text": "Invia il tuo spotted in forma anonima attraverso il form pubblico."}
+        ]
+
+        # Use a system technical user
+        technical_user, _ = get_or_create_technical_user(db, None)
+
+        created_ids = []
+        for d in defaults:
+            card = SpottedMessage(
+                title=d['title'],
+                text=d['text'],
+                message_type=MessageType.INFO,
+                status=MessageStatus.APPROVED,
+                technical_user_id=technical_user.id
+            )
+            db.add(card)
+            db.commit()
+            db.refresh(card)
+            created_ids.append(card.id)
+            # schedule publishing
+            if background_tasks:
+                background_tasks.add_task(publish_single_info_card, card.id)
+
+        return {'status': 'success', 'deleted': deleted, 'created': created_ids}
+
+    except Exception as e:
+        db.rollback()
+        return {'status': 'error', 'message': str(e)}
 
 @router.delete("/api/info-cards/{card_id}")
 def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):

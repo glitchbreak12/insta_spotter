@@ -1467,10 +1467,16 @@
                 <div class="messages-section">
                     <div class="messages-header">
                         <h3>Info Cards Creator</h3>
+                        <div style="display:flex;gap:var(--space-sm);align-items:center;">
                         <button class="btn btn-primary" onclick="showCreateCardForm()">
                             <i class="fas fa-plus"></i>
                             Crea Nuova Card
                         </button>
+                        <button class="btn btn-warning" onclick="recreateInfoCardsConfirm()">
+                            <i class="fas fa-redo"></i>
+                            Ricrea Default
+                        </button>
+                        </div>
                     </div>
 
                     <!-- Create Card Form (Hidden by default) -->
@@ -2615,6 +2621,12 @@
                                     <i class="fas fa-undo"></i>
                                     Reset
                                 </button>
+                                ${message.status === 'APPROVED' ? `
+                                <button class="btn btn-success btn-sm" onclick="publishNow(${message.id})">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Pubblica ora
+                                </button>
+                                ` : ``}
                             </div>
                             <button class="btn btn-danger btn-sm" onclick="deleteMessage(${message.id})">
                                 <i class="fas fa-trash"></i>
@@ -2678,6 +2690,25 @@
         }
 
         // Daily Post functions
+
+        async function publishNow(messageId) {
+            try {
+                const resp = await apiCall(`/admin/api/messages/${messageId}/publish-now`, { method: 'POST' });
+                if (resp.status === 'success') {
+                    showNotification('Successo', 'Messaggio pubblicato correttamente (media: ' + (resp.media_pk || '') + ')', 'success');
+                } else {
+                    showNotification('Errore', 'Pubblicazione fallita: ' + (resp.message || JSON.stringify(resp)), 'error');
+                }
+                // Refresh list and data
+                loadMessages();
+                loadDashboardData();
+                // Close any open modals
+                document.querySelectorAll('.modal.active').forEach(m => m.remove());
+            } catch (err) {
+                console.error('Error publishNow:', err);
+                showNotification('Errore', 'Impossibile pubblicare ora: ' + err.message, 'error');
+            }
+        }
         async function loadDailyPostSettings() {
             try {
                 const response = await apiCall('/admin/api/daily-post/settings');
@@ -3046,6 +3077,38 @@
             } catch (error) {
                 console.error('Error deleting card:', error);
                 showNotification('Errore', 'Impossibile eliminare la card', 'error');
+            }
+        }
+
+        function recreateInfoCardsConfirm() {
+            if (!confirm('Sei sicuro di voler eliminare tutte le info cards attuali e ricreare quelle di default? (Operazione irreversibile)')) return;
+            recreateInfoCards();
+        }
+
+        async function recreateInfoCards() {
+            try {
+                const body = new URLSearchParams();
+                body.append('confirm', 'true');
+                const response = await fetch('/admin/api/info-cards/recreate-defaults', {
+                    method: 'POST',
+                    body: body,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    credentials: 'same-origin'
+                });
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showNotification('Successo', `Eliminate: ${data.deleted}. Create: ${data.created.length}`, 'success');
+                    loadInfoCards();
+                } else {
+                    showNotification('Errore', data.message || 'Errore durante la ricreazione', 'error');
+                }
+            } catch (err) {
+                console.error('Error recreating info cards:', err);
+                showNotification('Errore', 'Impossibile ricreare le info cards', 'error');
             }
         }
 
