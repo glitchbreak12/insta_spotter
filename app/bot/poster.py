@@ -78,7 +78,7 @@ class InstagramBot:
         except ChallengeRequired as e:
             print("--- DEBUG [POSTER]: Instagram richiede verifica (Challenge). ---")
             print(f"--- DEBUG [POSTER]: Challenge info: {e} ---")
-            
+
             # Prova a risolvere la challenge automaticamente
             try:
                 # In instagrapi, le challenge vengono gestite automaticamente
@@ -94,21 +94,40 @@ class InstagramBot:
                     try:
                         self.client.challenge_select_method("email")
                         print("--- DEBUG [POSTER]: Richiesta codice di verifica inviata (email). ---")
-                    except:
+                    except Exception as second_error:
+                        # Se entrambi falliscono, potrebbe essere un nuovo tipo di challenge
+                        print(f"--- DEBUG [POSTER]: Entrambi i metodi di selezione falliti: {select_error}, {second_error} ---")
+
+                        # Controlla se è un errore di step_name sconosciuto
+                        if "step_name" in str(second_error) and "STEP_NAME" in str(second_error):
+                            print("--- DEBUG [POSTER]: Rilevato errore step_name sconosciuto - potrebbe essere una nuova challenge flow ---")
+                            # Proviamo metodi alternativi
+                            try:
+                                # Prova metodi numerici comuni
+                                for method in [0, 1, 2, 3]:
+                                    try:
+                                        self.client.challenge_select_method(method)
+                                        print(f"--- DEBUG [POSTER]: Metodo {method} selezionato con successo ---")
+                                        break
+                                    except:
+                                        continue
+                            except:
+                                pass
+
                         # Potrebbe essere che il metodo è già stato selezionato
                         if "already" in error_str or "selected" in error_str:
                             print("--- DEBUG [POSTER]: Metodo di verifica già selezionato. ---")
                         else:
                             print(f"--- DEBUG [POSTER]: Errore selezione metodo: {select_error} ---")
                             print("--- DEBUG [POSTER]: La challenge potrebbe richiedere intervento manuale. ---")
-                
+
                 # Aspetta un po' per dare tempo all'email di arrivare
                 print("--- DEBUG [POSTER]: Attendo 15 secondi per l'arrivo dell'email... ---")
                 time.sleep(15)
-                
+
                 # Controlla se c'è un codice pre-configurato nei Secrets
                 verification_code = os.getenv("INSTAGRAM_VERIFICATION_CODE")
-                
+
                 if verification_code and len(verification_code.strip()) == 6:
                     code = verification_code.strip()
                     print(f"--- DEBUG [POSTER]: Trovato codice di verifica nei Secrets: {code} ---")
@@ -140,25 +159,27 @@ class InstagramBot:
                     print("2. Aggiungi: INSTAGRAM_VERIFICATION_CODE = [il codice a 6 cifre]")
                     print("3. Riavvia l'app")
                     print("\n" + "="*60 + "\n")
-                    
+
                     # Rimuovi la sessione per forzare un nuovo tentativo al prossimo avvio
                     if os.path.exists(self.session_file):
                         os.remove(self.session_file)
                         print("--- DEBUG [POSTER]: File di sessione rimosso per permettere nuovo tentativo. ---")
-                    
+
                     raise Exception(
                         "Instagram richiede verifica via email. "
                         "Controlla la tua email per il codice a 6 cifre. "
                         "Aggiungi INSTAGRAM_VERIFICATION_CODE nei Secrets di Replit con il codice ricevuto, "
                         "poi riavvia l'app. Se l'email non arriva, aspetta 1-2 minuti e riavvia l'app."
                     )
-                    
+
             except Exception as challenge_error:
                 # Se è già un'eccezione informativa, rilanciala
                 if "Instagram richiede verifica" in str(challenge_error):
                     raise
                 print(f"--- DEBUG [POSTER]: Errore durante la gestione della challenge: {challenge_error} ---")
-                raise
+                # Non rilanciare l'errore per permettere all'app di continuare senza Instagram
+                print("--- DEBUG [POSTER]: Continuo senza Instagram abilitato ---")
+                return
                 
         except TwoFactorRequired:
             print("--- DEBUG [POSTER]: Richiesta 2FA. ---")

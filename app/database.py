@@ -95,7 +95,7 @@ class DailyPostSettings(Base):
     """Impostazioni per il post giornaliero di riepilogo."""
     __tablename__ = "daily_post_settings"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     enabled = Column(Integer, default=1)  # 1=abilitato, 0=disabilitato
     post_time = Column(String, default="20:00")  # Orario del post (HH:MM)
     style = Column(Enum(DailyPostStyle), default=DailyPostStyle.CAROUSEL, nullable=False)
