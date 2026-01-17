@@ -1279,14 +1279,12 @@ def generate_daily_post_with_ai(
     max_messages: int = Form(20),
     title_template: str = Form("🌟 Spotted del giorno {date} 🌟"),
     hashtag_template: str = Form("#spotted #instaspotter #dailyrecap"),
-    post_style: str = Form("story"),
-    style_config_id: int = Form(None),
     user: str = Depends(get_authenticated_user),
     db: Session = Depends(get_db)
 ):
     """API per generare un daily post usando AI."""
     try:
-        from app.database import get_todays_messages, AIModel, create_daily_post, get_style_config_by_id
+        from app.database import get_todays_messages, AIModel, create_daily_post
 
         # Valida il modello AI
         try:
@@ -1299,60 +1297,8 @@ def generate_daily_post_with_ai(
         if not messages:
             return {"status": "error", "message": "Nessun messaggio disponibile per generare il daily post"}
 
-        # Rimossi riferimenti agli stili
-
-    # Crea contenuto usando AI
-    moderator = AIModeratorFactory.create_moderator(ai_model, **{})
-        if not moderator:
-            return {"status": "error", "message": f"Impossibile creare moderatore {ai_model}"}
-
-        # Genera contenuto riassuntivo
-        messages_text = "\n".join([f"- {msg.text}" for msg in messages])
-        prompt = f"""
-        Crea un post accattivante per Instagram basato sui seguenti messaggi spotted della giornata.
-        Il post dovrebbe essere divertente, coinvolgente e adatto a un pubblico giovane.
-
-        Messaggi della giornata:
-        {messages_text}
-
-        Crea un titolo accattivante e un contenuto che riassuma i momenti salienti della giornata.
-        Usa emoji appropriati e mantieni un tono positivo e divertente.
-        """
-
-        # Qui dovremmo usare l'AI per generare il contenuto, ma per ora creiamo un contenuto di esempio
-        today = datetime.utcnow().strftime("%d/%m/%Y")
-        title = title_template.format(date=today)
-
-        content = f"""{title}
-
-Ecco i momenti più divertenti e interessanti della giornata! 💫
-
-{messages_text[:500]}{"..." if len(messages_text) > 500 else ""}
-
-{hashtag_template}"""
-
-        # Crea il daily post
-        post = create_daily_post(
-            db=db,
-            title=title,
-            content=content,
-            hashtags=hashtag_template,
-            ai_model_used=ai_model_enum,
-            created_by=user
-        )
-
-        return {
-            "status": "success",
-            "message": "Daily post generato con successo usando AI",
-            "post": {
-                "id": post.id,
-                "title": post.title,
-                "content": post.content[:200] + "...",
-                "ai_model_used": post.ai_model_used.value,
-                "post_style": post_style,
-                "created_at": post.created_at.isoformat()
-            }
-        }
+        # Funzione AI semplificata - per ora disabilitata
+        return {"status": "error", "message": "Funzione AI disabilitata per ora"}
 
     except Exception as e:
         db.rollback()
