@@ -1719,11 +1719,10 @@ def create_info_card(
         else:
             print("--- [INFO CARD CREATE]: ERROR - Card not found after creation!")
 
-        # Pubblica automaticamente la card appena creata usando background tasks
-        if background_tasks:
-            background_tasks.add_task(publish_single_info_card, info_card.id)
+        # Info cards sono create come APPROVED ma NON pubblicate automaticamente
+        # La pubblicazione avviene solo quando esplicitamente richiesta dall'utente
 
-        return {"status": "success", "message": "Info card creata con successo, pubblicazione in corso", "id": info_card.id}
+        return {"status": "success", "message": "Info card creata con successo. Clicca 'Pubblica' per pubblicarla.", "id": info_card.id}
     except Exception as e:
         print(f"--- [INFO CARD CREATE]: ERROR: {e}")
         import traceback

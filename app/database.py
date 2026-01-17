@@ -283,7 +283,7 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
             raise
 
 def get_todays_messages(db: Session, limit: int = 20) -> list:
-    """Recupera tutti i messaggi APPROVED di oggi."""
+    """Recupera tutti i messaggi SPOTTED APPROVED di oggi (esclude INFO cards)."""
     from datetime import datetime, time
 
     today_start = datetime.combine(datetime.utcnow().date(), time.min)
@@ -291,6 +291,7 @@ def get_todays_messages(db: Session, limit: int = 20) -> list:
 
     return db.query(SpottedMessage).filter(
         SpottedMessage.status == MessageStatus.APPROVED,
+        SpottedMessage.message_type == MessageType.SPOTTED,  # Solo messaggi spotted, non info cards
         SpottedMessage.created_at >= today_start,
         SpottedMessage.created_at <= today_end
     ).order_by(SpottedMessage.created_at).limit(limit).all()
