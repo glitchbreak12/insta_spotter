@@ -1,4 +1,4 @@
-nimport imgkit
+import imgkit
 import jinja2
 import os
 from pathlib import Path
