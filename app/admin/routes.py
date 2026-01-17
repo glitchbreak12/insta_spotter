@@ -1766,13 +1766,19 @@ def preview_info_card(
             title = "Titolo Card"
             text = "Il contenuto apparirà qui..."
 
-        # Recupera la configurazione di stile se specificata
-        style_config_json = None
+        # Recupera la configurazione di stile se specificata e convertila in dict
+        style_config_dict = None
         if style_config_id:
             from app.database import get_style_config_by_id
+            import json
             style_config = get_style_config_by_id(db, style_config_id)
             if style_config and style_config.type == "info_card":
-                style_config_json = style_config.config
+                try:
+                    style_config_dict = json.loads(style_config.config)
+                    print(f"✅ Caricata configurazione stile: {style_config.name}")
+                except json.JSONDecodeError as e:
+                    print(f"❌ Errore parsing configurazione stile: {e}")
+                    style_config_dict = None
 
         # Usa il generatore di immagini per creare una preview
         from app.image.generator import ImageGenerator
@@ -1787,7 +1793,7 @@ def preview_info_card(
             message_id=0,
             message_type="info",
             title=title,
-            style_config=style_config_json
+            style_config=style_config_dict  # Passa il dict parsato invece della stringa JSON
         )
 
         if image_path:
