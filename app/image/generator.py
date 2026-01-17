@@ -99,7 +99,7 @@ class ImageGenerator:
         return template.render(message=message_text, id=message_id, font_url=font_url, title=title, publish_date=current_date)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
-        """Fallback PIL che replica esattamente lo stile card_v5.html con glow 3D."""
+        """Fallback PIL che replica esattamente lo stile dei template con glow 3D."""
         if not PIL_AVAILABLE:
             raise RuntimeError("PIL non disponibile")
 
@@ -108,17 +108,17 @@ class ImageGenerator:
             width = self.image_width
             height = 1920
 
-            # === SFONDO V5 OTTIMIZZATO - Tema Blu Professionale ===
+            # === SFONDO COMUNE - Tema Blu Professionale ===
             img = Image.new('RGB', (width, height), color='#000000')
             draw = ImageDraw.Draw(img)
 
-            # Sfondo con pattern geometrici blu come card_v5 migliorato
+            # Sfondo con pattern geometrici blu come nei template
             bg_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bg_draw = ImageDraw.Draw(bg_layer)
 
-            # Pattern di cerchi concentrici blu come sfondo professionale
+            # Pattern di cerchi concentrici blu
             import random
-            random.seed(456)  # Seed diverso per V5
+            random.seed(456)  # Seed per consistenza
             for i in range(12):
                 center_x = random.randint(width//6, 5*width//6)
                 center_y = random.randint(height//6, 5*height//6)
@@ -151,56 +151,8 @@ class ImageGenerator:
             img = Image.alpha_composite(img.convert('RGBA'), bg_layer).convert('RGB')
             draw = ImageDraw.Draw(img)
 
-            # === TEMPLATE CELESTIAL - Rendering OTTIMIZZATO ===
-            # Sfondo spaziale con stelle simulate come nel CSS
-            stars_layer = Image.new('RGBA', (width, height), (11, 11, 26, 255))  # #0B0B1A
-            stars_draw = ImageDraw.Draw(stars_layer)
-
-            # Stelle casuali come nel template CSS
-            import random
-            random.seed(42)  # Per consistenza
-            for i in range(200):  # Molte stelle per effetto spaziale
-                x = random.randint(0, width)
-                y = random.randint(0, height)
-                brightness = random.randint(180, 255)
-                size = random.randint(1, 3)
-                stars_draw.rectangle([x, y, x+size, y+size], fill=(brightness, brightness, brightness, 220))
-
-            # Nebula gradients come nel CSS
-            nebula_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-            nebula_draw = ImageDraw.Draw(nebula_layer)
-
-            # Nebula viola centrale (--nebula-purple: #9b59b6)
-            for radius in range(350, 100, -15):
-                alpha = int(120 * (1 - radius/350))
-                nebula_draw.ellipse(
-                    [width//2 - radius, height//2 - radius,
-                     width//2 + radius, height//2 + radius],
-                    fill=(155, 89, 182, alpha)  # #9b59b6
-                )
-
-            # Nebula blu ai lati (--nebula-blue: #3498db)
-            for radius in range(280, 80, -12):
-                alpha = int(100 * (1 - radius/280))
-                nebula_draw.ellipse(
-                    [width//4 - radius, height//3 - radius,
-                     width//4 + radius, height//3 + radius],
-                    fill=(52, 152, 219, alpha)  # #3498db
-                )
-
-                nebula_draw.ellipse(
-                    [3*width//4 - radius, 2*height//3 - radius,
-                     3*width//4 + radius, 2*height//3 + radius],
-                    fill=(52, 152, 219, alpha)
-                )
-
-            # Combina sfondi spaziali
-            celestial_bg = Image.alpha_composite(stars_layer, nebula_layer)
-            img = Image.alpha_composite(img.convert('RGBA'), celestial_bg).convert('RGB')
-            draw = ImageDraw.Draw(img)
-
-            # === CARD V5 OTTIMIZZATA - Tema Blu Professionale ===
-            card_x = 90  # padding: 90px come nel template
+            # === CARD OTTIMIZZATA - Tema Blu Professionale ===
+            card_x = 90  # padding: 90px come nei template
             card_y = 90
             card_w = width - 180
             card_h = height - 180
@@ -304,10 +256,10 @@ class ImageGenerator:
 
             if os.path.exists(font_path) and os.path.getsize(font_path) > 1000:
                 try:
-                    brand_font = ImageFont.truetype(font_path, 95)  # font-size: 95px come card_v5
-                    message_font = ImageFont.truetype(font_path, 62)  # font-size: 62px come card_v5
-                    id_font = ImageFont.truetype(font_path, 26)  # font-size: 26px come card_v5
-                    footer_font = ImageFont.truetype(font_path, 30)  # font-size: 30px come card_v5
+                    brand_font = ImageFont.truetype(font_path, 95)  # font-size: 95px come nei template
+                    message_font = ImageFont.truetype(font_path, 62)  # font-size: 62px come nei template
+                    id_font = ImageFont.truetype(font_path, 26)  # font-size: 26px come nei template
+                    footer_font = ImageFont.truetype(font_path, 30)  # font-size: 30px come nei template
                 except Exception as e:
                     print(f"⚠️ Errore nel caricamento font Komika Axis: {e}")
 
@@ -332,22 +284,33 @@ class ImageGenerator:
                     id_font = ImageFont.load_default()
                     footer_font = ImageFont.load_default()
 
-            # === HEADER CON BRAND E BADGE (esatto come card_v5.html) ===
+            # === HEADER CON BRAND E BADGE ===
             header_y = card_y + 50  # padding-top: 50px
 
-            # BRAND "SPOTTED" con text-shadow esatto come card_v5
-            brand_text = "SPOTTED"
+            # Determina il testo del brand basato sul tipo di messaggio
+            if message_type == "info":
+                brand_text = "INFO"
+                badge_text = f"info#{message_id}"
+                footer_text = "@spottedatbz"
+                cta_text = "📢 Info Importante"
+            else:
+                brand_text = "SPOTTED"
+                badge_text = f"sp#{message_id}"
+                footer_text = "@spottedatbz"
+                cta_text = "Invia il tuo spotted dal link in bio"
+
+            # BRAND con text-shadow professionale
             brand_bbox = draw.textbbox((0, 0), brand_text, font=brand_font)
             brand_width = brand_bbox[2] - brand_bbox[0]
             brand_x = (width - brand_width) // 2
             brand_y = header_y
 
-            # Text shadows esatti come card_v5.html (4 livelli)
+            # Text shadows multi-livello
             for dx, dy, color, alpha in [
-                (0, 0, (0, 122, 255), 128),  # 0 0 10px rgba(0,122,255,0.5) = 128
-                (0, 0, (0, 122, 255), 77),   # 0 0 20px rgba(0,122,255,0.3) = 77
-                (0, 0, (0, 122, 255), 25),   # 0 0 30px rgba(0,122,255,0.1) = 25
-                (0, 2, (0, 0, 0), 204)       # 0 2px 5px rgba(0,0,0,0.8) = 204
+                (0, 0, (0, 122, 255), 128),  # Inner glow
+                (0, 0, (0, 122, 255), 77),   # Medium glow
+                (0, 0, (0, 122, 255), 25),   # Outer glow
+                (0, 2, (0, 0, 0), 204)       # Dark shadow
             ]:
                 shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 shadow_draw = ImageDraw.Draw(shadow_layer)
@@ -357,9 +320,8 @@ class ImageGenerator:
 
             draw.text((brand_x, brand_y), brand_text, fill='#ffffff', font=brand_font)
 
-            # BADGE ID esatto come card_v5.html
-            id_text = f"sp#{message_id}"
-            id_bbox = draw.textbbox((0, 0), id_text, font=id_font)
+            # BADGE ID professionale
+            id_bbox = draw.textbbox((0, 0), badge_text, font=id_font)
             id_width = id_bbox[2] - id_bbox[0]
             id_x = (width - id_width) // 2
             id_y = brand_y + int(95 * 1.1) + 35  # font-size 95px con line-height 1.1 + margin 35px
@@ -367,14 +329,14 @@ class ImageGenerator:
             badge = Image.new('RGBA', (width, height), (0, 0, 0, 0))
             bdraw = ImageDraw.Draw(badge)
 
-            # Padding esatto: 12px 30px
+            # Padding professionale: 12px 30px
             pad_x, pad_y = 30, 12
             badge_width = id_width + (pad_x * 2)
-            badge_height = 32 + (pad_y * 2)  # Altezza base 32px come nel template
+            badge_height = 32 + (pad_y * 2)
 
             # Box-shadow per il badge
             for shadow_dx, shadow_dy, shadow_color, shadow_alpha in [
-                (0, 4, (0, 122, 255), 38)  # 0 4px 20px rgba(0,122,255,0.15) ≈ 38
+                (0, 4, (0, 122, 255), 38)
             ]:
                 shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                 shadow_draw = ImageDraw.Draw(shadow_layer)
@@ -390,19 +352,19 @@ class ImageGenerator:
             # Badge principale
             bdraw.rounded_rectangle(
                 [id_x - pad_x, id_y - pad_y, id_x + id_width + pad_x, id_y + 32 + pad_y],
-                radius=25,  # border-radius: 25px
+                radius=25,
                 fill=(0, 122, 255, 30),  # background: rgba(0,122,255,0.12)
                 outline=(0, 122, 255, 64)  # border: 1px solid rgba(0,122,255,0.25)
             )
             img = Image.alpha_composite(img.convert('RGBA'), badge).convert('RGB')
             draw = ImageDraw.Draw(img)
-            draw.text((id_x, id_y), id_text, fill='#5ac8fa', font=id_font)  # color: #5ac8fa
+            draw.text((id_x, id_y), badge_text, fill='#5ac8fa', font=id_font)
 
             # === BODY CON MESSAGGIO ===
             body_top = id_y + 80  # margin-bottom: 80px dell'header
             body_bottom = card_y + card_h - 100  # Prima del footer
 
-            # Word wrap per max-width: 80% come card_v5
+            # Word wrap per max-width: 80%
             words = message_text.split()
             lines = []
             current_line = []
@@ -441,11 +403,11 @@ class ImageGenerator:
                 if y_pos > body_bottom - line_height:
                     break
 
-                # Text shadows esatti come card_v5 (3 livelli)
+                # Text shadows multi-livello
                 for dx, dy, color, alpha in [
-                    (0, 0, (255, 255, 255), 77),  # 0 0 8px rgba(255,255,255,0.3) ≈ 77/255
-                    (0, 0, (0, 0, 0), 153),       # 0 0 15px rgba(0,0,0,0.6) ≈ 153/255
-                    (0, 5, (0, 0, 0), 204)        # 0 5px 10px rgba(0,0,0,0.8) ≈ 204/255
+                    (0, 0, (255, 255, 255), 77),  # Subtle white glow
+                    (0, 0, (0, 0, 0), 153),       # Medium dark shadow
+                    (0, 5, (0, 0, 0), 204)        # Deep dark shadow
                 ]:
                     shadow_layer = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                     shadow_draw = ImageDraw.Draw(shadow_layer)
@@ -456,13 +418,39 @@ class ImageGenerator:
                 draw.text((line_x, y_pos), line, fill='#ffffff', font=message_font)
 
             # === FOOTER ===
-            footer_text = "@spottedatbz"
             footer_bbox = draw.textbbox((0, 0), footer_text, font=footer_font)
             footer_width = footer_bbox[2] - footer_bbox[0]
             footer_x = (width - footer_width) // 2
             footer_y = card_y + card_h - 100  # padding-top: 60px + padding-bottom: 40px
 
-            draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)  # rgba(255,255,255,0.55) ≈ 140/255
+            draw.text((footer_x, footer_y), footer_text, fill=(140, 140, 140), font=footer_font)
+
+            # CTA per info cards
+            if message_type == "info":
+                cta_bbox = draw.textbbox((0, 0), cta_text, font=id_font)
+                cta_width = cta_bbox[2] - cta_bbox[0]
+                cta_x = (width - cta_width) // 2
+                cta_y = footer_y + 40
+
+                # CTA con background blu
+                cta_bg = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+                cta_draw = ImageDraw.Draw(cta_bg)
+
+                # Padding per CTA
+                cta_pad_x, cta_pad_y = 26, 12
+                cta_bg_width = cta_width + (cta_pad_x * 2)
+                cta_bg_height = 32 + (cta_pad_y * 2)
+
+                cta_draw.rounded_rectangle(
+                    [cta_x - cta_pad_x, cta_y - cta_pad_y,
+                     cta_x + cta_width + cta_pad_x, cta_y + 32 + cta_pad_y],
+                    radius=22,
+                    fill=(0, 122, 255, 45)  # background: rgba(0,122,255,0.18)
+                )
+
+                img = Image.alpha_composite(img.convert('RGBA'), cta_bg).convert('RGB')
+                draw = ImageDraw.Draw(img)
+                draw.text((cta_x, cta_y), cta_text, fill='#5ac8fa', font=id_font)
 
             # Salva e ottimizza per Instagram
             img.save(output_path, 'PNG', quality=100, optimize=False)
