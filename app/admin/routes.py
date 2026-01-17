@@ -1861,9 +1861,7 @@ def recreate_default_info_cards(confirm: bool = Form(False), background_tasks: B
             db.commit()
             db.refresh(card)
             created_ids.append(card.id)
-            # schedule publishing
-            if background_tasks:
-                background_tasks.add_task(publish_single_info_card, card.id)
+            # Info cards are created as APPROVED but NOT automatically published
 
         return {'status': 'success', 'deleted': deleted, 'created': created_ids}
 
