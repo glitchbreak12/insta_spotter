@@ -5933,31 +5933,35 @@
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header">
-                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'}</h3>
+                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'} - Editor Avanzato</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
-                    <form id="styleEditorForm" onsubmit="saveStyleModal(event, ${styleId})">
-                        <div class="form-group">
-                            <label class="form-label">Nome Stile</label>
-                            <input type="text" id="styleEditorName" class="form-input" placeholder="Es: Stile Professionale" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Tipo</label>
-                            <select id="styleEditorType" class="form-select" required>
-                                <option value="info_card">Info Card</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">
-                                <input type="checkbox" id="styleEditorDefault"> Stile Predefinito
-                            </label>
-                            <div class="form-hint">Questo diventerà lo stile usato automaticamente</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Configurazione CSS (JSON)</label>
-                            <textarea id="styleEditorConfig" class="form-textarea" rows="15" placeholder='{
+                    <div style="display: grid; grid-template-columns: 1fr 300px; gap: var(--space-xl); height: calc(100% - 80px);">
+                        <!-- Editor Panel -->
+                        <div style="display: flex; flex-direction: column;">
+                            <form id="styleEditorForm" onsubmit="saveStyleModal(event, ${styleId})" style="flex: 1; display: flex; flex-direction: column;">
+                                <div class="form-group">
+                                    <label class="form-label">Nome Stile</label>
+                                    <input type="text" id="styleEditorName" class="form-input" placeholder="Es: Stile Professionale" required>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--space-md); align-items: end;">
+                                    <div class="form-group">
+                                        <label class="form-label">Tipo</label>
+                                        <select id="styleEditorType" class="form-select" required>
+                                            <option value="info_card">Info Card</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" id="styleEditorDefault"> Predefinito
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+                                    <label class="form-label">Editor CSS Variables (JSON)</label>
+                                    <textarea id="styleEditorConfig" class="form-textarea" style="flex: 1; min-height: 300px;" placeholder='{
   "--info-primary-color": "#FF6B35",
   "--info-secondary-color": "#F7931E",
   "--info-accent-color": "#FFD23F",
@@ -5971,19 +5975,58 @@
   "--info-font-size-message": "65px",
   "--info-icon": "\\"📢\\""
 }' required></textarea>
-                            <div class="form-hint">Inserisci la configurazione CSS come oggetto JSON</div>
+                                    <div class="form-hint">Modifica il JSON per vedere l'anteprima in tempo reale</div>
+                                </div>
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save"></i>
+                                        ${isEdit ? 'Salva Modifiche' : 'Crea Stile'}
+                                    </button>
+                                    <button type="button" class="btn btn-info" onclick="resetToDefaults()">
+                                        <i class="fas fa-undo"></i>
+                                        Reset Default
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                        <i class="fas fa-times"></i>
+                                        Annulla
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="action-buttons">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i>
-                                ${isEdit ? 'Salva Modifiche' : 'Crea Stile'}
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                                Annulla
-                            </button>
+
+                        <!-- Live Preview Panel -->
+                        <div style="display: flex; flex-direction: column;">
+                            <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Anteprima Live</h4>
+
+                            <!-- Test Content Inputs -->
+                            <div class="form-group">
+                                <label class="form-label">Titolo Test</label>
+                                <input type="text" id="previewTitle" class="form-input" value="Titolo Card di Test" oninput="updateLivePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contenuto Test</label>
+                                <textarea id="previewContent" class="form-textarea" rows="3" oninput="updateLivePreview()">Questo è un contenuto di test per vedere come appare la card con il nuovo stile.</textarea>
+                            </div>
+
+                            <!-- Live Preview Area -->
+                            <div style="flex: 1; border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); background: var(--bg-primary); overflow: hidden;">
+                                <div id="livePreviewArea" style="width: 100%; height: 100%; position: relative;">
+                                    <div style="text-align: center; color: var(--text-muted); padding: var(--space-3xl);">
+                                        <i class="fas fa-eye fa-3x" style="margin-bottom: var(--space-lg);"></i>
+                                        <div style="font-size: 1.2rem; margin-bottom: var(--space-md);">Anteprima Live</div>
+                                        <div>Modifica il JSON a sinistra per vedere i cambiamenti in tempo reale</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: var(--space-md); text-align: center;">
+                                <button class="btn btn-primary btn-sm" onclick="generateFullPreview()">
+                                    <i class="fas fa-image"></i>
+                                    Genera Anteprima Completa
+                                </button>
+                            </div>
                         </div>
-                    </form>
+                    </div>
                 </div>
             `;
 
@@ -5999,7 +6042,15 @@
                 loadStyleForEditModal(styleId);
             } else {
                 // Set default config for new styles
-                document.getElementById('styleEditorConfig').value = `{
+                setDefaultStyleConfig();
+            }
+
+            // Setup live preview
+            setupLivePreview();
+        }
+
+        function setDefaultStyleConfig() {
+            const defaultConfig = `{
   "--info-primary-color": "#FF6B35",
   "--info-secondary-color": "#F7931E",
   "--info-accent-color": "#FFD23F",
@@ -6013,6 +6064,186 @@
   "--info-font-size-message": "65px",
   "--info-icon": "\\"📢\\""
 }`;
+            document.getElementById('styleEditorConfig').value = defaultConfig;
+            updateLivePreview();
+        }
+
+        function resetToDefaults() {
+            setDefaultStyleConfig();
+            document.getElementById('styleEditorName').value = '';
+            document.getElementById('styleEditorDefault').checked = false;
+        }
+
+        function setupLivePreview() {
+            const configTextarea = document.getElementById('styleEditorConfig');
+            configTextarea.addEventListener('input', function() {
+                // Debounce the preview update
+                clearTimeout(window.previewTimeout);
+                window.previewTimeout = setTimeout(updateLivePreview, 300);
+            });
+
+            // Initial preview
+            updateLivePreview();
+        }
+
+        function updateLivePreview() {
+            const configText = document.getElementById('styleEditorConfig').value;
+            const title = document.getElementById('previewTitle').value || 'Titolo Card';
+            const content = document.getElementById('previewContent').value || 'Contenuto di test';
+
+            try {
+                const config = JSON.parse(configText);
+
+                // Create a temporary style element for live preview
+                let styleElement = document.getElementById('livePreviewStyle');
+                if (!styleElement) {
+                    styleElement = document.createElement('style');
+                    styleElement.id = 'livePreviewStyle';
+                    document.head.appendChild(styleElement);
+                }
+
+                // Build CSS from config
+                let css = '.live-preview-card {';
+                for (const [key, value] of Object.entries(config)) {
+                    css += `${key}: ${value}; `;
+                }
+                css += '}';
+
+                styleElement.textContent = css;
+
+                // Update preview content
+                const previewArea = document.getElementById('livePreviewArea');
+                previewArea.innerHTML = `
+                    <div class="live-preview-card" style="
+                        width: 100%;
+                        height: 100%;
+                        background: linear-gradient(135deg, ${config['--info-bg-gradient-start'] || '#2D1B69'} 0%, ${config['--info-bg-gradient-end'] || '#11998E'} 100%);
+                        border-radius: ${config['--info-border-radius'] || '50px'};
+                        padding: 40px;
+                        box-shadow: 0 20px 40px ${config['--info-shadow-color'] || 'rgba(255, 107, 53, 0.3)'};
+                        border: 3px solid ${config['--info-primary-color'] || '#FF6B35'};
+                        position: relative;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        text-align: center;
+                        color: ${config['--info-text-color'] || '#FFFFFF'};
+                    ">
+                        <div style="
+                            font-size: ${parseInt(config['--info-font-size-brand'] || '120') * 0.8}px;
+                            font-weight: bold;
+                            margin-bottom: 20px;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                        ">
+                            ${config['--info-icon'] ? config['--info-icon'].replace(/"/g, '') + ' ' : ''}${title}
+                        </div>
+                        <div style="
+                            font-size: ${parseInt(config['--info-font-size-message'] || '65') * 0.8}px;
+                            line-height: 1.4;
+                            max-width: 80%;
+                            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+                        ">
+                            ${content}
+                        </div>
+                        <div style="
+                            position: absolute;
+                            top: 20px;
+                            right: 20px;
+                            width: 60px;
+                            height: 60px;
+                            background: ${config['--info-accent-color'] || '#FFD23F'};
+                            border-radius: 50%;
+                            opacity: 0.8;
+                            filter: blur(10px);
+                        "></div>
+                        <div style="
+                            position: absolute;
+                            bottom: 20px;
+                            left: 20px;
+                            width: 40px;
+                            height: 40px;
+                            background: ${config['--info-secondary-color'] || '#F7931E'};
+                            border-radius: 50%;
+                            opacity: 0.6;
+                            filter: blur(8px);
+                        "></div>
+                    </div>
+                `;
+
+            } catch (error) {
+                // Show error in preview
+                document.getElementById('livePreviewArea').innerHTML = `
+                    <div style="text-align: center; color: var(--error); padding: var(--space-xl);">
+                        <i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: var(--space-md);"></i>
+                        <div style="font-weight: bold; margin-bottom: var(--space-sm);">JSON Non Valido</div>
+                        <div style="font-size: 0.9rem;">Correggi la sintassi JSON per vedere l'anteprima</div>
+                        <div style="font-size: 0.8rem; margin-top: var(--space-sm); opacity: 0.7;">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function generateFullPreview() {
+            const configText = document.getElementById('styleEditorConfig').value;
+            const title = document.getElementById('previewTitle').value || 'Titolo Card';
+            const content = document.getElementById('previewContent').value || 'Contenuto di test';
+
+            try {
+                const config = JSON.parse(configText);
+
+                // Generate full preview image
+                const previewResponse = fetch('/admin/api/info-cards/preview', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        title: title,
+                        text: content,
+                        style_config: JSON.stringify(config)
+                    })
+                });
+
+                previewResponse.then(response => {
+                    if (response.ok) {
+                        response.json().then(data => {
+                            if (data.image_url) {
+                                // Show full preview modal
+                                const modal = document.createElement('div');
+                                modal.className = 'modal active';
+                                modal.innerHTML = `
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h3 class="modal-title">Anteprima Completa dello Stile</h3>
+                                            <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                                        </div>
+                                        <div style="text-align: center; padding: var(--space-lg);">
+                                            <img src="${data.image_url}?t=${Date.now()}" alt="Full Style Preview" style="max-width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                                            <p style="margin-top: var(--space-lg); color: var(--text-muted);">
+                                                Questa è l'immagine che verrà effettivamente pubblicata su Instagram
+                                            </p>
+                                        </div>
+                                    </div>
+                                `;
+
+                                document.body.appendChild(modal);
+                                modal.addEventListener('click', function(e) {
+                                    if (e.target === modal) {
+                                        modal.remove();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }).catch(error => {
+                    showNotification('Errore', 'Impossibile generare l\'anteprima completa', 'error');
+                });
+
+            } catch (error) {
+                showNotification('Errore', 'JSON non valido per l\'anteprima completa', 'error');
             }
         }
 

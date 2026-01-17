@@ -1686,12 +1686,16 @@ def create_info_card(
     from app.database import MessageType, MessageStatus
 
     try:
+        print(f"--- [INFO CARD CREATE]: Creating info card - Title: '{title}', User: {user}")
+
         if not title or not text:
+            print("--- [INFO CARD CREATE]: Missing title or text")
             return {"status": "error", "message": "Title and text are required"}
 
         # Ottieni o crea utente tecnico per l'utente corrente
         from app.database import get_or_create_technical_user
         technical_user = get_or_create_technical_user(db, user)
+        print(f"--- [INFO CARD CREATE]: Technical user ID: {technical_user.id}")
 
         # Crea la info card dall'utente corrente
         info_card = SpottedMessage(
@@ -1706,12 +1710,24 @@ def create_info_card(
         db.commit()
         db.refresh(info_card)
 
+        print(f"--- [INFO CARD CREATE]: Info card created with ID: {info_card.id}, Type: {info_card.message_type}, Status: {info_card.status}")
+
+        # Verifica che sia stata salvata correttamente
+        verify_card = db.query(SpottedMessage).filter(SpottedMessage.id == info_card.id).first()
+        if verify_card:
+            print(f"--- [INFO CARD CREATE]: Verification successful - Type: {verify_card.message_type}")
+        else:
+            print("--- [INFO CARD CREATE]: ERROR - Card not found after creation!")
+
         # Pubblica automaticamente la card appena creata usando background tasks
         if background_tasks:
             background_tasks.add_task(publish_single_info_card, info_card.id)
 
         return {"status": "success", "message": "Info card creata con successo, pubblicazione in corso", "id": info_card.id}
     except Exception as e:
+        print(f"--- [INFO CARD CREATE]: ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         return {"status": "error", "message": str(e)}
 
