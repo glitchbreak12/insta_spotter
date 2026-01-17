@@ -320,61 +320,106 @@ async def daily_post_scheduler():
 def check_and_install_wkhtmltopdf():
     """Verifica se wkhtmltopdf è installato."""
     import shutil
-    
+
     # Verifica se wkhtmltoimage è disponibile
     wkhtmltoimage_path = shutil.which('wkhtmltoimage')
-    
+
     if wkhtmltoimage_path:
         logger.info(f"✓ wkhtmltoimage trovato: {wkhtmltoimage_path}")
         return True
-    
+
     # Se non trovato, mostra istruzioni
     if is_replit:
         logger.warning("""
     ⚠ ATTENZIONE: wkhtmltoimage non è disponibile!
-    
+
     Per installarlo su Replit:
     1. Apri il pannello "System Dependencies" (Dipendenze di Sistema)
        - Cerca nel menu ☰ o vai su Tools → System Dependencies
     2. Cerca "wkhtmltopdf" e clicca "Add" o "Install"
     3. Attendi che l'installazione completi
     4. Riavvia l'app
-    
+
     NOTA: Su Replit NON puoi usare apt-get direttamente nella shell.
     Devi usare il pannello System Dependencies.
-    
+
     Guida completa: vedi INSTALLA_WKHTMLTOPDF_REPLIT.md
-    
+
     Senza wkhtmltoimage, la generazione delle immagini non funzionerà.
     """)
     else:
         logger.warning("""
     ⚠ ATTENZIONE: wkhtmltoimage non è disponibile!
-    
+
     Per installarlo:
     - Linux: sudo apt-get install -y wkhtmltopdf
     - macOS: brew install wkhtmltopdf
     - Windows: Scarica da https://wkhtmltopdf.org/downloads.html
-    
+
     Riavvia l'app dopo l'installazione.
     """)
     return False
+
+async def setup_instagram_auth_at_startup():
+    """Configura l'autenticazione Instagram all'avvio dell'applicazione."""
+    try:
+        logger.info("📱 Configurazione autenticazione Instagram all'avvio...")
+
+        # Verifica se sono configurate le credenziali Instagram
+        instagram_username = os.getenv("INSTAGRAM_USERNAME")
+        instagram_password = os.getenv("INSTAGRAM_PASSWORD")
+
+        if not instagram_username or not instagram_password:
+            logger.warning("⚠️ Credenziali Instagram non configurate. Imposta INSTAGRAM_USERNAME e INSTAGRAM_PASSWORD")
+            return
+
+        logger.info(f"📱 Trovate credenziali per utente Instagram: {instagram_username}")
+
+        # Verifica se il bot Instagram è disponibile
+        try:
+            from app.bot.poster import InstagramBot
+            logger.info("📱 InstagramBot disponibile, provo autenticazione...")
+
+            # Crea un'istanza del bot per testare la connessione
+            bot = InstagramBot()
+            test_result = bot.test_connection()
+
+            if test_result.get('connected'):
+                logger.info("✅ Instagram autenticato con successo all'avvio!")
+                logger.info(f"   📊 Username: {test_result.get('username', 'N/A')}")
+                logger.info(f"   📊 Seguaci: {test_result.get('followers', 'N/A')}")
+                logger.info(f"   📊 Seguiti: {test_result.get('following', 'N/A')}")
+            else:
+                logger.warning("⚠️ Instagram NON autenticato. Controlla le credenziali.")
+                logger.warning(f"   Errore: {test_result.get('error', 'Errore sconosciuto')}")
+
+        except ImportError:
+            logger.warning("⚠️ InstagramBot non disponibile (instagrapi non installato)")
+        except Exception as e:
+            logger.error(f"❌ Errore durante autenticazione Instagram: {e}")
+            logger.info("🔄 L'applicazione continuerà senza Instagram abilitato")
+
+    except Exception as e:
+        logger.error(f"❌ Errore critico nella configurazione Instagram: {e}")
 
 @app.on_event("startup")
 async def on_startup():
     """Funzioni da eseguire all'avvio dell'applicazione."""
     logger.info("🚀 Avvio dell'applicazione InstaSpotter...")
-    
+
     try:
         create_db_and_tables()
         logger.info("✓ Database e tabelle pronti.")
     except Exception as e:
         logger.error(f"✗ Errore nell'inizializzazione del database: {e}")
         raise
-    
+
     # Verifica e installa wkhtmltopdf se necessario
     check_and_install_wkhtmltopdf()
-    
+
+    # Configura autenticazione Instagram all'avvio
+    await setup_instagram_auth_at_startup()
+
     # Avvia i task in background
     asyncio.create_task(keep_alive_task())
     logger.info("✓ Keep-alive task avviato per hosting 24/7")

@@ -236,7 +236,7 @@ def post_daily_compilation(db: Session):
             try:
                 output_filename = f"spotted_{msg.id}_{int(datetime.now().timestamp())}.png"
                 print(f"--- DEBUG [TASK]: Generazione immagine: {output_filename} ---")
-                path = image_generator.from_text(msg.text, output_filename)
+                path = image_generator.from_text(msg.text, output_filename, msg.id)
                 if path:
                     print(f"--- DEBUG [TASK]: Immagine generata con successo: {path} ---")
                     image_paths.append(path)

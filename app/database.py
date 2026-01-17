@@ -187,16 +187,15 @@ def create_technical_user(db: Session) -> TechnicalUser:
     db.refresh(new_user)
     return new_user
 
-def get_or_create_technical_user(db: Session, technical_user_id: Optional[str]) -> Tuple[TechnicalUser, bool]:
+def get_or_create_technical_user(db: Session, technical_user_id: Optional[str]) -> TechnicalUser:
     """
     Recupera un utente tecnico se l'ID è valido, altrimenti ne crea uno nuovo.
-    Restituisce l'utente e un booleano che indica se è stato creato.
+    Restituisce solo l'utente (non una tupla come prima).
     """
-    created = False
     user = None
     if technical_user_id:
         user = get_technical_user(db, technical_user_id)
-    
+
     if user:
         # Utente trovato, aggiorna last_seen_at
         user.last_seen_at = datetime.utcnow()
@@ -205,9 +204,8 @@ def get_or_create_technical_user(db: Session, technical_user_id: Optional[str]) 
     else:
         # Utente non trovato o ID non fornito, creane uno nuovo
         user = create_technical_user(db)
-        created = True
-        
-    return user, created
+
+    return user
 
 # --- Funzioni per il Daily Post ---
 

@@ -5933,51 +5933,108 @@
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto;">
                     <div class="modal-header">
-                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'} - Editor Avanzato</h3>
+                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'} - Editor Interattivo</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 300px; gap: var(--space-xl); height: calc(100% - 80px);">
-                        <!-- Editor Panel -->
-                        <div style="display: flex; flex-direction: column;">
-                            <form id="styleEditorForm" onsubmit="saveStyleModal(event, ${styleId})" style="flex: 1; display: flex; flex-direction: column;">
-                                <div class="form-group">
-                                    <label class="form-label">Nome Stile</label>
-                                    <input type="text" id="styleEditorName" class="form-input" placeholder="Es: Stile Professionale" required>
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--space-md); align-items: end;">
+                    <div style="display: grid; grid-template-columns: 350px 1fr 320px; gap: var(--space-lg); height: calc(100% - 80px);">
+                        <!-- Interactive Controls Panel -->
+                        <div style="display: flex; flex-direction: column; gap: var(--space-lg);">
+                            <form id="styleEditorForm" onsubmit="saveStyleModal(event, ${styleId})" style="display: flex; flex-direction: column; gap: var(--space-lg);">
+
+                                <!-- Basic Info -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
                                     <div class="form-group">
-                                        <label class="form-label">Tipo</label>
-                                        <select id="styleEditorType" class="form-select" required>
-                                            <option value="info_card">Info Card</option>
-                                        </select>
+                                        <label class="form-label">Nome Stile</label>
+                                        <input type="text" id="styleEditorName" class="form-input" placeholder="Es: Stile Professionale" required>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label">
+                                    <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                                        <label class="form-label" style="margin: 0;">
                                             <input type="checkbox" id="styleEditorDefault"> Predefinito
                                         </label>
                                     </div>
                                 </div>
-                                <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-                                    <label class="form-label">Editor CSS Variables (JSON)</label>
-                                    <textarea id="styleEditorConfig" class="form-textarea" style="flex: 1; min-height: 300px;" placeholder='{
-  "--info-primary-color": "#FF6B35",
-  "--info-secondary-color": "#F7931E",
-  "--info-accent-color": "#FFD23F",
-  "--info-bg-gradient-start": "#2D1B69",
-  "--info-bg-gradient-end": "#11998E",
-  "--info-text-color": "#FFFFFF",
-  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
-  "--info-border-radius": "50px",
-  "--info-glow-intensity": "0.4",
-  "--info-font-size-brand": "120px",
-  "--info-font-size-message": "65px",
-  "--info-icon": "\\"📢\\""
-}' required></textarea>
-                                    <div class="form-hint">Modifica il JSON per vedere l'anteprima in tempo reale</div>
+
+                                <!-- Color Controls -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                    <h5 style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">🎨 Colori</h5>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 60px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Colore Primario</label>
+                                        <input type="color" id="colorPrimary" value="#FF6B35" onchange="updateStyleFromControls()" style="width: 50px; height: 30px; border: none; border-radius: var(--radius); cursor: pointer;">
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 60px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Colore Secondario</label>
+                                        <input type="color" id="colorSecondary" value="#F7931E" onchange="updateStyleFromControls()" style="width: 50px; height: 30px; border: none; border-radius: var(--radius); cursor: pointer;">
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 60px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Colore Accento</label>
+                                        <input type="color" id="colorAccent" value="#FFD23F" onchange="updateStyleFromControls()" style="width: 50px; height: 30px; border: none; border-radius: var(--radius); cursor: pointer;">
+                                    </div>
                                 </div>
-                                <div class="action-buttons">
+
+                                <!-- Background Gradient -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                    <h5 style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">🌈 Sfondo Gradiente</h5>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 60px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Colore Iniziale</label>
+                                        <input type="color" id="bgGradientStart" value="#2D1B69" onchange="updateStyleFromControls()" style="width: 50px; height: 30px; border: none; border-radius: var(--radius); cursor: pointer;">
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 60px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Colore Finale</label>
+                                        <input type="color" id="bgGradientEnd" value="#11998E" onchange="updateStyleFromControls()" style="width: 50px; height: 30px; border: none; border-radius: var(--radius); cursor: pointer;">
+                                    </div>
+                                </div>
+
+                                <!-- Typography -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                    <h5 style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">📝 Tipografia</h5>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 80px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Dimensione Titolo</label>
+                                        <input type="range" id="fontSizeBrand" min="80" max="150" value="120" onchange="updateStyleFromControls()" style="width: 70px;">
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 80px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Dimensione Testo</label>
+                                        <input type="range" id="fontSizeMessage" min="40" max="80" value="65" onchange="updateStyleFromControls()" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <!-- Effects -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                    <h5 style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">✨ Effetti</h5>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 80px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Raggio Bordi</label>
+                                        <input type="range" id="borderRadius" min="0" max="100" value="50" onchange="updateStyleFromControls()" style="width: 70px;">
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 80px; gap: var(--space-sm); align-items: center;">
+                                        <label class="form-label" style="font-size: 0.8rem; margin: 0;">Intensità Glow</label>
+                                        <input type="range" id="glowIntensity" min="0" max="1" step="0.1" value="0.4" onchange="updateStyleFromControls()" style="width: 70px;">
+                                    </div>
+                                </div>
+
+                                <!-- Icon -->
+                                <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+                                    <h5 style="margin: 0; color: var(--text-primary); font-size: 0.9rem; font-weight: 600;">🎯 Icona</h5>
+                                    <div class="form-group">
+                                        <input type="text" id="iconEmoji" class="form-input" value="📢" maxlength="5" onchange="updateStyleFromControls()" placeholder="Emoji icona">
+                                        <div class="form-hint" style="font-size: 0.7rem;">Inserisci un'emoji come icona</div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden JSON Config -->
+                                <input type="hidden" id="styleEditorConfig" name="config">
+
+                                <!-- Action Buttons -->
+                                <div class="action-buttons" style="margin-top: auto;">
                                     <button type="submit" class="btn btn-success">
                                         <i class="fas fa-save"></i>
                                         ${isEdit ? 'Salva Modifiche' : 'Crea Stile'}
@@ -5994,27 +6051,38 @@
                             </form>
                         </div>
 
+                        <!-- Code View -->
+                        <div style="display: flex; flex-direction: column;">
+                            <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">📝 Codice JSON Generato</h4>
+                            <div style="flex: 1; display: flex; flex-direction: column;">
+                                <textarea id="styleEditorConfig" class="form-textarea" style="flex: 1; min-height: 400px; font-family: 'Monaco', 'Menlo', monospace; font-size: 0.8rem;" readonly></textarea>
+                                <div class="form-hint" style="font-size: 0.7rem; margin-top: var(--space-sm);">
+                                    Questo JSON viene generato automaticamente dai controlli interattivi
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Live Preview Panel -->
                         <div style="display: flex; flex-direction: column;">
-                            <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Anteprima Live</h4>
+                            <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">👁️ Anteprima Live</h4>
 
                             <!-- Test Content Inputs -->
                             <div class="form-group">
-                                <label class="form-label">Titolo Test</label>
-                                <input type="text" id="previewTitle" class="form-input" value="Titolo Card di Test" oninput="updateLivePreview()">
+                                <label class="form-label" style="font-size: 0.8rem;">Titolo Test</label>
+                                <input type="text" id="previewTitle" class="form-input" value="Titolo Card di Test" oninput="updateLivePreview()" style="font-size: 0.8rem;">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Contenuto Test</label>
-                                <textarea id="previewContent" class="form-textarea" rows="3" oninput="updateLivePreview()">Questo è un contenuto di test per vedere come appare la card con il nuovo stile.</textarea>
+                                <label class="form-label" style="font-size: 0.8rem;">Contenuto Test</label>
+                                <textarea id="previewContent" class="form-textarea" rows="3" oninput="updateLivePreview()" style="font-size: 0.8rem;">Questo è un contenuto di test per vedere come appare la card con il nuovo stile.</textarea>
                             </div>
 
                             <!-- Live Preview Area -->
-                            <div style="flex: 1; border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); background: var(--bg-primary); overflow: hidden;">
+                            <div style="flex: 1; border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); background: var(--bg-primary); overflow: hidden; position: relative;">
                                 <div id="livePreviewArea" style="width: 100%; height: 100%; position: relative;">
                                     <div style="text-align: center; color: var(--text-muted); padding: var(--space-3xl);">
                                         <i class="fas fa-eye fa-3x" style="margin-bottom: var(--space-lg);"></i>
                                         <div style="font-size: 1.2rem; margin-bottom: var(--space-md);">Anteprima Live</div>
-                                        <div>Modifica il JSON a sinistra per vedere i cambiamenti in tempo reale</div>
+                                        <div style="font-size: 0.9rem;">Usa i controlli a sinistra per modificare lo stile</div>
                                     </div>
                                 </div>
                             </div>
@@ -6042,11 +6110,40 @@
                 loadStyleForEditModal(styleId);
             } else {
                 // Set default config for new styles
-                setDefaultStyleConfig();
+                resetToDefaults();
             }
 
             // Setup live preview
             setupLivePreview();
+        }
+
+        function updateStyleFromControls() {
+            // Get values from interactive controls
+            const config = {
+                "--info-primary-color": document.getElementById('colorPrimary').value,
+                "--info-secondary-color": document.getElementById('colorSecondary').value,
+                "--info-accent-color": document.getElementById('colorAccent').value,
+                "--info-bg-gradient-start": document.getElementById('bgGradientStart').value,
+                "--info-bg-gradient-end": document.getElementById('bgGradientEnd').value,
+                "--info-text-color": "#FFFFFF",
+                "--info-shadow-color": `rgba(${hexToRgb(document.getElementById('colorPrimary').value)}, 0.3)`,
+                "--info-border-radius": document.getElementById('borderRadius').value + "px",
+                "--info-glow-intensity": document.getElementById('glowIntensity').value,
+                "--info-font-size-brand": document.getElementById('fontSizeBrand').value + "px",
+                "--info-font-size-message": document.getElementById('fontSizeMessage').value + "px",
+                "--info-icon": `"${document.getElementById('iconEmoji').value}"`
+            };
+
+            // Update JSON textarea
+            document.getElementById('styleEditorConfig').value = JSON.stringify(config, null, 2);
+
+            // Update live preview
+            updateLivePreview();
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : "0, 0, 0";
         }
 
         function setDefaultStyleConfig() {
