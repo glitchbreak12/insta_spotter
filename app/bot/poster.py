@@ -210,8 +210,8 @@ class InstagramBot:
                 'following': 0
             }
 
-    def post_story(self, image_path: str) -> bool:
-        if not os.path.exists(image_path): return False
+    def post_story(self, image_path: str, caption: str = "") -> Optional[str]:
+        if not os.path.exists(image_path): return None
 
         # Contatore di tentativi per gestire fallimenti del primo post
         max_retries = 3
