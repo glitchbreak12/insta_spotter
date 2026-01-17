@@ -813,7 +813,6 @@ def get_daily_post_settings_api(user: str = Depends(get_current_user), db: Sessi
     return {
         "enabled": bool(settings.enabled),
         "post_time": settings.post_time,
-        "style": settings.style,
         "max_messages": settings.max_messages,
         "title_template": settings.title_template,
         "hashtag_template": settings.hashtag_template,
@@ -847,7 +846,6 @@ def update_daily_post_settings(
             db=db,
             enabled=enabled,
             post_time=post_time,
-            style=style,
             max_messages=max_messages,
             title_template=title_template,
             hashtag_template=hashtag_template,
@@ -1298,15 +1296,11 @@ def generate_daily_post_with_ai(
         if not messages:
             return {"status": "error", "message": "Nessun messaggio disponibile per generare il daily post"}
 
-        # Recupera configurazione stile se specificata
-        style_config_json = None
-        if style_config_id:
-            style_config = get_style_config_by_id(db, style_config_id)
-            if style_config:
-                style_config_json = style_config.config
+        # Rimossi riferimenti agli stili
 
-        # Crea contenuto usando AI
-        moderator = AIModeratorFactory.create_moderator(ai_model, **{})
+    # Crea contenuto usando AI
+    from app.ai.moderator import AIModeratorFactory
+    moderator = AIModeratorFactory.create_moderator(ai_model, **{})
         if not moderator:
             return {"status": "error", "message": f"Impossibile creare moderatore {ai_model}"}
 
@@ -1335,7 +1329,7 @@ Ecco i momenti più divertenti e interessanti della giornata! 💫
 
 {hashtag_template}"""
 
-        # Crea il daily post con stile e configurazione
+        # Crea il daily post
         post = create_daily_post(
             db=db,
             title=title,
@@ -1344,10 +1338,6 @@ Ecco i momenti più divertenti e interessanti della giornata! 💫
             ai_model_used=ai_model_enum,
             created_by=user
         )
-
-        # Aggiorna con stile e configurazione
-        from app.database import update_daily_post
-        update_daily_post(db, post.id, post_style=post_style, style_config=style_config_json)
 
         return {
             "status": "success",
@@ -1780,7 +1770,6 @@ def publish_info_card(card_id: int, user: str = Depends(get_current_user), db: S
 def preview_info_card(
     title: str = Form(""),
     text: str = Form(""),
-    style_config_id: int = Form(None),
     user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1790,34 +1779,19 @@ def preview_info_card(
             title = "Titolo Card"
             text = "Il contenuto apparirà qui..."
 
-        # Recupera la configurazione di stile se specificata e convertila in dict
-        style_config_dict = None
-        if style_config_id:
-            from app.database import get_style_config_by_id
-            import json
-            style_config = get_style_config_by_id(db, style_config_id)
-            if style_config and style_config.type == "info_card":
-                try:
-                    style_config_dict = json.loads(style_config.config)
-                    print(f"✅ Caricata configurazione stile: {style_config.name}")
-                except json.JSONDecodeError as e:
-                    print(f"❌ Errore parsing configurazione stile: {e}")
-                    style_config_dict = None
-
-        # Usa il generatore di immagini per creare una preview
+        # Usa il generatore di immagini per creare una preview (stili fissi)
         from app.image.generator import ImageGenerator
         import time
         generator = ImageGenerator()
 
-        # Genera l'immagine con message_type="info" e configurazione stile
+        # Genera l'immagine con message_type="info" (stili fissi)
         preview_filename = f"preview_info_{int(time.time())}.png"
         image_path = generator.from_text(
             text,
             preview_filename,
             message_id=0,
             message_type="info",
-            title=title,
-            style_config=style_config_dict  # Passa il dict parsato invece della stringa JSON
+            title=title
         )
 
         if image_path:

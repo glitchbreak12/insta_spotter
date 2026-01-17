@@ -267,7 +267,7 @@ def post_daily_compilation(db: Session):
 
         insta_bot = InstagramBot()
         caption = f"Spotted del giorno {datetime.now().strftime('%d/%m/%Y')}! ✨\n\n#spotted #instaspotter #confessioni"
-        media_pk = insta_bot.post_album(image_paths, caption)
+        media_pk = insta_bot.post_carousel(image_paths, caption)
 
         if not media_pk:
             raise Exception("InstagramBot.post_album ha restituito False o None.")
