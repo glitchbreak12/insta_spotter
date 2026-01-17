@@ -1468,56 +1468,21 @@
                     <div class="messages-header">
                         <h3>Info Cards Creator</h3>
                         <div style="display:flex;gap:var(--space-sm);align-items:center;flex-wrap:wrap;">
-                        <button class="btn btn-primary" onclick="showCreateCardForm()">
+                        <button class="btn btn-primary" onclick="showCreateCardModal()">
                             <i class="fas fa-plus"></i>
                             Crea Nuova Card
                         </button>
-                        <button class="btn btn-success" onclick="showStyleManager()">
+                        <button class="btn btn-success" onclick="showStyleManagerModal()">
                             <i class="fas fa-palette"></i>
                             Gestisci Stili
                         </button>
-                        <button class="btn btn-warning" onclick="recreateInfoCardsConfirm()">
+                        <button class="btn btn-warning" onclick="recreateDefaultCards()">
                             <i class="fas fa-redo"></i>
                             Ricrea Default
                         </button>
-                        </div>
-                    </div>
-
-                    <!-- Create Card Form (Hidden by default) -->
-                    <div id="createCardForm" class="stat-card" style="display: none; margin-bottom: var(--space-xl);">
-                        <h4 style="margin-bottom: var(--space-lg); color: var(--text-primary);">Crea Info Card</h4>
-
-                        <div class="form-group">
-                            <label class="form-label">Titolo</label>
-                            <input type="text" id="cardTitle" class="form-input" placeholder="Titolo della card">
-                            <div class="form-hint">Il titolo apparirà in grassetto nella card</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Contenuto</label>
-                            <textarea id="cardContent" class="form-textarea" placeholder="Contenuto della card..." rows="4"></textarea>
-                            <div class="form-hint">Descrivi cosa vuoi comunicare nella card</div>
-                        </div>
-
-                        <!-- Live Preview -->
-                        <div class="form-group">
-                            <label class="form-label">Anteprima Live</label>
-                            <div id="cardPreview" style="border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-lg); min-height: 150px; background: var(--bg-primary);">
-                                <div style="text-align: center; color: var(--text-muted);">
-                                    <i class="fas fa-eye fa-2x" style="margin-bottom: var(--space-md);"></i>
-                                    <div>L'anteprima apparirà qui mentre digiti</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="action-buttons">
-                            <button class="btn btn-success" onclick="createInfoCard()">
-                                <i class="fas fa-save"></i>
-                                Crea Card
-                        </button>
-                            <button class="btn btn-secondary" onclick="hideCreateCardForm()">
-                                <i class="fas fa-times"></i>
-                                Annulla
+                        <button class="btn btn-info" onclick="loadInfoCards()">
+                            <i class="fas fa-sync"></i>
+                            Ricarica
                         </button>
                         </div>
                     </div>
@@ -2820,6 +2785,370 @@
             } catch (error) {
                 console.error('Error loading info cards:', error);
                 document.getElementById('infoCardsList').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Errore</h3><p>Impossibile caricare le cards</p></div>';
+            }
+        }
+
+        function showStyleManager() {
+            console.log('Opening style manager...');
+            // Show style management modal
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Gestione Stili Info Card</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="action-buttons" style="margin-bottom: var(--space-lg);">
+                        <button class="btn btn-success" onclick="createNewStyle()">
+                            <i class="fas fa-plus"></i>
+                            Nuovo Stile
+                        </button>
+                        <button class="btn btn-info" onclick="loadStyles()">
+                            <i class="fas fa-sync"></i>
+                            Ricarica Stili
+                        </button>
+                    </div>
+                    <div id="stylesContainer" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento stili...</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Load styles
+            loadStyles();
+        }
+
+        async function loadStyles() {
+            try {
+                const response = await apiCall('/admin/api/style-configs?type=info_card');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    renderStyles(data.configs);
+                } else {
+                    throw new Error(data.message || 'Failed to load styles');
+                }
+            } catch (error) {
+                console.error('Error loading styles:', error);
+                document.getElementById('stylesContainer').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Errore caricamento stili
+                    </div>
+                `;
+            }
+        }
+
+        function renderStyles(styles) {
+            const container = document.getElementById('stylesContainer');
+
+            if (!styles.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-palette"></i>
+                        <h3>Nessuno Stile</h3>
+                        <p>Crea il tuo primo stile personalizzato per le info cards.</p>
+                        <button class="btn btn-primary" onclick="createNewStyle()">
+                            <i class="fas fa-plus"></i>
+                            Crea Nuovo Stile
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = styles.map(style => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-id">${style.name}</span>
+                        ${style.is_default ? '<span class="message-status status-approved">PREDEFINITO</span>' : ''}
+                    </div>
+                    <div class="message-content">
+                        <strong>Tipo:</strong> ${style.type}<br>
+                        <strong>Creato:</strong> ${new Date(style.created_at).toLocaleDateString('it-IT')}
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn btn-primary btn-sm" onclick="editStyle(${style.id})">
+                            <i class="fas fa-edit"></i>
+                            Modifica
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="previewStyle(${style.id})">
+                            <i class="fas fa-eye"></i>
+                            Preview
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStyle(${style.id})">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function createNewStyle() {
+            showStyleEditor();
+        }
+
+        function editStyle(styleId) {
+            // Load style data and show editor
+            showStyleEditor(styleId);
+        }
+
+        function showStyleEditor(styleId = null) {
+            const isEdit = styleId !== null;
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <form id="styleForm" onsubmit="saveStyle(event, ${styleId})">
+                        <div class="form-group">
+                            <label class="form-label">Nome Stile</label>
+                            <input type="text" id="styleName" class="form-input" placeholder="Es: Stile Professionale" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="styleType" class="form-select" required>
+                                <option value="info_card">Info Card</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="styleDefault"> Stile Predefinito
+                            </label>
+                            <div class="form-hint">Questo diventerà lo stile usato automaticamente</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Configurazione CSS (JSON)</label>
+                            <textarea id="styleConfig" class="form-textarea" rows="15" placeholder='{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}' required></textarea>
+                            <div class="form-hint">Inserisci la configurazione CSS come oggetto JSON</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i>
+                                ${isEdit ? 'Salva Modifiche' : 'Crea Stile'}
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                <i class="fas fa-times"></i>
+                                Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Load existing style data if editing
+            if (isEdit) {
+                loadStyleForEdit(styleId);
+            } else {
+                // Set default config for new styles
+                document.getElementById('styleConfig').value = `{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}`;
+            }
+        }
+
+        async function loadStyleForEdit(styleId) {
+            try {
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`);
+                if (response.ok) {
+                    const style = await response.json();
+                    document.getElementById('styleName').value = style.name;
+                    document.getElementById('styleType').value = style.type;
+                    document.getElementById('styleDefault').checked = style.is_default;
+                    document.getElementById('styleConfig').value = style.config;
+                } else {
+                    throw new Error('Failed to load style');
+                }
+            } catch (error) {
+                console.error('Error loading style for edit:', error);
+                showNotification('Errore', 'Impossibile caricare lo stile', 'error');
+            }
+        }
+
+        async function saveStyle(event, styleId) {
+            event.preventDefault();
+
+            const name = document.getElementById('styleName').value.trim();
+            const type = document.getElementById('styleType').value;
+            const config = document.getElementById('styleConfig').value.trim();
+            const isDefault = document.getElementById('styleDefault').checked;
+
+            if (!name || !config) {
+                showNotification('Errore', 'Nome e configurazione sono obbligatori', 'error');
+                return;
+            }
+
+            // Validate JSON
+            try {
+                JSON.parse(config);
+            } catch (e) {
+                showNotification('Errore', 'Configurazione JSON non valida', 'error');
+                return;
+            }
+
+            try {
+                const styleData = {
+                    name: name,
+                    type: type,
+                    config: config,
+                    is_default: isDefault
+                };
+
+                let response;
+                if (styleId) {
+                    // Update existing style
+                    styleData.name = name; // Include name for update
+                    response = await apiCall(`/admin/api/style-configs/${styleId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(styleData)
+                    });
+                } else {
+                    // Create new style
+                    response = await apiCall('/admin/api/style-configs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(styleData)
+                    });
+                }
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', `Stile ${styleId ? 'aggiornato' : 'creato'} con successo!`, 'success');
+                    document.querySelector('.modal').remove();
+                    loadStyles();
+                } else {
+                    throw new Error('Save failed');
+                }
+            } catch (error) {
+                console.error('Error saving style:', error);
+                showNotification('Errore', 'Impossibile salvare lo stile', 'error');
+            }
+        }
+
+        async function previewStyle(styleId) {
+            try {
+                // Create a test card with this style
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`);
+                if (response.ok) {
+                    const style = await response.json();
+
+                    // Generate preview with test content
+                    const previewResponse = await fetch('/admin/api/info-cards/preview', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            title: `Preview: ${style.name}`,
+                            text: 'Questa è una preview dello stile selezionato. Il testo apparirà qui con il design personalizzato.',
+                            style_config_id: styleId
+                        })
+                    });
+
+                    if (previewResponse.ok) {
+                        const data = await previewResponse.json();
+                        if (data.image_url) {
+                            // Show preview modal
+                            const modal = document.createElement('div');
+                            modal.className = 'modal active';
+                            modal.innerHTML = `
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h3 class="modal-title">Preview Stile: ${style.name}</h3>
+                                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                                    </div>
+                                    <div style="text-align: center; padding: var(--space-lg);">
+                                        <img src="${data.image_url}?t=${Date.now()}" alt="Style Preview" style="max-width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                                        <p style="margin-top: var(--space-lg); color: var(--text-muted);">
+                                            Questo è come apparirà la tua info card con lo stile "${style.name}"
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+
+                            document.body.appendChild(modal);
+                            modal.addEventListener('click', function(e) {
+                                if (e.target === modal) {
+                                    modal.remove();
+                                }
+                            });
+                        } else {
+                            throw new Error('No preview image generated');
+                        }
+                    } else {
+                        throw new Error('Preview generation failed');
+                    }
+                } else {
+                    throw new Error('Style not found');
+                }
+            } catch (error) {
+                console.error('Error previewing style:', error);
+                showNotification('Errore', 'Impossibile generare la preview dello stile', 'error');
+            }
+        }
+
+        async function deleteStyle(styleId) {
+            if (!confirm('Eliminare questo stile? Questa azione non può essere annullata.')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Successo', 'Stile eliminato', 'success');
+                    loadStyles();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting style:', error);
+                showNotification('Errore', 'Impossibile eliminare lo stile', 'error');
             }
         }
 
@@ -5362,6 +5691,523 @@
         function closeIndividualMessageModal() {
             document.getElementById('individualMessageModal').classList.remove('active');
             window.currentMessageId = null;
+        }
+
+        // Info Cards Modal Functions
+        function showCreateCardModal() {
+            console.log('Opening create card modal...');
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Crea Nuova Info Card</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <form id="createCardForm" onsubmit="createNewInfoCard(event)">
+                        <div class="form-group">
+                            <label class="form-label">Titolo</label>
+                            <input type="text" id="newCardTitle" class="form-input" placeholder="Titolo della card" required>
+                            <div class="form-hint">Il titolo apparirà in grassetto nella card</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contenuto</label>
+                            <textarea id="newCardContent" class="form-textarea" placeholder="Contenuto della card..." rows="4" required></textarea>
+                            <div class="form-hint">Descrivi cosa vuoi comunicare nella card</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stile</label>
+                            <select id="newCardStyle" class="form-select">
+                                <option value="">Default</option>
+                            </select>
+                            <div class="form-hint">Scegli uno stile predefinito (opzionale)</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i>
+                                Crea Card
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                <i class="fas fa-times"></i>
+                                Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Load available styles
+            loadStylesForSelect();
+        }
+
+        async function loadStylesForSelect() {
+            try {
+                const response = await apiCall('/admin/api/style-configs?type=info_card');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const select = document.getElementById('newCardStyle');
+                    select.innerHTML = '<option value="">Default</option>';
+
+                    data.configs.forEach(style => {
+                        const option = document.createElement('option');
+                        option.value = style.id;
+                        option.textContent = style.name;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading styles for select:', error);
+            }
+        }
+
+        async function createNewInfoCard(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('newCardTitle').value.trim();
+            const content = document.getElementById('newCardContent').value.trim();
+            const styleId = document.getElementById('newCardStyle').value;
+
+            if (!title || !content) {
+                showNotification('Errore', 'Titolo e contenuto sono obbligatori', 'error');
+                return;
+            }
+
+            try {
+                showNotification('Info', 'Creando la card...', 'info');
+
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('text', content);
+
+                const response = await fetch('/admin/api/info-cards', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', 'Card creata con successo!', 'success');
+                    document.querySelector('.modal').remove();
+                    loadInfoCards();
+                } else {
+                    const error = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${error}`);
+                }
+            } catch (error) {
+                console.error('Error creating card:', error);
+                showNotification('Errore', 'Impossibile creare la card: ' + error.message, 'error');
+            }
+        }
+
+        function showStyleManagerModal() {
+            console.log('Opening style manager modal...');
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Gestione Stili Info Card</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <div class="action-buttons" style="margin-bottom: var(--space-lg);">
+                        <button class="btn btn-success" onclick="createNewStyleModal()">
+                            <i class="fas fa-plus"></i>
+                            Nuovo Stile
+                        </button>
+                        <button class="btn btn-info" onclick="loadAllStyles()">
+                            <i class="fas fa-sync"></i>
+                            Ricarica Stili
+                        </button>
+                    </div>
+                    <div id="stylesContainer" class="loading">
+                        <div class="spinner"></div>
+                        <div class="loading-text">Caricamento stili...</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Load styles
+            loadAllStyles();
+        }
+
+        async function loadAllStyles() {
+            try {
+                const response = await apiCall('/admin/api/style-configs?type=info_card');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    renderAllStyles(data.configs);
+                } else {
+                    throw new Error(data.message || 'Failed to load styles');
+                }
+            } catch (error) {
+                console.error('Error loading all styles:', error);
+                document.getElementById('stylesContainer').innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Errore caricamento stili
+                    </div>
+                `;
+            }
+        }
+
+        function renderAllStyles(styles) {
+            const container = document.getElementById('stylesContainer');
+
+            if (!styles.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-palette"></i>
+                        <h3>Nessuno Stile</h3>
+                        <p>Crea il tuo primo stile personalizzato per le info cards.</p>
+                        <button class="btn btn-primary" onclick="createNewStyleModal()">
+                            <i class="fas fa-plus"></i>
+                            Crea Nuovo Stile
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = styles.map(style => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-id">${style.name}</span>
+                        ${style.is_default ? '<span class="message-status status-approved">PREDEFINITO</span>' : ''}
+                    </div>
+                    <div class="message-content">
+                        <strong>Tipo:</strong> ${style.type}<br>
+                        <strong>Creato:</strong> ${new Date(style.created_at).toLocaleDateString('it-IT')}
+                    </div>
+                    <div class="message-actions">
+                        <button class="btn btn-primary btn-sm" onclick="editStyleModal(${style.id})">
+                            <i class="fas fa-edit"></i>
+                            Modifica
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="previewStyleModal(${style.id})">
+                            <i class="fas fa-eye"></i>
+                            Preview
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStyleModal(${style.id})">
+                            <i class="fas fa-trash"></i>
+                            Elimina
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function createNewStyleModal() {
+            showStyleEditorModal();
+        }
+
+        function editStyleModal(styleId) {
+            showStyleEditorModal(styleId);
+        }
+
+        function showStyleEditorModal(styleId = null) {
+            const isEdit = styleId !== null;
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title">${isEdit ? 'Modifica Stile' : 'Nuovo Stile'}</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                    </div>
+                    <form id="styleEditorForm" onsubmit="saveStyleModal(event, ${styleId})">
+                        <div class="form-group">
+                            <label class="form-label">Nome Stile</label>
+                            <input type="text" id="styleEditorName" class="form-input" placeholder="Es: Stile Professionale" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tipo</label>
+                            <select id="styleEditorType" class="form-select" required>
+                                <option value="info_card">Info Card</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="styleEditorDefault"> Stile Predefinito
+                            </label>
+                            <div class="form-hint">Questo diventerà lo stile usato automaticamente</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Configurazione CSS (JSON)</label>
+                            <textarea id="styleEditorConfig" class="form-textarea" rows="15" placeholder='{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}' required></textarea>
+                            <div class="form-hint">Inserisci la configurazione CSS come oggetto JSON</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i>
+                                ${isEdit ? 'Salva Modifiche' : 'Crea Stile'}
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                <i class="fas fa-times"></i>
+                                Annulla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            // Load existing style data if editing
+            if (isEdit) {
+                loadStyleForEditModal(styleId);
+            } else {
+                // Set default config for new styles
+                document.getElementById('styleEditorConfig').value = `{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}`;
+            }
+        }
+
+        async function loadStyleForEditModal(styleId) {
+            try {
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`);
+                if (response.ok) {
+                    const style = await response.json();
+                    document.getElementById('styleEditorName').value = style.name;
+                    document.getElementById('styleEditorType').value = style.type;
+                    document.getElementById('styleEditorDefault').checked = style.is_default;
+                    document.getElementById('styleEditorConfig').value = style.config;
+                } else {
+                    throw new Error('Failed to load style');
+                }
+            } catch (error) {
+                console.error('Error loading style for edit:', error);
+                showNotification('Errore', 'Impossibile caricare lo stile', 'error');
+            }
+        }
+
+        async function saveStyleModal(event, styleId) {
+            event.preventDefault();
+
+            const name = document.getElementById('styleEditorName').value.trim();
+            const type = document.getElementById('styleEditorType').value;
+            const config = document.getElementById('styleEditorConfig').value.trim();
+            const isDefault = document.getElementById('styleEditorDefault').checked;
+
+            if (!name || !config) {
+                showNotification('Errore', 'Nome e configurazione sono obbligatori', 'error');
+                return;
+            }
+
+            // Validate JSON
+            try {
+                JSON.parse(config);
+            } catch (e) {
+                showNotification('Errore', 'Configurazione JSON non valida', 'error');
+                return;
+            }
+
+            try {
+                const styleData = {
+                    name: name,
+                    type: type,
+                    config: config,
+                    is_default: isDefault
+                };
+
+                let response;
+                if (styleId) {
+                    // Update existing style
+                    styleData.name = name; // Include name for update
+                    response = await apiCall(`/admin/api/style-configs/${styleId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(styleData)
+                    });
+                } else {
+                    // Create new style
+                    response = await apiCall('/admin/api/style-configs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(styleData)
+                    });
+                }
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', `Stile ${styleId ? 'aggiornato' : 'creato'} con successo!`, 'success');
+                    document.querySelector('.modal').remove();
+                    loadAllStyles();
+                } else {
+                    throw new Error('Save failed');
+                }
+            } catch (error) {
+                console.error('Error saving style:', error);
+                showNotification('Errore', 'Impossibile salvare lo stile', 'error');
+            }
+        }
+
+        async function previewStyleModal(styleId) {
+            try {
+                // Create a test card with this style
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`);
+                if (response.ok) {
+                    const style = await response.json();
+
+                    // Generate preview with test content
+                    const previewResponse = await fetch('/admin/api/info-cards/preview', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            title: `Preview: ${style.name}`,
+                            text: 'Questa è una preview dello stile selezionato. Il testo apparirà qui con il design personalizzato.',
+                            style_config_id: styleId
+                        })
+                    });
+
+                    if (previewResponse.ok) {
+                        const data = await previewResponse.json();
+                        if (data.image_url) {
+                            // Show preview modal
+                            const modal = document.createElement('div');
+                            modal.className = 'modal active';
+                            modal.innerHTML = `
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h3 class="modal-title">Preview Stile: ${style.name}</h3>
+                                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                                    </div>
+                                    <div style="text-align: center; padding: var(--space-lg);">
+                                        <img src="${data.image_url}?t=${Date.now()}" alt="Style Preview" style="max-width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                                        <p style="margin-top: var(--space-lg); color: var(--text-muted);">
+                                            Questo è come apparirà la tua info card con lo stile "${style.name}"
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+
+                            document.body.appendChild(modal);
+                            modal.addEventListener('click', function(e) {
+                                if (e.target === modal) {
+                                    modal.remove();
+                                }
+                            });
+                        } else {
+                            throw new Error('No preview image generated');
+                        }
+                    } else {
+                        throw new Error('Preview generation failed');
+                    }
+                } else {
+                    throw new Error('Style not found');
+                }
+            } catch (error) {
+                console.error('Error previewing style:', error);
+                showNotification('Errore', 'Impossibile generare la preview dello stile', 'error');
+            }
+        }
+
+        async function deleteStyleModal(styleId) {
+            if (!confirm('Eliminare questo stile? Questa azione non può essere annullata.')) return;
+
+            try {
+                const response = await apiCall(`/admin/api/style-configs/${styleId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification('Successo', 'Stile eliminato', 'success');
+                    loadAllStyles();
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (error) {
+                console.error('Error deleting style:', error);
+                showNotification('Errore', 'Impossibile eliminare lo stile', 'error');
+            }
+        }
+
+        async function recreateDefaultCards() {
+            if (!confirm('Sei sicuro di voler eliminare tutte le info cards attuali e ricreare quelle di default? (Operazione irreversibile)')) return;
+
+            try {
+                showNotification('Info', 'Ricreando cards di default...', 'info');
+
+                const body = new URLSearchParams();
+                body.append('confirm', 'true');
+
+                const response = await fetch('/admin/api/info-cards/recreate-defaults', {
+                    method: 'POST',
+                    body: body,
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    credentials: 'same-origin'
+                });
+
+                if (response.status === 401) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showNotification('Successo', `Cards ricreate: ${result.created.length}`, 'success');
+                    loadInfoCards();
+                } else {
+                    const error = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${error}`);
+                }
+            } catch (error) {
+                console.error('Error recreating default cards:', error);
+                showNotification('Errore', 'Impossibile ricreare le cards di default', 'error');
+            }
         }
 
         async function approveMessageIndividual() {
