@@ -6118,39 +6118,49 @@
         }
 
         function updateStyleFromControls() {
-            // Get values from interactive controls
-            const primaryColor = document.getElementById('colorPrimary').value;
-            const secondaryColor = document.getElementById('colorSecondary').value;
-            const accentColor = document.getElementById('colorAccent').value;
-            const bgGradientStart = document.getElementById('bgGradientStart').value;
-            const bgGradientEnd = document.getElementById('bgGradientEnd').value;
-            const borderRadius = document.getElementById('borderRadius').value;
-            const glowIntensity = document.getElementById('glowIntensity').value;
-            const fontSizeBrand = document.getElementById('fontSizeBrand').value;
-            const fontSizeMessage = document.getElementById('fontSizeMessage').value;
-            const iconEmoji = document.getElementById('iconEmoji').value;
+            try {
+                // Get values from interactive controls
+                const primaryColor = document.getElementById('colorPrimary').value;
+                const secondaryColor = document.getElementById('colorSecondary').value;
+                const accentColor = document.getElementById('colorAccent').value;
+                const bgGradientStart = document.getElementById('bgGradientStart').value;
+                const bgGradientEnd = document.getElementById('bgGradientEnd').value;
+                const borderRadius = document.getElementById('borderRadius').value;
+                const glowIntensity = document.getElementById('glowIntensity').value;
+                const fontSizeBrand = document.getElementById('fontSizeBrand').value;
+                const fontSizeMessage = document.getElementById('fontSizeMessage').value;
+                const iconEmoji = document.getElementById('iconEmoji').value || "📢";
 
-            const config = {
-                "--info-primary-color": primaryColor,
-                "--info-secondary-color": secondaryColor,
-                "--info-accent-color": accentColor,
-                "--info-bg-gradient-start": bgGradientStart,
-                "--info-bg-gradient-end": bgGradientEnd,
-                "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": `rgba(${hexToRgb(primaryColor)}, 0.3)`,
-                "--info-border-radius": borderRadius + "px",
-                "--info-glow-intensity": glowIntensity,
-                "--info-font-size-brand": fontSizeBrand + "px",
-                "--info-font-size-message": fontSizeMessage + "px",
-                "--info-icon": `"${iconEmoji}"`
-            };
+                // Convert hex to RGB for shadow color
+                const rgbValues = hexToRgb(primaryColor);
+                const shadowColor = `rgba(${rgbValues}, 0.3)`;
 
-            // Update JSON textarea with proper formatting
-            const jsonTextarea = document.getElementById('styleEditorConfig');
-            jsonTextarea.value = JSON.stringify(config, null, 2);
+                const config = {
+                    "--info-primary-color": primaryColor,
+                    "--info-secondary-color": secondaryColor,
+                    "--info-accent-color": accentColor,
+                    "--info-bg-gradient-start": bgGradientStart,
+                    "--info-bg-gradient-end": bgGradientEnd,
+                    "--info-text-color": "#FFFFFF",
+                    "--info-shadow-color": shadowColor,
+                    "--info-border-radius": borderRadius + "px",
+                    "--info-glow-intensity": glowIntensity,
+                    "--info-font-size-brand": fontSizeBrand + "px",
+                    "--info-font-size-message": fontSizeMessage + "px",
+                    "--info-icon": "\"" + iconEmoji + "\""
+                };
 
-            // Update live preview
-            updateLivePreview();
+                // Update JSON textarea with proper formatting
+                const jsonTextarea = document.getElementById('styleEditorConfig');
+                jsonTextarea.value = JSON.stringify(config, null, 2);
+
+                // Update live preview
+                updateLivePreview();
+
+            } catch (error) {
+                console.error('Error updating style from controls:', error);
+                // Don't show error notification as it would spam during typing
+            }
         }
 
         function hexToRgb(hex) {

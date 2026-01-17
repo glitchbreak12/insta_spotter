@@ -1633,11 +1633,20 @@ def debug_admin_credentials():
 
 @router.get("/api/settings/instagram")
 def get_instagram_settings(user: str = Depends(get_current_user)):
-    """Ottieni impostazioni Instagram."""
+    """Ottieni impostazioni Instagram complete."""
     import os
+    username = os.getenv("INSTAGRAM_USERNAME", "")
+    configured = bool(username)
+
+    # Check if connected by trying to see if we have valid credentials
+    connected = configured and bool(os.getenv("INSTAGRAM_PASSWORD"))
+
     return {
-        "username": os.getenv("INSTAGRAM_USERNAME", "Not configured"),
-        "configured": bool(os.getenv("INSTAGRAM_USERNAME"))
+        "username": username[:3] + "***" if username else "Not configured",
+        "configured": configured,
+        "connected": connected,  # Add the connected field that the frontend expects
+        "last_post": None,  # Could be enhanced later
+        "stories_count": 0  # Could be enhanced later
     }
 
 @router.get("/api/settings/gemini")

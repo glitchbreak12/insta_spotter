@@ -467,78 +467,16 @@ def create_default_info_card_styles(db: Session):
     if existing_styles:
         return  # Stili già esistenti
 
-    # Stili predefiniti per info card
+    # Stili predefiniti per info card - versione semplificata e valida
     default_styles = [
         {
-            "name": "Annuncio Arancione",
-            "config": """{
-                "--info-primary-color": "#FF6B35",
-                "--info-secondary-color": "#F7931E",
-                "--info-accent-color": "#FFD23F",
-                "--info-bg-gradient-start": "#2D1B69",
-                "--info-bg-gradient-end": "#11998E",
-                "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
-                "--info-border-radius": "50px",
-                "--info-glow-intensity": "0.4",
-                "--info-font-size-brand": "120px",
-                "--info-font-size-message": "65px",
-                "--info-icon": "\\"📢\\""
-            }""",
+            "name": "Stile V5 Custom",
+            "config": '{"--info-primary-color": "#FF6B35", "--info-secondary-color": "#F7931E", "--info-accent-color": "#FFD23F", "--info-bg-gradient-start": "#2D1B69", "--info-bg-gradient-end": "#11998E", "--info-text-color": "#FFFFFF", "--info-shadow-color": "rgba(255, 107, 53, 0.3)", "--info-border-radius": "50px", "--info-glow-intensity": "0.4", "--info-font-size-brand": "120px", "--info-font-size-message": "65px", "--info-icon": "📢"}',
             "is_default": True
         },
         {
-            "name": "Avviso Blu",
-            "config": """{
-                "--info-primary-color": "#007AFF",
-                "--info-secondary-color": "#5AC8FA",
-                "--info-accent-color": "#FFFFFF",
-                "--info-bg-gradient-start": "#1C1C1E",
-                "--info-bg-gradient-end": "#2C2C2E",
-                "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": "rgba(0, 122, 255, 0.3)",
-                "--info-border-radius": "40px",
-                "--info-glow-intensity": "0.5",
-                "--info-font-size-brand": "110px",
-                "--info-font-size-message": "60px",
-                "--info-icon": "\\"ℹ️\\""
-            }""",
-            "is_default": False
-        },
-        {
-            "name": "Emergenza Rossa",
-            "config": """{
-                "--info-primary-color": "#FF3B30",
-                "--info-secondary-color": "#FF453A",
-                "--info-accent-color": "#FFFFFF",
-                "--info-bg-gradient-start": "#330000",
-                "--info-bg-gradient-end": "#660000",
-                "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": "rgba(255, 59, 48, 0.4)",
-                "--info-border-radius": "30px",
-                "--info-glow-intensity": "0.6",
-                "--info-font-size-brand": "130px",
-                "--info-font-size-message": "70px",
-                "--info-icon": "\\"🚨\\""
-            }""",
-            "is_default": False
-        },
-        {
-            "name": "Successo Verde",
-            "config": """{
-                "--info-primary-color": "#34C759",
-                "--info-secondary-color": "#30D158",
-                "--info-accent-color": "#FFFFFF",
-                "--info-bg-gradient-start": "#0D4F1A",
-                "--info-bg-gradient-end": "#1A6B2E",
-                "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": "rgba(52, 199, 89, 0.3)",
-                "--info-border-radius": "45px",
-                "--info-glow-intensity": "0.35",
-                "--info-font-size-brand": "115px",
-                "--info-font-size-message": "62px",
-                "--info-icon": "\\"✅\\""
-            }""",
+            "name": "Stile Moderno",
+            "config": '{"--info-primary-color": "#6366f1", "--info-secondary-color": "#8b5cf6", "--info-accent-color": "#f59e0b", "--info-bg-gradient-start": "#1e1b4b", "--info-bg-gradient-end": "#312e81", "--info-text-color": "#FFFFFF", "--info-shadow-color": "rgba(99, 102, 241, 0.3)", "--info-border-radius": "40px", "--info-glow-intensity": "0.5", "--info-font-size-brand": "110px", "--info-font-size-message": "60px", "--info-icon": "🚀"}',
             "is_default": False
         }
     ]
@@ -552,6 +490,7 @@ def create_default_info_card_styles(db: Session):
                 config=style["config"],
                 is_default=style["is_default"]
             )
+            print(f"✅ Creato stile '{style['name']}' per info card")
         except Exception as e:
             print(f"⚠️ Errore creazione stile '{style['name']}': {e}")
 

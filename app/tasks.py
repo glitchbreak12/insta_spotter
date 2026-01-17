@@ -336,16 +336,15 @@ def daily_post_task():
                 print("--- [DAILY POST V2]: Già pubblicato oggi ---")
                 return {"status": "already_run", "message": "Già pubblicato oggi"}
 
-            # === PASSO 3: Recupera messaggi approvati di oggi ===
+            # === PASSO 3: Recupera messaggi approvati (tutti, non solo di oggi) ===
             messages = db.query(SpottedMessage).filter(
                 SpottedMessage.status == MessageStatus.APPROVED,
-                SpottedMessage.message_type == MessageType.SPOTTED,
-                SpottedMessage.created_at >= today_start
-            ).order_by(SpottedMessage.created_at).limit(settings.max_messages).all()
+                SpottedMessage.message_type == MessageType.SPOTTED
+            ).order_by(SpottedMessage.created_at.desc()).limit(settings.max_messages).all()
 
             if not messages:
-                print("--- [DAILY POST V2]: Nessun messaggio da pubblicare oggi ---")
-                return {"status": "no_messages", "message": "Nessun messaggio approvato oggi"}
+                print("--- [DAILY POST V2]: Nessun messaggio approvato da pubblicare ---")
+                return {"status": "no_messages", "message": "Nessun messaggio approvato disponibile"}
 
             print(f"--- [DAILY POST V2]: Trovati {len(messages)} messaggi da pubblicare ---")
 
