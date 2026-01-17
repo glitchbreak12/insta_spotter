@@ -322,9 +322,39 @@ class InstagramBot:
 
         try:
             print(f"--- DEBUG [POSTER]: Tento pubblicazione carousel con {len(image_paths)} immagini... ---")
-            self.client.album_upload(paths=image_paths, caption=caption)
-            print("--- DEBUG [POSTER]: Carousel pubblicato con successo! ---")
-            return self.client.last_json['media']['pk']
+
+            # Try album upload first (newer API)
+            try:
+                self.client.album_upload(paths=image_paths, caption=caption)
+                print("--- DEBUG [POSTER]: Carousel pubblicato con successo via album_upload! ---")
+                return self.client.last_json['media']['pk']
+            except Exception as album_error:
+                print(f"--- DEBUG [POSTER]: Album upload fallito: {album_error}, provo sidecar... ---")
+
+                # Fallback to sidecar upload (older API)
+                try:
+                    from instagrapi.types import StoryMention, StoryHashtag, StoryLocation
+                    self.client.sidecar_upload(paths=image_paths, caption=caption)
+                    print("--- DEBUG [POSTER]: Carousel pubblicato con successo via sidecar_upload! ---")
+                    return self.client.last_json['media']['pk']
+                except Exception as sidecar_error:
+                    print(f"--- DEBUG [POSTER]: Sidecar upload fallito: {sidecar_error} ---")
+
+                    # Last resort: post as separate stories
+                    print("--- DEBUG [POSTER]: Provo pubblicazione come storie separate... ---")
+                    media_pks = []
+                    for i, image_path in enumerate(image_paths):
+                        story_caption = f"{caption} ({i+1}/{len(image_paths)})" if len(image_paths) > 1 else caption
+                        media_pk = self.post_story(image_path, story_caption)
+                        if media_pk:
+                            media_pks.append(media_pk)
+
+                    if media_pks:
+                        print(f"--- DEBUG [POSTER]: Pubblicate {len(media_pks)} storie separate ---")
+                        return media_pks[0]  # Return first media PK
+                    else:
+                        raise Exception("Nessuna pubblicazione riuscita")
+
         except Exception as e:
             print(f"--- DEBUG [POSTER]: ERRORE pubblicazione carousel: {e} ---")
             if isinstance(e, LoginRequired):

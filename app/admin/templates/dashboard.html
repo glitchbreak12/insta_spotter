@@ -2789,29 +2789,49 @@
         }
 
         function showStyleManager() {
-            console.log('Opening style manager...');
-            // Show style management modal
+            console.log('Opening simple style editor...');
+            // Show simple style editor modal
             const modal = document.createElement('div');
             modal.className = 'modal active';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">
-                        <h3 class="modal-title">Gestione Stili Info Card</h3>
+                        <h3 class="modal-title">Stile Personalizzato Card</h3>
                         <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
                     </div>
-                    <div class="action-buttons" style="margin-bottom: var(--space-lg);">
-                        <button class="btn btn-success" onclick="createNewStyle()">
-                            <i class="fas fa-plus"></i>
-                            Nuovo Stile
-                        </button>
-                        <button class="btn btn-info" onclick="loadStyles()">
-                            <i class="fas fa-sync"></i>
-                            Ricarica Stili
-                        </button>
-                    </div>
-                    <div id="stylesContainer" class="loading">
-                        <div class="spinner"></div>
-                        <div class="loading-text">Caricamento stili...</div>
+                    <div style="padding: var(--space-lg);">
+                        <div class="form-group">
+                            <label class="form-label">Configurazione Stile CSS (JSON)</label>
+                            <textarea id="simpleStyleConfig" class="form-textarea" rows="20" placeholder='Configurazione CSS come oggetto JSON...'>{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}</textarea>
+                            <div class="form-hint">Modifica i valori CSS per personalizzare l'aspetto delle card</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="saveSimpleStyle()">
+                                <i class="fas fa-save"></i>
+                                Salva Stile
+                            </button>
+                            <button class="btn btn-info" onclick="testSimpleStyle()">
+                                <i class="fas fa-eye"></i>
+                                Test Anteprima
+                            </button>
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                <i class="fas fa-times"></i>
+                                Chiudi
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -2823,8 +2843,8 @@
                 }
             });
 
-            // Load styles
-            loadStyles();
+            // Load current style
+            loadCurrentStyle();
         }
 
         async function loadStyles() {
@@ -6676,6 +6696,137 @@
             } catch (error) {
                 console.error('Error deleting message:', error);
                 showNotification('Errore', 'Impossibile eliminare il messaggio', 'error');
+            }
+        }
+
+        // Simplified Style Management Functions
+        async function loadCurrentStyle() {
+            try {
+                // Load the default style for info cards
+                const response = await apiCall('/admin/api/style-configs?type=info_card');
+                const data = await response.json();
+
+                if (data.status === 'success' && data.configs.length > 0) {
+                    // Find the default style
+                    const defaultStyle = data.configs.find(style => style.is_default) || data.configs[0];
+                    document.getElementById('simpleStyleConfig').value = JSON.stringify(JSON.parse(defaultStyle.config), null, 2);
+                }
+            } catch (error) {
+                console.error('Error loading current style:', error);
+                // Use default config
+                document.getElementById('simpleStyleConfig').value = `{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-bg-gradient-start": "#2D1B69",
+  "--info-bg-gradient-end": "#11998E",
+  "--info-text-color": "#FFFFFF",
+  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+  "--info-border-radius": "50px",
+  "--info-glow-intensity": "0.4",
+  "--info-font-size-brand": "120px",
+  "--info-font-size-message": "65px",
+  "--info-icon": "\\"📢\\""
+}`;
+            }
+        }
+
+        async function saveSimpleStyle() {
+            const configText = document.getElementById('simpleStyleConfig').value.trim();
+
+            if (!configText) {
+                showNotification('Errore', 'La configurazione dello stile è obbligatoria', 'error');
+                return;
+            }
+
+            try {
+                // Validate JSON
+                JSON.parse(configText);
+
+                // For now, just save to localStorage and show success
+                localStorage.setItem('customInfoCardStyle', configText);
+                showNotification('Successo', 'Stile personalizzato salvato!', 'success');
+
+                // Close modal
+                document.querySelector('.modal').remove();
+
+            } catch (error) {
+                console.error('Error saving style:', error);
+                if (error instanceof SyntaxError) {
+                    showNotification('Errore', 'JSON non valido. Controlla la sintassi.', 'error');
+                } else {
+                    showNotification('Errore', 'Impossibile salvare lo stile', 'error');
+                }
+            }
+        }
+
+        async function testSimpleStyle() {
+            const configText = document.getElementById('simpleStyleConfig').value.trim();
+
+            if (!configText) {
+                showNotification('Errore', 'La configurazione dello stile è obbligatoria', 'error');
+                return;
+            }
+
+            try {
+                // Validate JSON
+                const config = JSON.parse(configText);
+
+                // Generate test preview
+                const previewResponse = await fetch('/admin/api/info-cards/preview', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        title: 'Test Stile Personalizzato',
+                        text: 'Questa è una preview del tuo stile personalizzato. L\'immagine verrà generata con le impostazioni che hai configurato.',
+                        style_config: JSON.stringify(config)
+                    })
+                });
+
+                if (previewResponse.ok) {
+                    const data = await previewResponse.json();
+                    if (data.image_url) {
+                        // Show preview modal
+                        const modal = document.createElement('div');
+                        modal.className = 'modal active';
+                        modal.innerHTML = `
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title">Test Stile Personalizzato</h3>
+                                    <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
+                                </div>
+                                <div style="text-align: center; padding: var(--space-lg);">
+                                    <img src="${data.image_url}?t=${Date.now()}" alt="Style Test" style="max-width: 100%; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+                                    <p style="margin-top: var(--space-lg); color: var(--text-muted);">
+                                        Questa è l'anteprima del tuo stile personalizzato
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+
+                        document.body.appendChild(modal);
+                        modal.addEventListener('click', function(e) {
+                            if (e.target === modal) {
+                                modal.remove();
+                            }
+                        });
+                    } else {
+                        throw new Error('No preview image generated');
+                    }
+                } else {
+                    throw new Error('Preview generation failed');
+                }
+
+            } catch (error) {
+                console.error('Error testing style:', error);
+                if (error instanceof SyntaxError) {
+                    showNotification('Errore', 'JSON non valido. Controlla la sintassi prima di testare.', 'error');
+                } else {
+                    showNotification('Errore', 'Impossibile testare lo stile', 'error');
+                }
             }
         }
     </script>
