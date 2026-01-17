@@ -15,6 +15,9 @@ from app.admin.security import authenticate_user, create_access_token, get_curre
 from app.tasks import post_daily_compilation, publish_single_info_card
 from config import settings # Import settings
 
+# Import AIModeratorFactory
+from app.ai.moderator import AIModeratorFactory
+
 # --- Configurazione ---
 
 router = APIRouter(
@@ -1299,7 +1302,6 @@ def generate_daily_post_with_ai(
         # Rimossi riferimenti agli stili
 
     # Crea contenuto usando AI
-    from app.ai.moderator import AIModeratorFactory
     moderator = AIModeratorFactory.create_moderator(ai_model, **{})
         if not moderator:
             return {"status": "error", "message": f"Impossibile creare moderatore {ai_model}"}
