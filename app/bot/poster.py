@@ -176,6 +176,40 @@ class InstagramBot:
         print("--- DEBUG [POSTER]: Login completato. Salvo la sessione... ---")
         self.client.dump_settings(self.session_file)
 
+    def test_connection(self) -> Dict[str, Any]:
+        """
+        Testa la connessione Instagram e restituisce informazioni sull'account.
+        """
+        try:
+            print("--- DEBUG [POSTER]: Testando connessione Instagram... ---")
+
+            # Ottieni informazioni sull'account
+            account_info = self.client.account_info()
+            timeline_feed = self.client.get_timeline_feed()
+
+            result = {
+                'connected': True,
+                'username': account_info.username if hasattr(account_info, 'username') else self.username,
+                'followers': account_info.follower_count if hasattr(account_info, 'follower_count') else 0,
+                'following': account_info.following_count if hasattr(account_info, 'following_count') else 0,
+                'posts_count': account_info.media_count if hasattr(account_info, 'media_count') else 0,
+                'is_business': getattr(account_info, 'is_business_account', False),
+                'is_verified': getattr(account_info, 'is_verified', False)
+            }
+
+            print(f"--- DEBUG [POSTER]: Connessione riuscita - Username: {result['username']}, Followers: {result['followers']} ---")
+            return result
+
+        except Exception as e:
+            print(f"--- DEBUG [POSTER]: Errore test connessione: {e} ---")
+            return {
+                'connected': False,
+                'error': str(e),
+                'username': None,
+                'followers': 0,
+                'following': 0
+            }
+
     def post_story(self, image_path: str) -> bool:
         if not os.path.exists(image_path): return False
 

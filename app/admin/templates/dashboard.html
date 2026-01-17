@@ -6119,23 +6119,35 @@
 
         function updateStyleFromControls() {
             // Get values from interactive controls
+            const primaryColor = document.getElementById('colorPrimary').value;
+            const secondaryColor = document.getElementById('colorSecondary').value;
+            const accentColor = document.getElementById('colorAccent').value;
+            const bgGradientStart = document.getElementById('bgGradientStart').value;
+            const bgGradientEnd = document.getElementById('bgGradientEnd').value;
+            const borderRadius = document.getElementById('borderRadius').value;
+            const glowIntensity = document.getElementById('glowIntensity').value;
+            const fontSizeBrand = document.getElementById('fontSizeBrand').value;
+            const fontSizeMessage = document.getElementById('fontSizeMessage').value;
+            const iconEmoji = document.getElementById('iconEmoji').value;
+
             const config = {
-                "--info-primary-color": document.getElementById('colorPrimary').value,
-                "--info-secondary-color": document.getElementById('colorSecondary').value,
-                "--info-accent-color": document.getElementById('colorAccent').value,
-                "--info-bg-gradient-start": document.getElementById('bgGradientStart').value,
-                "--info-bg-gradient-end": document.getElementById('bgGradientEnd').value,
+                "--info-primary-color": primaryColor,
+                "--info-secondary-color": secondaryColor,
+                "--info-accent-color": accentColor,
+                "--info-bg-gradient-start": bgGradientStart,
+                "--info-bg-gradient-end": bgGradientEnd,
                 "--info-text-color": "#FFFFFF",
-                "--info-shadow-color": `rgba(${hexToRgb(document.getElementById('colorPrimary').value)}, 0.3)`,
-                "--info-border-radius": document.getElementById('borderRadius').value + "px",
-                "--info-glow-intensity": document.getElementById('glowIntensity').value,
-                "--info-font-size-brand": document.getElementById('fontSizeBrand').value + "px",
-                "--info-font-size-message": document.getElementById('fontSizeMessage').value + "px",
-                "--info-icon": `"${document.getElementById('iconEmoji').value}"`
+                "--info-shadow-color": `rgba(${hexToRgb(primaryColor)}, 0.3)`,
+                "--info-border-radius": borderRadius + "px",
+                "--info-glow-intensity": glowIntensity,
+                "--info-font-size-brand": fontSizeBrand + "px",
+                "--info-font-size-message": fontSizeMessage + "px",
+                "--info-icon": `"${iconEmoji}"`
             };
 
-            // Update JSON textarea
-            document.getElementById('styleEditorConfig').value = JSON.stringify(config, null, 2);
+            // Update JSON textarea with proper formatting
+            const jsonTextarea = document.getElementById('styleEditorConfig');
+            jsonTextarea.value = JSON.stringify(config, null, 2);
 
             // Update live preview
             updateLivePreview();

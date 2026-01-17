@@ -12,7 +12,7 @@ import os
 
 from app.database import get_db, SpottedMessage, MessageStatus, SessionLocal, get_ai_config, update_ai_config, AIModel, set_system_setting, get_system_setting_value
 from app.admin.security import authenticate_user, create_access_token, get_current_user
-from app.tasks import post_daily_compilation
+from app.tasks import post_daily_compilation, publish_single_info_card
 from config import settings # Import settings
 
 # --- Configurazione ---
