@@ -1756,7 +1756,9 @@ def publish_info_card(card_id: int, user: str = Depends(get_current_user), db: S
 def preview_info_card(
     title: str = Form(""),
     text: str = Form(""),
-    user: str = Depends(get_current_user)
+    style_config_id: int = Form(None),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
     """API per ottenere una preview dell'info card come immagine."""
     try:
@@ -1764,14 +1766,29 @@ def preview_info_card(
             title = "Titolo Card"
             text = "Il contenuto apparirà qui..."
 
+        # Recupera la configurazione di stile se specificata
+        style_config_json = None
+        if style_config_id:
+            from app.database import get_style_config_by_id
+            style_config = get_style_config_by_id(db, style_config_id)
+            if style_config and style_config.type == "info_card":
+                style_config_json = style_config.config
+
         # Usa il generatore di immagini per creare una preview
         from app.image.generator import ImageGenerator
         import time
         generator = ImageGenerator()
 
-        # Genera l'immagine con message_type="info"
+        # Genera l'immagine con message_type="info" e configurazione stile
         preview_filename = f"preview_info_{int(time.time())}.png"
-        image_path = generator.from_text(text, preview_filename, message_id=0, message_type="info", title=title)
+        image_path = generator.from_text(
+            text,
+            preview_filename,
+            message_id=0,
+            message_type="info",
+            title=title,
+            style_config=style_config_json
+        )
 
         if image_path:
             # Restituisci l'URL relativa dell'immagine

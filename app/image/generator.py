@@ -1,4 +1,4 @@
-import imgkit
+nimport imgkit
 import jinja2
 import os
 from pathlib import Path
@@ -75,7 +75,7 @@ class ImageGenerator:
         # Verifica disponibilità Playwright
         self.playwright_available = PLAYWRIGHT_AVAILABLE
 
-    def _render_html(self, message_text: str, message_id: int, message_type: str = "spotted", title: str = None) -> str:
+    def _render_html(self, message_text: str, message_id: int, message_type: str = "spotted", title: str = None, style_config: dict = None) -> str:
         """Carica il template HTML e inserisce il messaggio e l'URL del font."""
 
         # Scegli il template basato sul tipo di messaggio
@@ -87,7 +87,7 @@ class ImageGenerator:
             print(f"🎨 [DEBUG] Usando template SPOTTED: {template_name}")
 
         template = self.template_env.get_template(template_name)
-        
+
         # Crea un URL assoluto e corretto per il file del font
         font_path = os.path.abspath(os.path.join(self.template_base_dir, 'fonts', 'Komika_Axis.ttf'))
         font_url = Path(font_path).as_uri()
@@ -96,7 +96,54 @@ class ImageGenerator:
         from datetime import datetime
         current_date = datetime.now().strftime("%d/%m/%Y")
 
-        return template.render(message=message_text, id=message_id, font_url=font_url, title=title, publish_date=current_date)
+        # Prepara le variabili CSS personalizzate per info cards
+        template_vars = {
+            'message': message_text,
+            'id': message_id,
+            'font_url': font_url,
+            'title': title,
+            'publish_date': current_date,
+        }
+
+        # Estrai le variabili CSS dallo style_config per info cards
+        if style_config and message_type == "info":
+            try:
+                import json
+                config_dict = json.loads(style_config)
+
+                # Mappa le chiavi CSS alle variabili template
+                css_var_mapping = {
+                    '--info-primary-color': 'primary_color',
+                    '--info-secondary-color': 'secondary_color',
+                    '--info-accent-color': 'accent_color',
+                    '--info-bg-gradient-start': 'bg_gradient_start',
+                    '--info-bg-gradient-end': 'bg_gradient_end',
+                    '--info-text-color': 'text_color',
+                    '--info-shadow-color': 'shadow_color',
+                    '--info-border-radius': 'border_radius',
+                    '--info-glow-intensity': 'glow_intensity',
+                    '--info-font-size-brand': 'font_size_brand',
+                    '--info-font-size-message': 'font_size_message',
+                    '--info-icon': 'icon'
+                }
+
+                # Estrai i valori CSS e rimuovi le virgolette se necessario
+                for css_var, template_var in css_var_mapping.items():
+                    if css_var in config_dict:
+                        value = config_dict[css_var].strip()
+                        # Rimuovi virgolette esterne se presenti
+                        if value.startswith('"') and value.endswith('"'):
+                            value = value[1:-1]
+                        elif value.startswith("'") and value.endswith("'"):
+                            value = value[1:-1]
+                        template_vars[template_var] = value
+
+                print(f"🎨 [DEBUG] Applicando stile personalizzato con {len(template_vars) - 5} variabili CSS")
+
+            except Exception as e:
+                print(f"⚠️ Errore parsing configurazione stile: {e}")
+
+        return template.render(**template_vars)
 
     def _generate_with_pil(self, message_text: str, output_path: str, message_id: int, message_type: str = "spotted", title: str = None) -> Optional[str]:
         """Fallback PIL che replica esattamente lo stile dei template con glow 3D."""

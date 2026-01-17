@@ -135,15 +135,15 @@ class DailyPost(Base):
     images = Column(String, nullable=True)  # JSON array di percorsi immagini per multi-foto
 
 class StyleConfig(Base):
-    """Configurazioni di stile per post e stories."""
+    """Configurazioni di stile per post, stories e info cards."""
     __tablename__ = "style_configs"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False)  # "post" o "story"
+    type = Column(String, nullable=False)  # "post", "story", "info_card"
     config = Column(String, nullable=False)  # JSON string con configurazione stile
     preview_image = Column(String, nullable=True)
-    is_default = Column(Integer, default=0)  # 1 se è lo stile predefinito
+    is_default = Column(Integer, default=0)  # 1 se è lo stile predefinito per il tipo
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -393,7 +393,7 @@ def create_style_config(db: Session, name: str, type: str, config: str, preview_
     """Crea una nuova configurazione di stile."""
     if is_default:
         # Rimuovi il flag default da altri stili dello stesso tipo
-        db.query(StyleConfig).filter(StyleConfig.type == type).update({"is_default": False})
+        db.query(StyleConfig).filter(StyleConfig.type == type).update({"is_default": 0})
 
     style_config = StyleConfig(
         name=name,
@@ -458,6 +458,112 @@ def delete_style_config(db: Session, config_id: int) -> bool:
     db.delete(config)
     db.commit()
     return True
+
+# --- Funzioni per Info Card Style Management ---
+
+def create_default_info_card_styles(db: Session):
+    """Crea stili predefiniti per info card se non esistono."""
+    # Verifica se esistono già stili per info card
+    existing_styles = get_style_configs(db, "info_card")
+    if existing_styles:
+        return  # Stili già esistenti
+
+    # Stili predefiniti per info card
+    default_styles = [
+        {
+            "name": "Annuncio Arancione",
+            "config": """{
+                "--info-primary-color": "#FF6B35",
+                "--info-secondary-color": "#F7931E",
+                "--info-accent-color": "#FFD23F",
+                "--info-bg-gradient-start": "#2D1B69",
+                "--info-bg-gradient-end": "#11998E",
+                "--info-text-color": "#FFFFFF",
+                "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
+                "--info-border-radius": "50px",
+                "--info-glow-intensity": "0.4",
+                "--info-font-size-brand": "120px",
+                "--info-font-size-message": "65px",
+                "--info-icon": "\\"📢\\""
+            }""",
+            "is_default": True
+        },
+        {
+            "name": "Avviso Blu",
+            "config": """{
+                "--info-primary-color": "#007AFF",
+                "--info-secondary-color": "#5AC8FA",
+                "--info-accent-color": "#FFFFFF",
+                "--info-bg-gradient-start": "#1C1C1E",
+                "--info-bg-gradient-end": "#2C2C2E",
+                "--info-text-color": "#FFFFFF",
+                "--info-shadow-color": "rgba(0, 122, 255, 0.3)",
+                "--info-border-radius": "40px",
+                "--info-glow-intensity": "0.5",
+                "--info-font-size-brand": "110px",
+                "--info-font-size-message": "60px",
+                "--info-icon": "\\"ℹ️\\""
+            }""",
+            "is_default": False
+        },
+        {
+            "name": "Emergenza Rossa",
+            "config": """{
+                "--info-primary-color": "#FF3B30",
+                "--info-secondary-color": "#FF453A",
+                "--info-accent-color": "#FFFFFF",
+                "--info-bg-gradient-start": "#330000",
+                "--info-bg-gradient-end": "#660000",
+                "--info-text-color": "#FFFFFF",
+                "--info-shadow-color": "rgba(255, 59, 48, 0.4)",
+                "--info-border-radius": "30px",
+                "--info-glow-intensity": "0.6",
+                "--info-font-size-brand": "130px",
+                "--info-font-size-message": "70px",
+                "--info-icon": "\\"🚨\\""
+            }""",
+            "is_default": False
+        },
+        {
+            "name": "Successo Verde",
+            "config": """{
+                "--info-primary-color": "#34C759",
+                "--info-secondary-color": "#30D158",
+                "--info-accent-color": "#FFFFFF",
+                "--info-bg-gradient-start": "#0D4F1A",
+                "--info-bg-gradient-end": "#1A6B2E",
+                "--info-text-color": "#FFFFFF",
+                "--info-shadow-color": "rgba(52, 199, 89, 0.3)",
+                "--info-border-radius": "45px",
+                "--info-glow-intensity": "0.35",
+                "--info-font-size-brand": "115px",
+                "--info-font-size-message": "62px",
+                "--info-icon": "\\"✅\\""
+            }""",
+            "is_default": False
+        }
+    ]
+
+    for style in default_styles:
+        try:
+            create_style_config(
+                db=db,
+                name=style["name"],
+                type="info_card",
+                config=style["config"],
+                is_default=style["is_default"]
+            )
+        except Exception as e:
+            print(f"⚠️ Errore creazione stile '{style['name']}': {e}")
+
+def get_info_card_style_config(db: Session, style_id: int = None) -> Optional[StyleConfig]:
+    """Recupera una configurazione di stile per info card."""
+    if style_id:
+        config = get_style_config_by_id(db, style_id)
+        return config if config and config.type == "info_card" else None
+    else:
+        # Ritorna lo stile predefinito
+        return get_default_style_config(db, "info_card")
 
 # --- SYSTEM SETTINGS FUNCTIONS ---
 

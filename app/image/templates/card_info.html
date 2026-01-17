@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+g<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -16,11 +16,27 @@
             box-sizing: border-box;
         }
 
+        :root {
+            /* Variabili CSS personalizzabili per stili avanzati - ora dinamiche */
+            --info-primary-color: {{ primary_color | default('#FF6B35') }};
+            --info-secondary-color: {{ secondary_color | default('#F7931E') }};
+            --info-accent-color: {{ accent_color | default('#FFD23F') }};
+            --info-bg-gradient-start: {{ bg_gradient_start | default('#2D1B69') }};
+            --info-bg-gradient-end: {{ bg_gradient_end | default('#11998E') }};
+            --info-text-color: {{ text_color | default('#FFFFFF') }};
+            --info-shadow-color: {{ shadow_color | default('rgba(255, 107, 53, 0.3)') }};
+            --info-border-radius: {{ border_radius | default('50px') }};
+            --info-glow-intensity: {{ glow_intensity | default('0.4') }};
+            --info-font-size-brand: {{ font_size_brand | default('120px') }};
+            --info-font-size-message: {{ font_size_message | default('65px') }};
+            --info-icon: "{{ icon | default('📢') }}";
+        }
+
         body {
             width: 1080px;
             height: 1920px;
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-            background: #000000;
+            background: linear-gradient(135deg, var(--info-bg-gradient-start) 0%, var(--info-bg-gradient-end) 100%);
             overflow: hidden;
             position: relative;
             display: flex;
@@ -28,15 +44,35 @@
             align-items: center;
         }
 
-        /* Sfondo stile Apple - mantiene v3 */
+        /* Sfondo dinamico con pattern geometrici personalizzati */
         .bg-container {
             position: absolute;
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(circle at 30% 40%, rgba(0, 122, 255, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, rgba(88, 86, 214, 0.1) 0%, transparent 50%),
-                linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+                radial-gradient(circle at 25% 25%, rgba(255, 107, 53, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(247, 147, 30, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 10%, rgba(255, 210, 63, 0.08) 0%, transparent 35%),
+                linear-gradient(45deg,
+                    var(--info-bg-gradient-start) 0%,
+                    var(--info-bg-gradient-end) 50%,
+                    var(--info-primary-color) 100%);
+        }
+
+        /* Pattern decorativi per info card */
+        .bg-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, var(--info-accent-color) 2px, transparent 2px),
+                radial-gradient(circle at 80% 70%, var(--info-secondary-color) 1px, transparent 1px),
+                radial-gradient(circle at 40% 80%, var(--info-primary-color) 1.5px, transparent 1.5px);
+            background-size: 100px 100px, 80px 80px, 120px 120px;
+            opacity: 0.03;
         }
 
         .container {
@@ -49,101 +85,135 @@
             padding: 90px;
         }
 
-        /* Card con Glow 3D */
+        /* Card speciale per info con design distintivo */
         .card {
             position: relative;
             width: 100%;
             height: 100%;
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 45px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            /* NEW: Enhanced 3D Box Shadow */
+            background: linear-gradient(145deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0.05) 50%,
+                rgba(255, 107, 53, 0.08) 100%);
+            border-radius: var(--info-border-radius);
+            border: 2px solid rgba(255, 107, 53, 0.3);
             box-shadow:
-                0 0 10px rgba(0, 122, 255, 0.3), /* Inner light glow */
-                0 0 40px rgba(0, 122, 255, 0.2), /* Medium glow */
-                0 0 80px rgba(0, 122, 255, 0.15), /* Outer subtle glow */
-                0 20px 60px rgba(0, 0, 0, 0.7); /* Deep dark shadow for depth */
-            backdrop-filter: blur(55px) saturate(190%); /* Slightly stronger blur/saturate */
-            -webkit-backdrop-filter: blur(55px) saturate(190%);
+                0 0 30px var(--info-shadow-color),
+                0 0 60px rgba(255, 107, 53, var(--info-glow-intensity)),
+                0 0 120px rgba(247, 147, 30, 0.2),
+                0 25px 80px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
             display: flex;
             flex-direction: column;
-            padding: 100px 90px;
+            padding: 120px 90px;
             overflow: hidden;
-            /* Optional: slight transform for subtle 3D tilt */
-            /* transform: perspective(1000px) rotateX(2deg) rotateY(-2deg); */
         }
 
-        /* Glow sottile - mantiene v3 */
+        /* Glow animato per info card */
         .card::before {
             content: '';
             position: absolute;
-            top: -30%;
-            left: -30%;
-            width: 160%;
-            height: 160%;
-            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, transparent 70%);
-            opacity: 0.5;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background:
+                conic-gradient(from 0deg,
+                    transparent 0deg,
+                    rgba(255, 107, 53, 0.1) 60deg,
+                    rgba(247, 147, 30, 0.15) 120deg,
+                    rgba(255, 210, 63, 0.1) 180deg,
+                    transparent 240deg
+                );
+            animation: rotate 20s linear infinite;
+            opacity: 0.6;
             pointer-events: none;
         }
 
-        /* Highlight superiore - mantiene v3 */
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Highlight superiore con gradiente speciale */
         .highlight {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 350px;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
-            border-radius: 45px 45px 0 0;
+            height: 400px;
+            background: linear-gradient(180deg,
+                rgba(255, 210, 63, 0.2) 0%,
+                rgba(247, 147, 30, 0.15) 30%,
+                rgba(255, 107, 53, 0.1) 60%,
+                transparent 100%);
+            border-radius: var(--info-border-radius) var(--info-border-radius) 0 0;
             pointer-events: none;
         }
 
-        /* Header */
+        /* Header speciale per info card */
         .header {
             text-align: center;
-            margin-bottom: 80px;
+            margin-bottom: 100px;
             position: relative;
             z-index: 2;
-            padding-top: 50px;
+            padding-top: 60px;
         }
 
         .brand {
             font-family: 'Komika Axis', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 95px;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: 4px;
-            margin-bottom: 35px;
-            /* NEW: Enhanced 3D Text Shadow */
+            font-size: var(--info-font-size-brand);
+            font-weight: 800;
+            color: var(--info-text-color);
+            letter-spacing: 6px;
+            margin-bottom: 40px;
             text-shadow:
-                0 0 10px rgba(0, 122, 255, 0.5), /* Inner glow */
-                0 0 20px rgba(0, 122, 255, 0.3), /* Medium glow */
-                0 0 30px rgba(0, 122, 255, 0.1), /* Outer glow */
-                0 2px 5px rgba(0, 0, 0, 0.8); /* Stronger dark shadow for lift */
-            line-height: 1.1;
+                0 0 15px rgba(255, 107, 53, 0.8),
+                0 0 30px rgba(247, 147, 30, 0.6),
+                0 0 45px rgba(255, 210, 63, 0.4),
+                0 3px 8px rgba(0, 0, 0, 0.9);
+            line-height: 1;
+            position: relative;
         }
 
-        /* Badge - mantiene v3 */
+        .brand::before {
+            content: var(--info-icon);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 60px;
+            opacity: 0.8;
+        }
+
+        /* Badge speciale per info */
         .badge {
             display: inline-block;
-            padding: 12px 30px;
-            background: rgba(0, 122, 255, 0.12);
-            border: 1px solid rgba(0, 122, 255, 0.25);
-            border-radius: 25px;
-            color: #5ac8fa;
-            font-size: 26px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.15);
+            padding: 15px 35px;
+            background: linear-gradient(135deg,
+                rgba(255, 107, 53, 0.2) 0%,
+                rgba(247, 147, 30, 0.25) 50%,
+                rgba(255, 210, 63, 0.2) 100%);
+            border: 2px solid rgba(255, 107, 53, 0.4);
+            border-radius: 30px;
+            color: var(--info-accent-color);
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            box-shadow:
+                0 6px 25px rgba(255, 107, 53, 0.3),
+                inset 0 1px 3px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
-        /* Body */
+        /* Body con layout speciale per info */
         .body {
             flex: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 0;
+            padding: 20px 0;
             position: relative;
             z-index: 2;
             min-height: 0;
@@ -152,55 +222,136 @@
 
         .message {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 62px;
-            line-height: 1.5;
+            font-size: var(--info-font-size-message);
+            line-height: 1.6;
             text-align: center;
-            color: #ffffff;
-            font-weight: 400;
-            max-width: 80%;
+            color: var(--info-text-color);
+            font-weight: 500;
+            max-width: 85%;
             white-space: pre-wrap;
             word-wrap: break-word;
-            /* NEW: Enhanced 3D Text Shadow */
             text-shadow:
-                0 0 8px rgba(255, 255, 255, 0.3), /* Subtle white glow */
-                0 0 15px rgba(0, 0, 0, 0.6), /* Medium dark shadow */
-                0 5px 10px rgba(0, 0, 0, 0.8); /* Deep dark shadow for lift */
+                0 0 12px rgba(255, 255, 255, 0.4),
+                0 0 20px rgba(0, 0, 0, 0.7),
+                0 6px 15px rgba(0, 0, 0, 0.9);
             margin: 0;
             padding: 0;
         }
 
-        /* Footer */
+        /* Elementi decorativi per info card */
+        .decorative-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .decorative-elements::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255, 210, 63, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .decorative-elements::before {
+            content: '';
+            position: absolute;
+            bottom: 25%;
+            left: 8%;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(247, 147, 30, 0.25) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 6s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+        }
+
+        /* Footer speciale per info card */
         .footer {
             text-align: center;
             margin-top: auto;
-            padding-top: 60px;
-            padding-bottom: 40px;
+            padding-top: 80px;
+            padding-bottom: 50px;
             position: relative;
             z-index: 2;
         }
 
-        /* Footer Text - mantiene v3 */
         .footer-text {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            font-size: 30px;
-            color: rgba(255, 255, 255, 0.55);
-            letter-spacing: 1.5px;
-            margin-bottom: 22px;
-            font-weight: 500;
+            font-size: 32px;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* CTA - mantiene v3 */
         .cta {
             display: inline-block;
-            padding: 12px 26px;
-            background: rgba(0, 122, 255, 0.18);
-            border: 1px solid rgba(0, 122, 255, 0.35);
-            border-radius: 22px;
-            color: #5ac8fa;
-            font-size: 26px;
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.2);
+            padding: 18px 40px;
+            background: linear-gradient(135deg,
+                rgba(255, 107, 53, 0.3) 0%,
+                rgba(247, 147, 30, 0.35) 50%,
+                rgba(255, 210, 63, 0.3) 100%);
+            border: 2px solid rgba(255, 107, 53, 0.5);
+            border-radius: 30px;
+            color: var(--info-accent-color);
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow:
+                0 8px 30px rgba(255, 107, 53, 0.4),
+                inset 0 1px 3px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 12px 40px rgba(255, 107, 53, 0.6),
+                inset 0 1px 3px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 60px;
+            }
+
+            .card {
+                padding: 100px 60px;
+                border-radius: 40px;
+            }
+
+            .brand {
+                font-size: 100px;
+            }
+
+            .message {
+                font-size: 55px;
+            }
+
+            .footer-text {
+                font-size: 28px;
+            }
+
+            .cta {
+                padding: 15px 35px;
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -209,6 +360,7 @@
 
     <div class="container">
         <div class="card">
+            <div class="decorative-elements"></div>
             <div class="highlight"></div>
 
             <div class="header">
@@ -222,7 +374,7 @@
 
             <div class="footer">
                 <div class="footer-text">@spottedatbz</div>
-                <div class="cta">📢 Info Importante</div>
+                <div class="cta">{{ icon }} Info Importante</div>
             </div>
         </div>
     </div>

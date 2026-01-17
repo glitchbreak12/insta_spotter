@@ -145,6 +145,10 @@ def publish_info_card_task(card_id: int, db_session=None):
 
             print(f"--- DEBUG [INFO CARD]: Pubblicando '{info_card.title}' ---")
 
+            # Recupera la configurazione di stile (se specificata dall'utente)
+            style_config = None
+            # TODO: Aggiungere campo style_config_id alla tabella SpottedMessage se necessario
+
             # Genera immagine con template info
             import time
             generator = ImageGenerator()
