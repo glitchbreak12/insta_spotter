@@ -31,12 +31,7 @@ class UserStatus(str, enum.Enum):
     LIMITED = "limited"
     BLOCKED = "blocked"
 
-class DailyPostStyle(str, enum.Enum):
-    """Stili disponibili per il post giornaliero."""
-    GRID = "grid"  # Griglia di miniature
-    CAROUSEL = "carousel"  # Carousel Instagram
-    COMPACT = "compact"  # Layout compatto
-    ELEGANT = "elegant"  # Stile elegante
+
 
 class TechnicalUser(Base):
     """Modello per un utente tecnico anonimo."""
@@ -98,7 +93,6 @@ class DailyPostSettings(Base):
     id = Column(Integer, primary_key=True, index=True)
     enabled = Column(Integer, default=1)  # 1=abilitato, 0=disabilitato
     post_time = Column(String, default="20:00")  # Orario del post (HH:MM)
-    style = Column(Enum(DailyPostStyle), default=DailyPostStyle.CAROUSEL, nullable=False)
     max_messages = Column(Integer, default=20)  # Max messaggi nel post giornaliero
     title_template = Column(String, default="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫")
     hashtag_template = Column(String, default="#spotted #instaspotter #dailyrecap")
@@ -128,24 +122,9 @@ class DailyPost(Base):
 
     # Relazione con i messaggi inclusi (opzionale)
     message_ids = Column(String, nullable=True)  # JSON string di ID messaggi inclusi
-
-    # Nuovi campi per stili e multi-foto
-    post_style = Column(String, default="story")  # "post" o "story"
-    style_config = Column(String, nullable=True)  # JSON string per configurazione stile
     images = Column(String, nullable=True)  # JSON array di percorsi immagini per multi-foto
 
-class StyleConfig(Base):
-    """Configurazioni di stile per post, stories e info cards."""
-    __tablename__ = "style_configs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    type = Column(String, nullable=False)  # "post", "story", "info_card"
-    config = Column(String, nullable=False)  # JSON string con configurazione stile
-    preview_image = Column(String, nullable=True)
-    is_default = Column(Integer, default=0)  # 1 se è lo stile predefinito per il tipo
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 # --- Configurazione del Database ---
 
@@ -220,7 +199,6 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
         settings = DailyPostSettings(
             enabled=1,  # Abilita di default (1 per integer)
             post_time="20:00",
-            style=DailyPostStyle.CAROUSEL,
             max_messages=20,
             title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
             hashtag_template="#spotted #instaspotter #dailyrecap",
@@ -241,14 +219,6 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
                 except ValueError:
                     print(f"⚠️ Modello AI '{value}' non valido, uso GEMINI come default")
                     setattr(settings, key, AIModel.GEMINI)
-            # Converti stringa a enum per style
-            elif key == "style" and isinstance(value, str):
-                try:
-                    style_enum = DailyPostStyle(value)
-                    setattr(settings, key, style_enum)
-                except ValueError:
-                    print(f"⚠️ Stile '{value}' non valido, uso CAROUSEL come default")
-                    setattr(settings, key, DailyPostStyle.CAROUSEL)
             else:
                 setattr(settings, key, value)
 
@@ -271,7 +241,6 @@ def update_daily_post_settings(db: Session, **kwargs) -> DailyPostSettings:
             temp = DailyPostSettings(
                 enabled=1,
                 post_time="20:00",
-                style=DailyPostStyle.CAROUSEL,
                 max_messages=20,
                 title_template="🌟 Spotted del giorno {date} 🌟\n\nEcco tutti gli spotted della giornata! 💫",
                 hashtag_template="#spotted #instaspotter #dailyrecap",
@@ -386,122 +355,7 @@ def get_published_daily_posts(db: Session, limit: int = 20) -> list:
         DailyPost.status == "published"
     ).order_by(DailyPost.published_at.desc()).limit(limit).all()
 
-# --- Funzioni per Style Config Management ---
 
-def create_style_config(db: Session, name: str, type: str, config: str, preview_image: str = None, is_default: bool = False) -> StyleConfig:
-    """Crea una nuova configurazione di stile."""
-    if is_default:
-        # Rimuovi il flag default da altri stili dello stesso tipo
-        db.query(StyleConfig).filter(StyleConfig.type == type).update({"is_default": 0})
-
-    style_config = StyleConfig(
-        name=name,
-        type=type,
-        config=config,
-        preview_image=preview_image,
-        is_default=int(is_default)
-    )
-    db.add(style_config)
-    db.commit()
-    db.refresh(style_config)
-    return style_config
-
-def get_style_configs(db: Session, type: str = None) -> list:
-    """Recupera tutte le configurazioni di stile."""
-    query = db.query(StyleConfig).order_by(StyleConfig.created_at.desc())
-
-    if type:
-        query = query.filter(StyleConfig.type == type)
-
-    return query.all()
-
-def get_style_config_by_id(db: Session, config_id: int) -> Optional[StyleConfig]:
-    """Recupera una configurazione di stile per ID."""
-    return db.query(StyleConfig).filter(StyleConfig.id == config_id).first()
-
-def get_default_style_config(db: Session, type: str) -> Optional[StyleConfig]:
-    """Recupera la configurazione di stile predefinita per un tipo."""
-    return db.query(StyleConfig).filter(
-        StyleConfig.type == type,
-        StyleConfig.is_default == True
-    ).first()
-
-def update_style_config(db: Session, config_id: int, **kwargs) -> Optional[StyleConfig]:
-    """Aggiorna una configurazione di stile."""
-    config = get_style_config_by_id(db, config_id)
-    if not config:
-        return None
-
-    if "is_default" in kwargs and kwargs["is_default"]:
-        # Rimuovi il flag default da altri stili dello stesso tipo
-        db.query(StyleConfig).filter(
-            StyleConfig.type == config.type,
-            StyleConfig.id != config_id
-        ).update({"is_default": False})
-
-    for key, value in kwargs.items():
-        if hasattr(config, key):
-            setattr(config, key, value)
-
-    config.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(config)
-    return config
-
-def delete_style_config(db: Session, config_id: int) -> bool:
-    """Elimina una configurazione di stile."""
-    config = get_style_config_by_id(db, config_id)
-    if not config:
-        return False
-
-    db.delete(config)
-    db.commit()
-    return True
-
-# --- Funzioni per Info Card Style Management ---
-
-def create_default_info_card_styles(db: Session):
-    """Crea stili predefiniti per info card se non esistono."""
-    # Verifica se esistono già stili per info card
-    existing_styles = get_style_configs(db, "info_card")
-    if existing_styles:
-        return  # Stili già esistenti
-
-    # Stili predefiniti per info card - versione semplificata e valida
-    default_styles = [
-        {
-            "name": "Stile V5 Custom",
-            "config": '{"--info-primary-color": "#FF6B35", "--info-secondary-color": "#F7931E", "--info-accent-color": "#FFD23F", "--info-bg-gradient-start": "#2D1B69", "--info-bg-gradient-end": "#11998E", "--info-text-color": "#FFFFFF", "--info-shadow-color": "rgba(255, 107, 53, 0.3)", "--info-border-radius": "50px", "--info-glow-intensity": "0.4", "--info-font-size-brand": "120px", "--info-font-size-message": "65px", "--info-icon": "📢"}',
-            "is_default": True
-        },
-        {
-            "name": "Stile Moderno",
-            "config": '{"--info-primary-color": "#6366f1", "--info-secondary-color": "#8b5cf6", "--info-accent-color": "#f59e0b", "--info-bg-gradient-start": "#1e1b4b", "--info-bg-gradient-end": "#312e81", "--info-text-color": "#FFFFFF", "--info-shadow-color": "rgba(99, 102, 241, 0.3)", "--info-border-radius": "40px", "--info-glow-intensity": "0.5", "--info-font-size-brand": "110px", "--info-font-size-message": "60px", "--info-icon": "🚀"}',
-            "is_default": False
-        }
-    ]
-
-    for style in default_styles:
-        try:
-            create_style_config(
-                db=db,
-                name=style["name"],
-                type="info_card",
-                config=style["config"],
-                is_default=style["is_default"]
-            )
-            print(f"✅ Creato stile '{style['name']}' per info card")
-        except Exception as e:
-            print(f"⚠️ Errore creazione stile '{style['name']}': {e}")
-
-def get_info_card_style_config(db: Session, style_id: int = None) -> Optional[StyleConfig]:
-    """Recupera una configurazione di stile per info card."""
-    if style_id:
-        config = get_style_config_by_id(db, style_id)
-        return config if config and config.type == "info_card" else None
-    else:
-        # Ritorna lo stile predefinito
-        return get_default_style_config(db, "info_card")
 
 # --- SYSTEM SETTINGS FUNCTIONS ---
 

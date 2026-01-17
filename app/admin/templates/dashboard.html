@@ -1472,10 +1472,7 @@
                             <i class="fas fa-plus"></i>
                             Crea Nuova Card
                         </button>
-                        <button class="btn btn-success" onclick="showStyleManagerModal()">
-                            <i class="fas fa-palette"></i>
-                            Gestisci Stili
-                        </button>
+
                         <button class="btn btn-warning" onclick="recreateDefaultCards()">
                             <i class="fas fa-redo"></i>
                             Ricrea Default
@@ -2788,64 +2785,7 @@
             }
         }
 
-        function showStyleManager() {
-            console.log('Opening simple style editor...');
-            // Show simple style editor modal
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = `
-                <div class="modal-content" style="max-width: 600px;">
-                    <div class="modal-header">
-                        <h3 class="modal-title">Stile Personalizzato Card</h3>
-                        <button class="modal-close" onclick="this.closest('.modal').remove()">&times;</button>
-                    </div>
-                    <div style="padding: var(--space-lg);">
-                        <div class="form-group">
-                            <label class="form-label">Configurazione Stile CSS (JSON)</label>
-                            <textarea id="simpleStyleConfig" class="form-textarea" rows="20" placeholder='Configurazione CSS come oggetto JSON...'>{
-  "--info-primary-color": "#FF6B35",
-  "--info-secondary-color": "#F7931E",
-  "--info-accent-color": "#FFD23F",
-  "--info-bg-gradient-start": "#2D1B69",
-  "--info-bg-gradient-end": "#11998E",
-  "--info-text-color": "#FFFFFF",
-  "--info-shadow-color": "rgba(255, 107, 53, 0.3)",
-  "--info-border-radius": "50px",
-  "--info-glow-intensity": "0.4",
-  "--info-font-size-brand": "120px",
-  "--info-font-size-message": "65px",
-  "--info-icon": "\\"📢\\""
-}</textarea>
-                            <div class="form-hint">Modifica i valori CSS per personalizzare l'aspetto delle card</div>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="btn btn-success" onclick="saveSimpleStyle()">
-                                <i class="fas fa-save"></i>
-                                Salva Stile
-                            </button>
-                            <button class="btn btn-info" onclick="testSimpleStyle()">
-                                <i class="fas fa-eye"></i>
-                                Test Anteprima
-                            </button>
-                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                                Chiudi
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
 
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.remove();
-                }
-            });
-
-            // Load current style
-            loadCurrentStyle();
-        }
 
         async function loadStyles() {
             try {

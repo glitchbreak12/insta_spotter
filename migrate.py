@@ -147,7 +147,7 @@ def run_migration():
                 print(f"ℹ️  Colonna 'ai_model' non aggiunta: {e}")
             connection.rollback()
 
-        # Create daily_posts table
+        # Create daily_posts table (semplificata, senza gestione stili)
         try:
             connection.execute(text('''
                 CREATE TABLE daily_posts (
@@ -166,74 +166,49 @@ def run_migration():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     message_ids VARCHAR,
-                    post_style VARCHAR DEFAULT 'story',
-                    style_config VARCHAR,
                     images VARCHAR
                 )
             '''))
             connection.commit()
-            print("✅ Tabella 'daily_posts' creata con successo.")
+            print("✅ Tabella 'daily_posts' creata con successo (senza gestione stili).")
         except Exception as e:
             if "already exists" in str(e):
                 print("ℹ️  Tabella 'daily_posts' già esistente.")
-                # Add new columns if they don't exist
-                for column in ['post_style', 'style_config', 'images']:
+                # Rimuovi colonne di stile se esistono
+                for column in ['post_style', 'style_config']:
                     try:
-                        connection.execute(text(f'ALTER TABLE daily_posts ADD COLUMN {column} VARCHAR'))
+                        connection.execute(text(f'ALTER TABLE daily_posts DROP COLUMN {column}'))
                         connection.commit()
-                        print(f"✅ Colonna '{column}' aggiunta alla tabella 'daily_posts'.")
-                    except Exception as col_e:
-                        if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
-                            print(f"ℹ️  Colonna '{column}' già esistente.")
+                        print(f"✅ Colonna '{column}' rimossa dalla tabella 'daily_posts'.")
+                    except Exception as drop_e:
+                        if "no such column" in str(drop_e).lower():
+                            print(f"ℹ️  Colonna '{column}' non esistente.")
                         else:
-                            print(f"ℹ️  Colonna '{column}' non aggiunta: {col_e}")
+                            print(f"ℹ️  Colonna '{column}' non rimossa: {drop_e}")
                         connection.rollback()
+
+                # Assicurati che la colonna images esista
+                try:
+                    connection.execute(text('ALTER TABLE daily_posts ADD COLUMN images VARCHAR'))
+                    connection.commit()
+                    print("✅ Colonna 'images' aggiunta alla tabella 'daily_posts'.")
+                except Exception as col_e:
+                    if "duplicate column name" in str(col_e) or "already exists" in str(col_e):
+                        print("ℹ️  Colonna 'images' già esistente.")
+                    else:
+                        print(f"ℹ️  Colonna 'images' non aggiunta: {col_e}")
+                    connection.rollback()
             else:
                 print(f"❌ Errore tabella 'daily_posts': {e}")
             connection.rollback()
 
-        # Create style_configs table
+        # Rimuovi tabella style_configs se esiste (rimozione gestione stili)
         try:
-            connection.execute(text('''
-                CREATE TABLE style_configs (
-                    id INTEGER PRIMARY KEY,
-                    name VARCHAR NOT NULL,
-                    type VARCHAR NOT NULL,
-                    config VARCHAR NOT NULL,
-                    preview_image VARCHAR,
-                    is_default INTEGER DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            '''))
+            connection.execute(text('DROP TABLE IF EXISTS style_configs'))
             connection.commit()
-            print("✅ Tabella 'style_configs' creata con successo.")
-
-            # Insert default style configs
-            default_configs = [
-                ('Stile Classico Story', 'story', '{"background": "#000000", "text_color": "#ffffff", "font_size": "48px", "glow_effect": true}', None, 1),
-                ('Stile Minimal Post', 'post', '{"background": "#ffffff", "text_color": "#000000", "font_size": "36px", "border_radius": "16px"}', None, 1),
-                ('Stile Colorato Story', 'story', '{"background": "linear-gradient(45deg, #ff6b6b, #4ecdc4)", "text_color": "#ffffff", "font_size": "52px", "glow_effect": true}', None, 0),
-                ('Stile Elegante Post', 'post', '{"background": "#f8f9fa", "text_color": "#2d3748", "font_size": "40px", "shadow": "0 4px 6px rgba(0,0,0,0.1)"}', None, 0),
-            ]
-
-            for name, type_, config, preview, is_default in default_configs:
-                try:
-                    connection.execute(text('''
-                        INSERT INTO style_configs (name, type, config, preview_image, is_default)
-                        VALUES (?, ?, ?, ?, ?)
-                    '''), (name, type_, config, preview, is_default))
-                    connection.commit()
-                except Exception as insert_e:
-                    print(f"ℹ️  Configurazione stile '{name}' già esistente o errore: {insert_e}")
-                    connection.rollback()
-
-            print("✅ Configurazioni di stile predefinite inserite.")
+            print("✅ Tabella 'style_configs' rimossa con successo (gestione stili eliminata).")
         except Exception as e:
-            if "already exists" in str(e):
-                print("ℹ️  Tabella 'style_configs' già esistente.")
-            else:
-                print(f"❌ Errore tabella 'style_configs': {e}")
+            print(f"ℹ️  Tabella 'style_configs' non rimossa: {e}")
             connection.rollback()
 
         # Correggi valori message_type errati (enum aspetta 'SPOTTED' maiuscolo, non 'spotted' minuscolo)

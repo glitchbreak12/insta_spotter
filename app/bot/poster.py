@@ -314,52 +314,123 @@ class InstagramBot:
 
     def post_carousel(self, image_paths: list, caption: str) -> Optional[str]:
         """
-        Pubblica un carousel (album) su Instagram.
+        Pubblica un carousel (album di più foto) come POST su Instagram.
+        NON come storie - questo è per i daily post che devono essere post pubblici.
+
+        Comportamento anti-bot:
+        - Delay casuali tra 45-90 secondi prima della pubblicazione
+        - Controllo rate limit giornaliero
+        - Gestione automated content warnings
         """
         if not INSTAGRAPi_AVAILABLE:
             print("--- DEBUG [POSTER]: Instagram bot non disponibile ---")
             return None
 
         try:
-            print(f"--- DEBUG [POSTER]: Tento pubblicazione carousel con {len(image_paths)} immagini... ---")
+            print(f"--- DEBUG [POSTER]: Pubblicazione carousel come POST con {len(image_paths)} immagini... ---")
 
-            # Try album upload first (newer API)
+            # === ANTI-BOT MEASURES ===
+            # 1. Controlla rate limit giornaliero (max 3 pubblicazioni al giorno)
+            today_posts = self._get_today_posts_count()
+            if today_posts >= 3:
+                raise Exception(f"Rate limit giornaliero raggiunto ({today_posts}/3) - attendere domani")
+
+            # 2. Delay casuale anti-bot (45-90 secondi)
+            import random
+            anti_bot_delay = random.randint(45, 90)
+            print(f"--- DEBUG [POSTER]: Anti-bot delay: {anti_bot_delay} secondi... ---")
+            time.sleep(anti_bot_delay)
+
+            # 3. Simula comportamento umano - piccola pausa aggiuntiva
+            time.sleep(random.randint(5, 15))
+
+            # === PUBBLICAZIONE ===
             try:
                 self.client.album_upload(paths=image_paths, caption=caption)
-                print("--- DEBUG [POSTER]: Carousel pubblicato con successo via album_upload! ---")
+                print("--- DEBUG [POSTER]: Carousel pubblicato con successo come post! ---")
+
+                # Registra la pubblicazione per rate limiting
+                self._record_post_publication()
+
                 return self.client.last_json['media']['pk']
+
             except Exception as album_error:
-                print(f"--- DEBUG [POSTER]: Album upload fallito: {album_error}, provo sidecar... ---")
+                error_str = str(album_error).lower()
+                print(f"--- DEBUG [POSTER]: Album upload fallito: {album_error} ---")
 
-                # Fallback to sidecar upload (older API)
-                try:
-                    from instagrapi.types import StoryMention, StoryHashtag, StoryLocation
-                    self.client.sidecar_upload(paths=image_paths, caption=caption)
-                    print("--- DEBUG [POSTER]: Carousel pubblicato con successo via sidecar_upload! ---")
-                    return self.client.last_json['media']['pk']
-                except Exception as sidecar_error:
-                    print(f"--- DEBUG [POSTER]: Sidecar upload fallito: {sidecar_error} ---")
+                # Gestisci errori specifici di Instagram
+                if "challenge" in error_str or "verify" in error_str:
+                    print("--- DEBUG [POSTER]: Rilevato challenge di verifica - account limitato ---")
+                    raise Exception("Account Instagram richiede verifica manuale - disabilitare temporaneamente")
 
-                    # Last resort: post as separate stories
-                    print("--- DEBUG [POSTER]: Provo pubblicazione come storie separate... ---")
-                    media_pks = []
-                    for i, image_path in enumerate(image_paths):
-                        story_caption = f"{caption} ({i+1}/{len(image_paths)})" if len(image_paths) > 1 else caption
-                        media_pk = self.post_story(image_path, story_caption)
-                        if media_pk:
-                            media_pks.append(media_pk)
+                elif "spam" in error_str or "rate limit" in error_str or "too many" in error_str:
+                    print("--- DEBUG [POSTER]: Rilevato rate limiting - rallentare pubblicazioni ---")
+                    raise Exception("Rate limit raggiunto - attendere prima di riprovare")
 
-                    if media_pks:
-                        print(f"--- DEBUG [POSTER]: Pubblicate {len(media_pks)} storie separate ---")
-                        return media_pks[0]  # Return first media PK
-                    else:
-                        raise Exception("Nessuna pubblicazione riuscita")
+                elif "automated" in error_str or "bot" in error_str or "suspicious" in error_str:
+                    print("--- DEBUG [POSTER]: Rilevato automated content warning ---")
+                    # Per i warning automated, aspetta molto più tempo e riprova una volta sola
+                    print("--- DEBUG [POSTER]: Attendo 5 minuti per automated content warning... ---")
+                    time.sleep(300)  # 5 minuti
+
+                    try:
+                        self.client.album_upload(paths=image_paths, caption=caption)
+                        print("--- DEBUG [POSTER]: Carousel pubblicato dopo automated content warning! ---")
+                        self._record_post_publication()
+                        return self.client.last_json['media']['pk']
+                    except Exception as retry_error:
+                        print(f"--- DEBUG [POSTER]: Pubblicazione fallita anche dopo attesa: {retry_error} ---")
+                        raise Exception("Automated content warning persistente - account limitato")
+
+                else:
+                    # Per altri errori, non riprovare automaticamente
+                    raise album_error
 
         except Exception as e:
             print(f"--- DEBUG [POSTER]: ERRORE pubblicazione carousel: {e} ---")
             if isinstance(e, LoginRequired):
                 if os.path.exists(self.session_file): os.remove(self.session_file)
             return None
+
+    def _get_today_posts_count(self) -> int:
+        """Conta quante pubblicazioni sono state fatte oggi per rate limiting."""
+        try:
+            from datetime import datetime, date
+            today = date.today()
+
+            # Leggi dal file di log delle pubblicazioni (se esiste)
+            log_file = os.path.join(os.path.dirname(self.session_file), "publication_log.txt")
+
+            if not os.path.exists(log_file):
+                return 0
+
+            count = 0
+            with open(log_file, 'r') as f:
+                for line in f:
+                    if line.strip().startswith(str(today)):
+                        count += 1
+
+            return count
+
+        except Exception as e:
+            print(f"--- DEBUG [POSTER]: Errore lettura log pubblicazioni: {e} ---")
+            return 0
+
+    def _record_post_publication(self):
+        """Registra una pubblicazione nel log giornaliero."""
+        try:
+            from datetime import datetime
+            log_file = os.path.join(os.path.dirname(self.session_file), "publication_log.txt")
+
+            # Assicurati che la directory esista
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+            with open(log_file, 'a') as f:
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                f.write(f"{timestamp} - Pubblicazione carousel\n")
+
+        except Exception as e:
+            print(f"--- DEBUG [POSTER]: Errore scrittura log pubblicazioni: {e} ---")
 
     def get_media_comments(self, media_pk: str) -> Optional[List[Dict[str, Any]]]:
         """
