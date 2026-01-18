@@ -80,8 +80,8 @@ class ImageGenerator:
 
         # Scegli il template basato sul tipo di messaggio
         if message_type == "info":
-            template_name = "card_info.html"
-            print(f"🎨 [DEBUG] Usando template INFO: {template_name}")
+            template_name = "card_v5_fixed.html"  # Usa il template v5 per info cards
+            print(f"🎨 [DEBUG] Usando template INFO v5: {template_name}")
         else:
             template_name = os.path.basename(settings.image.template_path)
             print(f"🎨 [DEBUG] Usando template SPOTTED: {template_name}")

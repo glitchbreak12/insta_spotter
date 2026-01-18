@@ -85,9 +85,12 @@ def get_dashboard_data(db: Session = Depends(get_db), user: str = Depends(get_au
 
     try:
         print("--- [API] Querying database for messages ---")
-        # Fetch all messages, keeping it simple
-        messages_query = db.query(SpottedMessage).order_by(SpottedMessage.created_at.desc()).limit(200).all()
-        print(f"--- [API] Found {len(messages_query)} messages in database ---")
+        # Fetch only SPOTTED messages that are not FAILED (exclude info cards and failed messages)
+        messages_query = db.query(SpottedMessage).filter(
+            SpottedMessage.message_type == MessageType.SPOTTED,
+            SpottedMessage.status != MessageStatus.FAILED
+        ).order_by(SpottedMessage.created_at.desc()).limit(200).all()
+        print(f"--- [API] Found {len(messages_query)} SPOTTED messages (excluding FAILED and INFO cards) ---")
 
         # Manually build the response to ensure it's clean
         messages_data = []
@@ -344,9 +347,15 @@ def show_dashboard(request: Request, db: Session = Depends(get_db), user: str = 
     total_pages = math.ceil(total_messages / PAGE_SIZE)
     offset = (page - 1) * PAGE_SIZE
 
-    messages = db.query(SpottedMessage).order_by(SpottedMessage.id.desc()).offset(offset).limit(PAGE_SIZE).all()
+    messages = db.query(SpottedMessage).filter(
+        SpottedMessage.message_type == MessageType.SPOTTED,
+        SpottedMessage.status != MessageStatus.FAILED
+    ).order_by(SpottedMessage.id.desc()).offset(offset).limit(PAGE_SIZE).all()
     
-    kpi_counts = db.query(SpottedMessage.status, func.count(SpottedMessage.id)).group_by(SpottedMessage.status).all()
+    # KPI solo per messaggi SPOTTED (escludi info cards)
+    kpi_counts = db.query(SpottedMessage.status, func.count(SpottedMessage.id)).filter(
+        SpottedMessage.message_type == MessageType.SPOTTED
+    ).group_by(SpottedMessage.status).all()
     kpis = {status.value: 0 for status in MessageStatus}
     for status, count in kpi_counts:
         kpis[status] = count

@@ -194,8 +194,8 @@
             <div class="highlight"></div>
             
             <div class="header">
-                <div class="brand">SPOTTED</div>
-                <div class="badge">sp#{{ id }}</div>
+                <div class="brand">{% if message_type == "info" %}INFO{% else %}SPOTTED{% endif %}</div>
+                <div class="badge">{% if message_type == "info" %}info#{{ id }}{% else %}sp#{{ id }}{% endif %}</div>
             </div>
             
             <div class="body">

@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 from datetime import datetime
 import enum
 import uuid
+import os
 from typing import Optional, Tuple
 
 from config import settings
@@ -448,6 +449,139 @@ def delete_system_setting(db: Session, key: str) -> bool:
     db.delete(setting)
     db.commit()
     return True
+
+# --- STYLE CONFIG MANAGEMENT ---
+
+class StyleConfig(Base):
+    """Modello per le configurazioni di stile per info cards."""
+    __tablename__ = "style_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False, index=True)  # "info_card", "spotted_card", etc.
+    config = Column(String, nullable=False)  # JSON string con configurazione CSS/stili
+    preview_image = Column(String, nullable=True)  # Path dell'immagine di preview
+    is_default = Column(Integer, default=0, nullable=False)  # 1=predefinito, 0=no
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+def get_style_configs(db: Session, type: str = None) -> list:
+    """Recupera le configurazioni di stile, opzionalmente filtrate per tipo."""
+    query = db.query(StyleConfig)
+    if type:
+        query = query.filter(StyleConfig.type == type)
+    return query.order_by(StyleConfig.is_default.desc(), StyleConfig.created_at.desc()).all()
+
+def get_style_config_by_id(db: Session, config_id: int) -> Optional[StyleConfig]:
+    """Recupera una configurazione di stile per ID."""
+    return db.query(StyleConfig).filter(StyleConfig.id == config_id).first()
+
+def create_style_config(db: Session, name: str, type: str, config: str, preview_image: str = None, is_default: bool = False) -> StyleConfig:
+    """Crea una nuova configurazione di stile."""
+    # Se è impostata come default, rimuovi il flag da altre configurazioni dello stesso tipo
+    if is_default:
+        db.query(StyleConfig).filter(StyleConfig.type == type).update({"is_default": 0})
+
+    style_config = StyleConfig(
+        name=name,
+        type=type,
+        config=config,
+        preview_image=preview_image,
+        is_default=1 if is_default else 0
+    )
+    db.add(style_config)
+    db.commit()
+    db.refresh(style_config)
+    return style_config
+
+def update_style_config(db: Session, config_id: int, **kwargs) -> Optional[StyleConfig]:
+    """Aggiorna una configurazione di stile."""
+    config = get_style_config_by_id(db, config_id)
+    if not config:
+        return None
+
+    # Se stiamo impostando come default, rimuovi il flag da altre configurazioni
+    if kwargs.get('is_default'):
+        db.query(StyleConfig).filter(StyleConfig.type == config.type).update({"is_default": 0})
+
+    for key, value in kwargs.items():
+        if hasattr(config, key):
+            if key == 'is_default':
+                setattr(config, key, 1 if value else 0)
+            else:
+                setattr(config, key, value)
+
+    config.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(config)
+    return config
+
+def delete_style_config(db: Session, config_id: int) -> bool:
+    """Elimina una configurazione di stile."""
+    config = get_style_config_by_id(db, config_id)
+    if not config:
+        return False
+
+    db.delete(config)
+    db.commit()
+    return True
+
+def create_default_info_card_styles(db: Session):
+    """Crea le configurazioni di stile predefinite per le info cards."""
+    # Controlla se esistono già configurazioni
+    existing = get_style_configs(db, "info_card")
+    if existing:
+        print(f"Style configs già esistenti: {len(existing)}")
+        return
+
+    # Configurazione di default per info cards (stile v5)
+    default_config = """{
+  "--info-primary-color": "#FF6B35",
+  "--info-secondary-color": "#F7931E",
+  "--info-accent-color": "#FFD23F",
+  "--info-background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  "--info-text-color": "#ffffff",
+  "--info-title-font": "'Arial Black', sans-serif",
+  "--info-body-font": "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  "--info-shadow": "0 8px 32px rgba(0,0,0,0.3)",
+  "--info-border-radius": "20px",
+  "--info-padding": "30px",
+  "--info-margin": "20px"
+}"""
+
+    # Crea configurazione di default
+    create_style_config(
+        db=db,
+        name="Stile Classico v5",
+        type="info_card",
+        config=default_config,
+        is_default=True
+    )
+
+    # Configurazione alternativa
+    alternative_config = """{
+  "--info-primary-color": "#4CAF50",
+  "--info-secondary-color": "#2196F3",
+  "--info-accent-color": "#FF9800",
+  "--info-background": "linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)",
+  "--info-text-color": "#ffffff",
+  "--info-title-font": "'Arial Black', sans-serif",
+  "--info-body-font": "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+  "--info-shadow": "0 8px 32px rgba(0,0,0,0.3)",
+  "--info-border-radius": "15px",
+  "--info-padding": "25px",
+  "--info-margin": "15px"
+}"""
+
+    create_style_config(
+        db=db,
+        name="Stile Blu Verde",
+        type="info_card",
+        config=alternative_config,
+        is_default=False
+    )
+
+    print("Configurazioni stile info card create con successo")
 
 # --- UTILITY FUNCTIONS FOR SETTINGS ---
 
