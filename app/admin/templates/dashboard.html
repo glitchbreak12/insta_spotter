@@ -5531,14 +5531,22 @@
         async function openMessageModal(messageId) {
             try {
                 console.log('Opening message modal for ID:', messageId);
-                // Get message data
-                const message = allMessages.find(m => m.id === messageId);
-                if (!message) {
-                    console.error('Message not found in allMessages:', messageId);
-                    showNotification('Errore', 'Messaggio non trovato', 'error');
-                    return;
+
+                // First try to get fresh data from API
+                const response = await fetch(`/admin/api/messages/${messageId}`, {
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        showNotification('Errore', 'Messaggio non trovato', 'error');
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
                 }
-                console.log('Found message:', message);
+
+                const message = await response.json();
+                console.log('Loaded message from API:', message);
 
                 // Populate modal
                 document.getElementById('individualModalMessageId').textContent = message.id;
