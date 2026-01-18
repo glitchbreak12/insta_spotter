@@ -267,10 +267,10 @@ def post_daily_compilation(db: Session):
 
         insta_bot = InstagramBot()
         caption = f"Spotted del giorno {datetime.now().strftime('%d/%m/%Y')}! ✨\n\n#spotted #instaspotter #confessioni"
-        media_pk = insta_bot.post_album(image_paths, caption)
+        media_pk = insta_bot.post_carousel(image_paths, caption)
 
         if not media_pk:
-            raise Exception("InstagramBot.post_album ha restituito False o None.")
+            raise Exception("InstagramBot.post_carousel ha restituito False o None.")
 
         print(f"--- DEBUG [TASK]: Pubblicazione album riuscita. Aggiornamento stato messaggi. ---")
         # Aggiorna lo stato di tutti i messaggi pubblicati con successo
@@ -441,7 +441,7 @@ def daily_post_task():
             try:
                 print(f"--- [DAILY POST V2]: Pubblicazione carousel su Instagram ({len(image_paths)} slide) ---")
                 bot = InstagramBot()
-                media_pk = bot.post_album(image_paths, full_caption)
+                media_pk = bot.post_carousel(image_paths, full_caption)
 
                 if media_pk:
                     print(f"--- [DAILY POST V2]: ✅ Pubblicazione riuscita! Media PK: {media_pk} ---")
