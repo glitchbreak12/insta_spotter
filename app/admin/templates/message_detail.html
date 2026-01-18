@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dettagli Messaggio #{{ message.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/admin/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Messaggio #{{ message.id }}</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Messaggio #{{ message.id }}</h5>
+                    <div>
+                        {% if message.status.value == 'PENDING' %}
+                            <span class="badge badge-warning">In Attesa</span>
+                        {% elif message.status.value == 'APPROVED' %}
+                            <span class="badge badge-success">Approvato</span>
+                        {% elif message.status.value == 'REJECTED' %}
+                            <span class="badge badge-danger">Rifiutato</span>
+                        {% elif message.status.value == 'POSTED' %}
+                            <span class="badge badge-primary">Pubblicato</span>
+                        {% else %}
+                            <span class="badge badge-secondary">{{ message.status.value }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Testo del Messaggio:</h6>
+                            <div class="border p-3 bg-light rounded">
+                                <p class="mb-0">{{ message.text }}</p>
+                            </div>
+
+                            {% if message.gemini_analysis %}
+                            <div class="mt-3">
+                                <h6>Analisi AI:</h6>
+                                <div class="border p-3 bg-info text-white rounded">
+                                    <p class="mb-0">{{ message.gemini_analysis }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if message.admin_note %}
+                            <div class="mt-3">
+                                <h6>Note Admin:</h6>
+                                <div class="border p-3 bg-warning rounded">
+                                    <p class="mb-0">{{ message.admin_note }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if message.error_message %}
+                            <div class="mt-3">
+                                <h6>Errore Pubblicazione:</h6>
+                                <div class="border p-3 bg-danger text-white rounded">
+                                    <p class="mb-0">{{ message.error_message }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Informazioni</h6>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-5">ID:</dt>
+                                        <dd class="col-sm-7">{{ message.id }}</dd>
+
+                                        <dt class="col-sm-5">Tipo:</dt>
+                                        <dd class="col-sm-7">{{ message.message_type.value }}</dd>
+
+                                        <dt class="col-sm-5">Stato:</dt>
+                                        <dd class="col-sm-7">{{ message.status.value }}</dd>
+
+                                        <dt class="col-sm-5">Creato:</dt>
+                                        <dd class="col-sm-7">{{ message.created_at.strftime('%d/%m/%Y %H:%M') if message.created_at else 'N/A' }}</dd>
+
+                                        {% if message.posted_at %}
+                                        <dt class="col-sm-5">Pubblicato:</dt>
+                                        <dd class="col-sm-7">{{ message.posted_at.strftime('%d/%m/%Y %H:%M') }}</dd>
+                                        {% endif %}
+
+                                        {% if message.media_pk %}
+                                        <dt class="col-sm-5">Media PK:</dt>
+                                        <dd class="col-sm-7"><small>{{ message.media_pk }}</small></dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="btn-group-vertical w-100" role="group">
+                                    {% if message.status.value == 'PENDING' %}
+                                        <form method="post" action="/admin/messages/{{ message.id }}/approve" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm w-100 mb-1">✓ Approva</button>
+                                        </form>
+                                        <form method="post" action="/admin/messages/{{ message.id }}/reject" class="d-inline">
+                                            <button type="submit" class="btn btn-danger btn-sm w-100 mb-1">✗ Rifiuta</button>
+                                        </form>
+                                    {% elif message.status.value == 'APPROVED' %}
+                                        <form method="post" action="/admin/messages/{{ message.id }}/publish-now" class="d-inline">
+                                            <button type="submit" class="btn btn-primary btn-sm w-100 mb-1">📤 Pubblica Ora</button>
+                                        </form>
+                                        <form method="post" action="/admin/messages/{{ message.id }}/reset" class="d-inline">
+                                            <button type="submit" class="btn btn-warning btn-sm w-100 mb-1">🔄 Reset</button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if message.media_pk and message.status.value == 'POSTED' %}
+                                        <a href="https://instagram.com/p/{{ message.media_pk }}/" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-1">
+                                            🔗 Vedi su Instagram
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a href="/admin/dashboard" class="btn btn-secondary">← Torna alla Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
