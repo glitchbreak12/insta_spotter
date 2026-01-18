@@ -1313,6 +1313,137 @@ def generate_daily_post_with_ai(
         db.rollback()
         return {"status": "error", "message": str(e)}
 
+# --- Analytics Management ---
+
+@router.get("/api/analytics/dashboard")
+def get_analytics_dashboard(
+    days: int = 30,
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere dati analytics completi per il dashboard."""
+    try:
+        from app.analytics.manager import AnalyticsManager
+
+        manager = AnalyticsManager(db)
+        analytics = manager.get_comprehensive_analytics(days)
+
+        # Format data for frontend
+        response_data = {
+            "status": "success",
+            "timestamp": analytics.timestamp.isoformat(),
+            "time_range": analytics.time_range.value,
+
+            # Key metrics for the main dashboard cards
+            "metrics": {
+                "total_messages": analytics.summary["content"]["total_messages"],
+                "success_rate": round(analytics.summary["content"]["success_rate"], 1),
+                "ai_analyzed": analytics.summary["content"]["ai_analyzed_count"],
+                "daily_submissions": analytics.summary["engagement"]["daily_submissions"],
+                "ai_accuracy": round(analytics.summary["moderation"]["ai_accuracy"], 1)
+            },
+
+            # Charts data
+            "charts": {
+                "messages_per_hour": {
+                    "labels": analytics.charts[2].labels if len(analytics.charts) > 2 else [],
+                    "data": analytics.charts[2].datasets[0]["data"] if len(analytics.charts) > 2 and analytics.charts[2].datasets else []
+                },
+                "messages_status": {
+                    "labels": analytics.charts[1].labels if len(analytics.charts) > 1 else ["Approved", "Rejected", "Pending", "Failed"],
+                    "data": analytics.charts[1].datasets[0]["data"] if len(analytics.charts) > 1 and analytics.charts[1].datasets else [0, 0, 0, 0]
+                },
+                "daily_activity": {
+                    "labels": analytics.charts[0].labels if analytics.charts else [],
+                    "data": analytics.charts[0].datasets[0]["data"] if analytics.charts and analytics.charts[0].datasets else []
+                }
+            },
+
+            # Advanced analytics sections
+            "users": {
+                "active_24h": analytics.summary["engagement"]["daily_submissions"],
+                "active_7d": analytics.summary["engagement"]["weekly_submissions"],
+                "active_30d": analytics.summary["engagement"]["monthly_submissions"],
+                "peak_hour": analytics.summary["engagement"]["peak_hour"],
+                "peak_day": analytics.summary["engagement"]["peak_day"]
+            },
+
+            "performance": {
+                "cpu_usage": 45.2,  # Mock data - would need system monitoring
+                "ram_usage": 67.8,
+                "db_connections": 12,
+                "avg_processing_time": analytics.summary["content"]["avg_processing_time"]
+            },
+
+            "security": {
+                "failed_logins_24h": 2,  # Mock data - would need login tracking
+                "security_alerts": 0,
+                "audit_events_24h": 156
+            },
+
+            "traffic": {
+                "unique_ips_24h": 89,  # Mock data - would need IP tracking
+                "top_country": "Italy",
+                "traffic_trend": 12.5
+            }
+        }
+
+        return response_data
+
+    except Exception as e:
+        print(f"Error getting analytics: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "status": "error",
+            "message": str(e),
+            "fallback": {
+                "metrics": {
+                    "total_messages": 0,
+                    "success_rate": 0,
+                    "ai_analyzed": 0,
+                    "daily_submissions": 0,
+                    "ai_accuracy": 0
+                },
+                "charts": {
+                    "messages_per_hour": {"labels": [], "data": []},
+                    "messages_status": {"labels": ["Approved", "Rejected", "Pending", "Failed"], "data": [0, 0, 0, 0]},
+                    "daily_activity": {"labels": [], "data": []}
+                },
+                "users": {"active_24h": 0, "active_7d": 0, "active_30d": 0, "peak_hour": 0, "peak_day": "Unknown"},
+                "performance": {"cpu_usage": 0, "ram_usage": 0, "db_connections": 0, "avg_processing_time": 0},
+                "security": {"failed_logins_24h": 0, "security_alerts": 0, "audit_events_24h": 0},
+                "traffic": {"unique_ips_24h": 0, "top_country": "Unknown", "traffic_trend": 0}
+            }
+        }
+
+@router.get("/api/analytics/charts/{chart_type}")
+def get_analytics_chart(
+    chart_type: str,
+    days: int = 7,
+    user: str = Depends(get_authenticated_user),
+    db: Session = Depends(get_db)
+):
+    """API per ottenere dati specifici per un grafico."""
+    try:
+        from app.analytics.manager import AnalyticsManager
+
+        manager = AnalyticsManager(db)
+        chart_data = manager.get_chart_data(chart_type, days)
+
+        return {
+            "status": "success",
+            "chart": {
+                "title": chart_data.title,
+                "type": chart_data.chart_type.value,
+                "labels": chart_data.labels,
+                "datasets": chart_data.datasets
+            }
+        }
+
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # --- Style Config Management ---
 
 @router.get("/api/style-configs")
@@ -1808,6 +1939,100 @@ def recreate_default_info_cards(confirm: bool = Form(False), background_tasks: B
     except Exception as e:
         db.rollback()
         return {'status': 'error', 'message': str(e)}
+
+@router.put("/api/info-cards/{card_id}")
+def update_info_card(
+    card_id: int,
+    title: str = Form(None),
+    text: str = Form(None),
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """API per modificare una info card."""
+    from app.database import MessageType, MessageStatus
+
+    try:
+        print(f"--- [UPDATE INFO CARD]: Attempting to update card ID: {card_id}, User: {user}")
+
+        info_card = db.query(SpottedMessage).filter(
+            SpottedMessage.id == card_id,
+            SpottedMessage.message_type == MessageType.INFO
+        ).first()
+
+        if not info_card:
+            print(f"--- [UPDATE INFO CARD]: Card ID {card_id} not found or not an info card")
+            return {"status": "error", "message": "Info card non trovata"}
+
+        print(f"--- [UPDATE INFO CARD]: Found card - Type: {info_card.message_type}, Status: {info_card.status}")
+
+        # Non permettere modifica di card già pubblicate
+        if info_card.status == MessageStatus.POSTED:
+            print(f"--- [UPDATE INFO CARD]: Cannot update posted card (status: {info_card.status})")
+            return {"status": "error", "message": "Non puoi modificare una card già pubblicata"}
+
+        # Aggiorna i campi se forniti
+        updated = False
+        if title is not None and title.strip():
+            info_card.title = title.strip()
+            updated = True
+        if text is not None and text.strip():
+            info_card.text = text.strip()
+            updated = True
+
+        if updated:
+            db.commit()
+            print(f"--- [UPDATE INFO CARD]: Card ID {card_id} successfully updated")
+            return {"status": "success", "message": "Info card aggiornata con successo"}
+        else:
+            return {"status": "success", "message": "Nessuna modifica effettuata"}
+
+    except Exception as e:
+        print(f"--- [UPDATE INFO CARD]: ERROR updating card ID {card_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+
+@router.post("/api/info-cards/{card_id}/cancel")
+def cancel_info_card(card_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    """API per cancellare una info card (annulla pubblicazione se approvata)."""
+    from app.database import MessageType, MessageStatus
+
+    try:
+        print(f"--- [CANCEL INFO CARD]: Attempting to cancel card ID: {card_id}, User: {user}")
+
+        info_card = db.query(SpottedMessage).filter(
+            SpottedMessage.id == card_id,
+            SpottedMessage.message_type == MessageType.INFO
+        ).first()
+
+        if not info_card:
+            print(f"--- [CANCEL INFO CARD]: Card ID {card_id} not found or not an info card")
+            return {"status": "error", "message": "Info card non trovata"}
+
+        print(f"--- [CANCEL INFO CARD]: Found card - Type: {info_card.message_type}, Status: {info_card.status}")
+
+        # Solo le card APPROVED possono essere cancellate (tornano a PENDING)
+        if info_card.status != MessageStatus.APPROVED:
+            print(f"--- [CANCEL INFO CARD]: Cannot cancel card with status {info_card.status}")
+            return {"status": "error", "message": "Solo le card approvate possono essere cancellate"}
+
+        # Resetta allo stato PENDING
+        info_card.status = MessageStatus.PENDING
+        info_card.media_pk = None
+        info_card.error_message = None
+
+        db.commit()
+        print(f"--- [CANCEL INFO CARD]: Card ID {card_id} successfully cancelled (reset to PENDING)")
+
+        return {"status": "success", "message": "Info card cancellata con successo"}
+
+    except Exception as e:
+        print(f"--- [CANCEL INFO CARD]: ERROR cancelling card ID {card_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        return {"status": "error", "message": str(e)}
 
 @router.delete("/api/info-cards/{card_id}")
 def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Session = Depends(get_db)):

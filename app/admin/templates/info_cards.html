@@ -270,6 +270,24 @@
             background: #0891b2;
         }
 
+        .btn-warning {
+            background: var(--warning);
+            color: black;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
         .actions {
             display: flex;
             gap: 1rem;
@@ -504,12 +522,20 @@
                                     <button class="btn btn-success btn-sm" onclick="publishCard(${card.id})">
                                         <i class="fas fa-paper-plane"></i> Pubblica
                                     </button>
+                                    <button class="btn btn-warning btn-sm" onclick="editCard(${card.id}, '${escapeHtml(card.title || '')}', '${escapeHtml(card.text || '')}')">
+                                        <i class="fas fa-edit"></i> Modifica
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" onclick="cancelCard(${card.id})">
+                                        <i class="fas fa-ban"></i> Cancella
+                                    </button>
                                 ` : card.status === 'posted' ? `
                                     <span class="btn btn-info btn-sm" style="cursor: default;">
                                         <i class="fas fa-check"></i> Pubblicata
                                     </span>
-                                ` : ''}
-                                ${card.status !== 'posted' ? `
+                                ` : card.status === 'pending' ? `
+                                    <button class="btn btn-warning btn-sm" onclick="editCard(${card.id}, '${escapeHtml(card.title || '')}', '${escapeHtml(card.text || '')}')">
+                                        <i class="fas fa-edit"></i> Modifica
+                                    </button>
                                     <button class="btn btn-danger btn-sm" onclick="deleteCard(${card.id})">
                                         <i class="fas fa-trash"></i> Elimina
                                     </button>
@@ -592,6 +618,112 @@
 
                 if (result.status === 'success') {
                     showAlert('Info card eliminata con successo!', 'success');
+                    loadCards();
+                    loadStats();
+                } else {
+                    showAlert('Errore: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Errore di connessione: ' + error.message, 'error');
+            }
+        }
+
+        async function editCard(cardId, currentTitle, currentText) {
+            // Create modal for editing
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); z-index: 10000; display: flex;
+                justify-content: center; align-items: center;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+                    <h3 style="margin-bottom: 1rem; color: var(--text);">Modifica Info Card</h3>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text);">Titolo</label>
+                        <input type="text" id="edit-title" class="form-control" value="${escapeHtml(currentTitle)}">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text);">Contenuto</label>
+                        <textarea id="edit-content" class="form-control" rows="6">${escapeHtml(currentText)}</textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button id="cancel-edit" class="btn btn-secondary">Annulla</button>
+                        <button id="save-edit" class="btn btn-primary">Salva</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Handle save
+            document.getElementById('save-edit').onclick = async () => {
+                const newTitle = document.getElementById('edit-title').value.trim();
+                const newText = document.getElementById('edit-content').value.trim();
+
+                if (!newTitle || !newText) {
+                    showAlert('Titolo e contenuto sono obbligatori', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/admin/api/info-cards/${cardId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            title: newTitle,
+                            text: newText
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        showAlert('Info card aggiornata con successo!', 'success');
+                        document.body.removeChild(modal);
+                        loadCards();
+                        loadStats();
+                    } else {
+                        showAlert('Errore: ' + result.message, 'error');
+                    }
+                } catch (error) {
+                    showAlert('Errore di connessione: ' + error.message, 'error');
+                }
+            };
+
+            // Handle cancel
+            document.getElementById('cancel-edit').onclick = () => {
+                document.body.removeChild(modal);
+            };
+
+            // Close on backdrop click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            };
+        }
+
+        async function cancelCard(cardId) {
+            if (!confirm('Sei sicuro di voler cancellare questa info card? Tornerà allo stato PENDING.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/api/info-cards/${cardId}/cancel`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showAlert('Info card cancellata con successo!', 'success');
                     loadCards();
                     loadStats();
                 } else {

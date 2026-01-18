@@ -1236,7 +1236,7 @@
                             </div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
-                                +12%
+                                <span id="totalPostsChange">+12%</span>
                             </div>
                             </div>
                         <div class="stat-value" id="totalPosts">0</div>
@@ -1264,7 +1264,7 @@
                         </div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
-                                +8%
+                                <span id="approvedTodayChange">+8%</span>
                     </div>
                         </div>
                         <div class="stat-value" id="approvedToday">0</div>
@@ -1278,7 +1278,7 @@
                             </div>
                             <div class="stat-change positive">
                                 <i class="fas fa-arrow-up"></i>
-                                +15%
+                                <span id="postedTodayChange">+15%</span>
                             </div>
                         </div>
                         <div class="stat-value" id="postedToday">0</div>
@@ -1573,22 +1573,22 @@
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-lg); margin-bottom: var(--space-lg);">
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-users fa-2x" style="color: var(--primary); margin-bottom: var(--space-sm);"></i>
-                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Utenti Attivi</div>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);" id="activeUsers">Caricamento...</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">24h / 7gg / 30gg</div>
                         </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-chart-bar fa-2x" style="color: var(--success); margin-bottom: var(--space-sm);"></i>
-                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Performance</div>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);" id="performance">Caricamento...</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">CPU / RAM / DB</div>
                     </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-shield-alt fa-2x" style="color: var(--info); margin-bottom: var(--space-sm);"></i>
-                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Sicurezza</div>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);" id="security">Caricamento...</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">Login / Errori / Audit</div>
                         </div>
                                 <div style="text-align: center; padding: var(--space-lg); background: var(--bg-tertiary); border-radius: var(--radius-lg);">
                                     <i class="fas fa-globe fa-2x" style="color: var(--warning); margin-bottom: var(--space-sm);"></i>
-                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);">Traffico</div>
+                                    <div style="font-weight: 600; margin-bottom: var(--space-xs);" id="traffic">Caricamento...</div>
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">IP / Geo / Trends</div>
                     </div>
                         </div>
@@ -1609,9 +1609,9 @@
                 </div>
 
                         <div class="action-buttons" style="margin-top: var(--space-md);">
-                            <button class="btn btn-info btn-sm" onclick="generateAnalyticsReport()">
-                                <i class="fas fa-file-chart"></i>
-                                Report Completo
+                            <button class="btn btn-info btn-sm" onclick="loadAdvancedAnalytics()">
+                                <i class="fas fa-sync-alt"></i>
+                                Carica Analytics
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="exportAnalyticsData()">
                                 <i class="fas fa-download"></i>

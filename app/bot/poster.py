@@ -364,7 +364,6 @@ class InstagramBot:
                         print("--- DEBUG [POSTER]: last_json vuoto o None ---")
 
                     # Fallback: genera un media_pk simulato basato su timestamp
-                    import time
                     simulated_pk = f"carousel_{int(time.time())}"
                     print(f"--- DEBUG [POSTER]: Usando media_pk simulato: {simulated_pk} ---")
                     return simulated_pk
@@ -372,7 +371,6 @@ class InstagramBot:
                 except Exception as pk_error:
                     print(f"--- DEBUG [POSTER]: Errore estrazione media_pk: {pk_error} ---")
                     # Fallback con media_pk simulato
-                    import time
                     simulated_pk = f"carousel_{int(time.time())}"
                     print(f"--- DEBUG [POSTER]: Usando media_pk simulato dopo errore: {simulated_pk} ---")
                     return simulated_pk
@@ -411,7 +409,6 @@ class InstagramBot:
                             pass
 
                         # Fallback
-                        import time
                         simulated_pk = f"carousel_retry_{int(time.time())}"
                         return simulated_pk
 
