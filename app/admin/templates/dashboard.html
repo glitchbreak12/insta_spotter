@@ -5530,12 +5530,15 @@
         // Individual message management modal functions
         async function openMessageModal(messageId) {
             try {
+                console.log('Opening message modal for ID:', messageId);
                 // Get message data
                 const message = allMessages.find(m => m.id === messageId);
                 if (!message) {
+                    console.error('Message not found in allMessages:', messageId);
                     showNotification('Errore', 'Messaggio non trovato', 'error');
                     return;
                 }
+                console.log('Found message:', message);
 
                 // Populate modal
                 document.getElementById('individualModalMessageId').textContent = message.id;

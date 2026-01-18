@@ -1815,23 +1815,34 @@ def delete_info_card(card_id: int, user: str = Depends(get_current_user), db: Se
     from app.database import MessageType
 
     try:
+        print(f"--- [DELETE INFO CARD]: Attempting to delete card ID: {card_id}, User: {user}")
+
         info_card = db.query(SpottedMessage).filter(
             SpottedMessage.id == card_id,
             SpottedMessage.message_type == MessageType.INFO
         ).first()
 
         if not info_card:
+            print(f"--- [DELETE INFO CARD]: Card ID {card_id} not found or not an info card")
             return {"status": "error", "message": "Info card non trovata"}
+
+        print(f"--- [DELETE INFO CARD]: Found card - Type: {info_card.message_type}, Status: {info_card.status}")
 
         # Non permettere eliminazione di card già pubblicate
         if info_card.status == MessageStatus.POSTED:
+            print(f"--- [DELETE INFO CARD]: Cannot delete posted card (status: {info_card.status})")
             return {"status": "error", "message": "Non puoi eliminare una card già pubblicata"}
 
+        print(f"--- [DELETE INFO CARD]: Deleting card from database...")
         db.delete(info_card)
         db.commit()
+        print(f"--- [DELETE INFO CARD]: Card ID {card_id} successfully deleted")
 
         return {"status": "success", "message": "Info card eliminata con successo"}
     except Exception as e:
+        print(f"--- [DELETE INFO CARD]: ERROR deleting card ID {card_id}: {e}")
+        import traceback
+        traceback.print_exc()
         db.rollback()
         return {"status": "error", "message": str(e)}
 
