@@ -29,6 +29,18 @@ def run_migration():
                 print(f"❌ Errore colonna 'gemini_analysis': {e}")
             connection.rollback()
 
+        # Migrate ip_address column
+        try:
+            connection.execute(text('ALTER TABLE spotted_messages ADD COLUMN ip_address VARCHAR'))
+            connection.commit()
+            print("✅ Colonna 'ip_address' aggiunta con successo.")
+        except Exception as e:
+            if "duplicate column name" in str(e) or "already exists" in str(e):
+                print("ℹ️  Colonna 'ip_address' già esistente.")
+            else:
+                print(f"❌ Errore colonna 'ip_address': {e}")
+            connection.rollback()
+
         # Create technical_users table
         try:
             connection.execute(text('''

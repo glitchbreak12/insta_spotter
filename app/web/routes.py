@@ -98,9 +98,15 @@ def handle_submission(
         # ============================================
         # 3. SALVA MESSAGGIO
         # ============================================
+        # Ottieni o crea utente tecnico per il tracking
+        from app.database import get_or_create_technical_user
+        technical_user = get_or_create_technical_user(db, None)  # Crea utente anonimo
+
         new_message = SpottedMessage(
             text=validated_message,
-            status=MessageStatus.PENDING
+            status=MessageStatus.PENDING,
+            ip_address=hashed_ip,  # Salva l'IP hashato per il tracking
+            technical_user_id=technical_user.id  # Collega all'utente tecnico
         )
         db.add(new_message)
         db.commit()

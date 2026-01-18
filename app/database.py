@@ -61,7 +61,8 @@ class SpottedMessage(Base):
     media_pk = Column(String, nullable=True)
     admin_note = Column(String, nullable=True)
     gemini_analysis = Column(String, nullable=True)
-    
+    ip_address = Column(String, nullable=True)  # IP address del mittente (hashed per privacy)
+
     technical_user_id = Column(String, ForeignKey("technical_users.id"))
     author = relationship("TechnicalUser", back_populates="messages")
 

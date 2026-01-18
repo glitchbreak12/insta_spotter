@@ -2,6 +2,50 @@
 
 {% block title %}Dettagli Messaggio #{{ message.id }}{% endblock %}
 
+{% block extra_js %}
+<script>
+function editMessage(messageId) {
+    const newText = prompt('Modifica il testo del messaggio:', '{{ message.text|escapejs }}');
+    if (newText && newText.trim() && newText !== '{{ message.text|escapejs }}') {
+        if (confirm('Confermi la modifica del messaggio?')) {
+            // Submit edit form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/api/messages/${messageId}`;
+            form.innerHTML = `
+                <input type="hidden" name="text" value="${newText.replace(/"/g, '"')}">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+}
+
+function postMessage(messageId) {
+    if (confirm('Pubblicare questo messaggio ora?')) {
+        // Submit publish form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/api/messages/${messageId}/publish-now`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function deleteMessage(messageId) {
+    if (confirm('Eliminare definitivamente questo messaggio? Questa azione non può essere annullata.')) {
+        // Submit delete form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/api/messages/${messageId}`;
+        form.innerHTML = '<input type="hidden" name="_method" value="DELETE">';
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row">
@@ -115,6 +159,24 @@
                                             <button type="submit" class="btn btn-warning btn-sm w-100 mb-1">🔄 Reset</button>
                                         </form>
                                     {% endif %}
+
+                                    <!-- Additional action buttons as requested -->
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-info btn-sm w-100 mb-1" onclick="editMessage({{ message.id }})">
+                                            <i class="fas fa-edit"></i> Modifica
+                                        </button>
+                                        {% if message.status.value == 'APPROVED' %}
+                                        <button type="button" class="btn btn-primary btn-sm w-100 mb-1" onclick="postMessage({{ message.id }})">
+                                            <i class="fas fa-paper-plane"></i> Posta
+                                        </button>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-danger btn-sm w-100 mb-1" onclick="deleteMessage({{ message.id }})">
+                                            <i class="fas fa-trash"></i> Elimina
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm w-100" onclick="window.history.back()">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
 
                                     {% if message.media_pk and message.status.value == 'POSTED' %}
                                         <a href="https://instagram.com/p/{{ message.media_pk }}/" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-1">

@@ -1452,11 +1452,22 @@ def get_analytics_dashboard(
                 "audit_events_24h": 12
             },
 
-            "traffic": {
-                "unique_ips_24h": len(set([m.ip_address for m in recent_messages if m.ip_address])),
-                "top_country": "Italy",
-                "traffic_trend": 5.2
-            }
+                    "traffic": {
+                        "unique_ips_24h": len(set([m.ip_address for m in recent_messages if m.ip_address])),
+                        "top_country": "Italy",
+                        "traffic_trend": 5.2
+                    },
+
+                    # User tracking data
+                    "users_tracking": {
+                        "total_users": db.query(TechnicalUser).count(),
+                        "active_users_24h": db.query(TechnicalUser).filter(
+                            TechnicalUser.last_seen_at >= datetime.utcnow() - timedelta(hours=24)
+                        ).count(),
+                        "new_users_today": db.query(TechnicalUser).filter(
+                            TechnicalUser.first_seen_at >= datetime.utcnow() - timedelta(days=1)
+                        ).count()
+                    }
         }
 
         return response_data

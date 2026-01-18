@@ -5047,20 +5047,183 @@
         }
         */
 
-        // Initialize analytics when settings section is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load analytics when settings tab is shown (temporarily disabled)
-            /*
-            const settingsTab = document.querySelector('[data-section="settings"]');
-            if (settingsTab) {
-                settingsTab.addEventListener('click', function() {
-                    setTimeout(() => {
-                        loadAdvancedAnalytics();
-                    }, 100);
-                });
-            }
-            */
-        });
+                        // Load advanced analytics
+                        async function loadAdvancedAnalytics() {
+                            try {
+                                console.log('Loading advanced analytics...');
+
+                                const response = await fetch('/admin/api/analytics/dashboard', {
+                                    credentials: 'same-origin'
+                                });
+
+                                if (response.ok) {
+                                    const analytics = await response.json();
+                                    console.log('Analytics loaded:', analytics);
+
+                                    // Update analytics display
+                                    updateAnalyticsDisplay(analytics);
+
+                                    // Initialize charts
+                                    initializeCharts(analytics);
+                                } else {
+                                    console.error('Failed to load analytics');
+                                    // Show fallback data
+                                    updateAnalyticsDisplay({
+                                        users: { active_24h: 0, active_7d: 0, active_30d: 0 },
+                                        performance: { cpu_usage: 0, ram_usage: 0, db_connections: 0 },
+                                        security: { failed_logins_24h: 0, security_alerts: 0, audit_events_24h: 0 },
+                                        traffic: { unique_ips_24h: 0, traffic_trend: 0 }
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Error loading analytics:', error);
+                                // Show fallback data
+                                updateAnalyticsDisplay({
+                                    users: { active_24h: 0, active_7d: 0, active_30d: 0 },
+                                    performance: { cpu_usage: 0, ram_usage: 0, db_connections: 0 },
+                                    security: { failed_logins_24h: 0, security_alerts: 0, audit_events_24h: 0 },
+                                    traffic: { unique_ips_24h: 0, traffic_trend: 0 }
+                                });
+                            }
+                        }
+
+                        // Update analytics display
+                        function updateAnalyticsDisplay(analytics) {
+                            try {
+                                // Update user activity stats
+                                const activeUsersEl = document.getElementById('activeUsers');
+                                if (activeUsersEl) {
+                                    activeUsersEl.textContent = (analytics.users?.active_24h || 0) + ' / ' + (analytics.users?.active_7d || 0) + ' / ' + (analytics.users?.active_30d || 0);
+                                }
+
+                                // Update performance stats
+                                const performanceEl = document.getElementById('performance');
+                                if (performanceEl) {
+                                    performanceEl.textContent = (analytics.performance?.cpu_usage || 0).toFixed(1) + '% / ' + (analytics.performance?.ram_usage || 0).toFixed(1) + '% / ' + (analytics.performance?.db_connections || 0);
+                                }
+
+                                // Update security stats
+                                const securityEl = document.getElementById('security');
+                                if (securityEl) {
+                                    securityEl.textContent = (analytics.security?.failed_logins_24h || 0) + ' / ' + (analytics.security?.security_alerts || 0) + ' / ' + (analytics.security?.audit_events_24h || 0);
+                                }
+
+                                // Update traffic stats
+                                const trafficEl = document.getElementById('traffic');
+                                if (trafficEl) {
+                                    trafficEl.textContent = (analytics.traffic?.unique_ips_24h || 0) + ' / Italia / ' + (analytics.traffic?.traffic_trend || 0).toFixed(1) + '%';
+                                }
+
+                                console.log('Analytics display updated');
+                            } catch (error) {
+                                console.error('Error updating analytics display:', error);
+                            }
+                        }
+
+                        // Initialize charts
+                        function initializeCharts(analytics) {
+                            try {
+                                // Destroy existing charts if they exist
+                                if (messagesHourlyChart) {
+                                    messagesHourlyChart.destroy();
+                                }
+                                if (messagesStatusChart) {
+                                    messagesStatusChart.destroy();
+                                }
+
+                                // Messages per hour chart
+                                const hourlyCtx = document.getElementById('messagesHourlyChart');
+                                if (hourlyCtx && analytics.charts?.messages_per_hour) {
+                                    messagesHourlyChart = new Chart(hourlyCtx, {
+                                        type: 'line',
+                                        data: {
+                                            labels: analytics.charts.messages_per_hour.labels || [],
+                                            datasets: [{
+                                                label: 'Messaggi per Ora',
+                                                data: analytics.charts.messages_per_hour.data || [],
+                                                borderColor: 'var(--primary)',
+                                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                                tension: 0.4,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: {
+                                                    display: false
+                                                }
+                                            },
+                                            scales: {
+                                                y: {
+                                                    beginAtZero: true,
+                                                    ticks: {
+                                                        stepSize: 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Messages status chart
+                                const statusCtx = document.getElementById('messagesStatusChart');
+                                if (statusCtx && analytics.charts?.messages_status) {
+                                    messagesStatusChart = new Chart(statusCtx, {
+                                        type: 'doughnut',
+                                        data: {
+                                            labels: analytics.charts.messages_status.labels || [],
+                                            datasets: [{
+                                                data: analytics.charts.messages_status.data || [],
+                                                backgroundColor: [
+                                                    'var(--warning)',
+                                                    'var(--error)',
+                                                    'var(--primary)',
+                                                    'var(--success)'
+                                                ],
+                                                borderWidth: 2,
+                                                borderColor: 'var(--bg-primary)'
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: {
+                                                    position: 'bottom',
+                                                    labels: {
+                                                        usePointStyle: true,
+                                                        padding: 20
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Error initializing charts:', error);
+                            }
+                        }
+
+                        // Initialize analytics when settings section is loaded
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Load analytics when settings tab is shown
+                            const settingsTab = document.querySelector('[data-section="settings"]');
+                            if (settingsTab) {
+                                settingsTab.addEventListener('click', function() {
+                                    setTimeout(() => {
+                                        loadAdvancedAnalytics();
+                                    }, 100);
+                                });
+                            }
+                            // Also load analytics immediately if we're on the settings tab
+                            if (document.querySelector('[data-section="settings"].active')) {
+                                setTimeout(() => {
+                                    loadAdvancedAnalytics();
+                                }, 100);
+                            }
+                        });
 
         // Utility functions
         function escapeHtml(text) {

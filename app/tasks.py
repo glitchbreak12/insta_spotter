@@ -271,6 +271,9 @@ def post_daily_compilation(db: Session):
 
         if not media_pk:
             raise Exception("InstagramBot.post_carousel ha restituito False o None.")
+        elif isinstance(media_pk, dict) and 'media' in media_pk:
+            media_pk = media_pk['media']
+        # If it's already a string, use it as is
 
         print(f"--- DEBUG [TASK]: Pubblicazione album riuscita. Aggiornamento stato messaggi. ---")
         # Aggiorna lo stato di tutti i messaggi pubblicati con successo
